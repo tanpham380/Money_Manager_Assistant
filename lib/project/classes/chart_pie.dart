@@ -58,10 +58,13 @@ class ChartPie extends StatelessWidget {
       series: <CircularSeries<InputModel, String>>[
         DoughnutSeries<InputModel, String>(
               selectionBehavior: SelectionBehavior(enable: true),
-                 onPointTap: (ChartPointDetails details) {      
+                 onPointTap: (ChartPointDetails details) {    
+                  if (haveRecords){
                   final formattedAmount = NumberFormat.currency(locale: sharedPrefs.getLocale().toString()).format( (details.dataPoints![details.pointIndex!].y! * totalAmount) / 100  );
                   // final Text = "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount;
                   customToast(context, "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount);
+                  }  
+
                  },
             startAngle: 90,
             endAngle: 90,
