@@ -1,5 +1,6 @@
 /// Package import
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -186,22 +187,23 @@ class _ReportBodyState extends State<ReportBody> {
 
                   List<MonthAmount>? monthBasedTransactionList =
                       isLeapYear(year)
-                          ? 
-                          [
-          monthBasedTransaction(
-              'Jan', startOfThisYear.subtract(Duration(days: 1)), 30),
-          monthBasedTransaction('Feb', date(30), 59),
-          monthBasedTransaction('Mar', date(59), 90),
-          monthBasedTransaction('Apr', date(90), 120),
-          monthBasedTransaction('May', date(120), 151),
-          monthBasedTransaction('Jun', date(151), 181),
-          monthBasedTransaction('Jul', date(181), 212),
-          monthBasedTransaction('Aug', date(212), 243),
-          monthBasedTransaction('Sep', date(243), 273),
-          monthBasedTransaction('Oct', date(273), 303),
-          monthBasedTransaction('Nov', date(303), 334),
-          monthBasedTransaction('Dec', date(334), 365),
-        ]
+                          ? [
+                              monthBasedTransaction(
+                                  'Jan',
+                                  startOfThisYear.subtract(Duration(days: 1)),
+                                  30),
+                              monthBasedTransaction('Feb', date(30), 59),
+                              monthBasedTransaction('Mar', date(59), 90),
+                              monthBasedTransaction('Apr', date(90), 120),
+                              monthBasedTransaction('May', date(120), 151),
+                              monthBasedTransaction('Jun', date(151), 181),
+                              monthBasedTransaction('Jul', date(181), 212),
+                              monthBasedTransaction('Aug', date(212), 243),
+                              monthBasedTransaction('Sep', date(243), 273),
+                              monthBasedTransaction('Oct', date(273), 303),
+                              monthBasedTransaction('Nov', date(303), 334),
+                              monthBasedTransaction('Dec', date(334), 365),
+                            ]
                           : [
                               monthBasedTransaction(
                                   'Jan',
@@ -231,116 +233,116 @@ class _ReportBodyState extends State<ReportBody> {
 
                   return Column(
                     children: [
-    //                   Padding(
-    //                     padding: EdgeInsets.only(right: 8.0.w),
-    //                     child: SizedBox(
-    //                       height: 280.h,
-    //                       child: SfCartesianChart(
-    //                         primaryXAxis: CategoryAxis(
-    //                             // placeLabelsNearAxisLine: true,
-    //                             // edgeLabelPlacement: EdgeLabelPlacement.none,
-    //                             // majorTickLines: MajorTickLines(size: 5, width: 1),
-    //                             axisLine: AxisLine(
-    //                               width: 3.h,
-    //                             ),
-    //                             labelPlacement: LabelPlacement.onTicks,
-    //                             isVisible: true,
-    //                             labelRotation: -45,
-    //                             rangePadding: ChartRangePadding.none,
-    //                             majorGridLines: MajorGridLines(width: 0)),
-    //                         // tooltipBehavior: _tooltipBehavior,
-    //                         primaryYAxis: NumericAxis(
-    //                             majorGridLines: MajorGridLines(width: 0),
-    //                             minimum: 0,
-    //                             maximum: maximumMonthAmount,
-    //                             labelFormat: '{value}',
-    //                             axisLine: AxisLine(
-    //                               width: 4.h,
-    //                             ),
-    //                             majorTickLines: MajorTickLines(size: 5.sp)),
-    //          series: _getGradientAreaSeries(
-    // this.widget.type, monthBasedTransactionList),
+                      //                   Padding(
+                      //                     padding: EdgeInsets.only(right: 8.0.w),
+                      //                     child: SizedBox(
+                      //                       height: 280.h,
+                      //                       child: SfCartesianChart(
+                      //                         primaryXAxis: CategoryAxis(
+                      //                             // placeLabelsNearAxisLine: true,
+                      //                             // edgeLabelPlacement: EdgeLabelPlacement.none,
+                      //                             // majorTickLines: MajorTickLines(size: 5, width: 1),
+                      //                             axisLine: AxisLine(
+                      //                               width: 3.h,
+                      //                             ),
+                      //                             labelPlacement: LabelPlacement.onTicks,
+                      //                             isVisible: true,
+                      //                             labelRotation: -45,
+                      //                             rangePadding: ChartRangePadding.none,
+                      //                             majorGridLines: MajorGridLines(width: 0)),
+                      //                         // tooltipBehavior: _tooltipBehavior,
+                      //                         primaryYAxis: NumericAxis(
+                      //                             majorGridLines: MajorGridLines(width: 0),
+                      //                             minimum: 0,
+                      //                             maximum: maximumMonthAmount,
+                      //                             labelFormat: '{value}',
+                      //                             axisLine: AxisLine(
+                      //                               width: 4.h,
+                      //                             ),
+                      //                             majorTickLines: MajorTickLines(size: 5.sp)),
+                      //          series: _getGradientAreaSeries(
+                      // this.widget.type, monthBasedTransactionList),
 
-    //                         onMarkerRender: (MarkerRenderArgs args) {
-    //                           if (this.widget.type == 'Income') {
-    //                             if (args.pointIndex == 0) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(9, 110, 16, 1);
-    //                             } else if (args.pointIndex == 1) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(19, 134, 13, 1);
-    //                             } else if (args.pointIndex == 2) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(55, 171, 49, 1);
-    //                             } else if (args.pointIndex == 3) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(77, 213, 70, 1);
-    //                             } else if (args.pointIndex == 4) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(134, 213, 70, 1);
-    //                             } else if (args.pointIndex == 5) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(156, 222, 103, 1);
-    //                             } else if (args.pointIndex == 6) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(153, 249, 172, 1);
-    //                             } else if (args.pointIndex == 7) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(189, 235, 120, 1);
-    //                             } else if (args.pointIndex == 8) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(177, 249, 191, 1);
-    //                             } else if (args.pointIndex == 9) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(217, 241, 179, 1);
-    //                             } else if (args.pointIndex == 10) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(235, 246, 199, 1);
-    //                             } else if (args.pointIndex == 11) {
-    //                               args.color = Colors.white;
-    //                             }
-    //                           } else {
-    //                             if (args.pointIndex == 0) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(159, 16, 32, 1);
-    //                             } else if (args.pointIndex == 1) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(197, 71, 84, 1);
-    //                             } else if (args.pointIndex == 2) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(207, 124, 168, 1);
-    //                             } else if (args.pointIndex == 3) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(219, 128, 161, 1);
-    //                             } else if (args.pointIndex == 4) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(213, 143, 151, 1);
-    //                             } else if (args.pointIndex == 5) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(226, 157, 126, 1);
-    //                             } else if (args.pointIndex == 6) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(230, 168, 138, 1);
-    //                             } else if (args.pointIndex == 7) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(221, 176, 108, 1);
-    //                             } else if (args.pointIndex == 8) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(222, 187, 97, 1);
-    //                             } else if (args.pointIndex == 9) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(250, 204, 160, 1);
-    //                             } else if (args.pointIndex == 10) {
-    //                               args.color =
-    //                                   const Color.fromRGBO(248, 219, 191, 1);
-    //                             } else if (args.pointIndex == 11) {
-    //                               args.color = Colors.white;
-    //                             }
-    //                           }
-    //                         },
-    //                       ),
-    //                     ),
-    //                   ),
+                      //                         onMarkerRender: (MarkerRenderArgs args) {
+                      //                           if (this.widget.type == 'Income') {
+                      //                             if (args.pointIndex == 0) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(9, 110, 16, 1);
+                      //                             } else if (args.pointIndex == 1) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(19, 134, 13, 1);
+                      //                             } else if (args.pointIndex == 2) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(55, 171, 49, 1);
+                      //                             } else if (args.pointIndex == 3) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(77, 213, 70, 1);
+                      //                             } else if (args.pointIndex == 4) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(134, 213, 70, 1);
+                      //                             } else if (args.pointIndex == 5) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(156, 222, 103, 1);
+                      //                             } else if (args.pointIndex == 6) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(153, 249, 172, 1);
+                      //                             } else if (args.pointIndex == 7) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(189, 235, 120, 1);
+                      //                             } else if (args.pointIndex == 8) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(177, 249, 191, 1);
+                      //                             } else if (args.pointIndex == 9) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(217, 241, 179, 1);
+                      //                             } else if (args.pointIndex == 10) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(235, 246, 199, 1);
+                      //                             } else if (args.pointIndex == 11) {
+                      //                               args.color = Colors.white;
+                      //                             }
+                      //                           } else {
+                      //                             if (args.pointIndex == 0) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(159, 16, 32, 1);
+                      //                             } else if (args.pointIndex == 1) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(197, 71, 84, 1);
+                      //                             } else if (args.pointIndex == 2) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(207, 124, 168, 1);
+                      //                             } else if (args.pointIndex == 3) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(219, 128, 161, 1);
+                      //                             } else if (args.pointIndex == 4) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(213, 143, 151, 1);
+                      //                             } else if (args.pointIndex == 5) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(226, 157, 126, 1);
+                      //                             } else if (args.pointIndex == 6) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(230, 168, 138, 1);
+                      //                             } else if (args.pointIndex == 7) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(221, 176, 108, 1);
+                      //                             } else if (args.pointIndex == 8) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(222, 187, 97, 1);
+                      //                             } else if (args.pointIndex == 9) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(250, 204, 160, 1);
+                      //                             } else if (args.pointIndex == 10) {
+                      //                               args.color =
+                      //                                   const Color.fromRGBO(248, 219, 191, 1);
+                      //                             } else if (args.pointIndex == 11) {
+                      //                               args.color = Colors.white;
+                      //                             }
+                      //                           }
+                      //                         },
+                      //                       ),
+                      //                     ),
+                      //                   ),
                       Text(
                         '${getTranslated(context, 'This year')}: ${format(yearAmount.toDouble())} $currency',
                         textAlign: TextAlign.center,
@@ -453,10 +455,12 @@ class _ReportBodyState extends State<ReportBody> {
                                                           int]),
                                                   firstActionWillCoverAllSpaceOnDeleting:
                                                       true,
-                                                  trailingActions: <
-                                                      SwipeAction>[
+                                                  trailingActions: <SwipeAction>[
                                                     SwipeAction(
-                                                        title: getTranslated(context, 'Delete') ?? 'Delete',
+                                                        title: getTranslated(
+                                                                context,
+                                                                'Delete') ??
+                                                            'Delete',
                                                         onTap:
                                                             (CompletionHandler
                                                                 handler) async {
@@ -504,7 +508,10 @@ class _ReportBodyState extends State<ReportBody> {
                                                         },
                                                         color: red),
                                                     SwipeAction(
-                                                        title: getTranslated(context, 'Add') ?? 'Add',
+                                                        title: getTranslated(
+                                                                context,
+                                                                'Add') ??
+                                                            'Add',
                                                         onTap:
                                                             (CompletionHandler
                                                                 handler) {
@@ -523,43 +530,52 @@ class _ReportBodyState extends State<ReportBody> {
                                                         color: Color.fromRGBO(
                                                             255, 183, 121, 1)),
                                                   ],
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(
-                                                        left: 15.w,
-                                                        right: 15.w,
-                                                        top: 7.h),
-                                                    child: Row(
-                                                      children: [
-                                                        Text(
-                                                            DateFormat(sharedPrefs
-                                                                    .dateFormat)
-                                                                .format(DateFormat(
-                                                                        'dd/MM/yyyy')
-                                                                    .parse(selectedTransactions[
-                                                                            int]
-                                                                        .date!)),
-                                                            style: GoogleFonts
-                                                                .aBeeZee(
-                                                                    fontSize:
-                                                                        17.sp)),
-                                                        Spacer(),
-                                                        Text(
-                                                            '${format(selectedTransactions[int].amount!)} $currency',
-                                                            style: GoogleFonts
-                                                                .aBeeZee(
-                                                                    fontSize:
-                                                                        18.5.sp)),
-                                                        SizedBox(
-                                                          width: 15.w,
-                                                        ),
-                                                        Icon(
-                                                          Icons
-                                                              .arrow_forward_ios,
-                                                          size: 17.sp,
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
+child: Padding(
+  padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 7.h),
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded( // Sử dụng Expanded thay vì Flexible
+        child: RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: DateFormat(sharedPrefs.dateFormat)
+                    .format(DateFormat('dd/MM/yyyy')
+                    .parse(selectedTransactions[int].date!)),
+                style: TextStyle(
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              TextSpan(text: '\n'),
+              TextSpan(
+                text: selectedTransactions[int].description!,
+                style: TextStyle(
+                  fontSize: 17.sp,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      Spacer(), // Đẩy phần tử tiếp theo về phía cuối dòng
+      Text(
+        '${format(selectedTransactions[int].amount!)} $currency',
+        style: TextStyle(fontSize: 18.5.sp),
+      ),
+      SizedBox(width: 5.w), // Khoảng cách giữa số tiền và biểu tượng ">"
+      Icon(
+        Icons.arrow_forward_ios,
+        size: 17.sp,
+      ),
+    ],
+  ),
+),
+
+
                                                 ),
                                               );
                                             }),
@@ -575,9 +591,6 @@ class _ReportBodyState extends State<ReportBody> {
         });
   }
 }
-
-
-
 
 /// Returns the list of spline area series with horizontal gradient.
 List<CartesianSeries<dynamic, dynamic>> _getGradientAreaSeries(

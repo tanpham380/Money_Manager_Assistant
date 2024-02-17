@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app_lock/flutter_app_lock.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'classes/lockscreen.dart';
 import 'database_management/shared_preferences_services.dart';
 import 'localization/app_localization.dart';
@@ -10,6 +11,7 @@ import 'home.dart';
 void realMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   await sharedPrefs.sharePrefsInit();
+  await _checkStoragePermission();
   sharedPrefs.setItems(setCategoriesToDefault: false);
   sharedPrefs.getCurrency();
   sharedPrefs.getAllExpenseItemsLists();
@@ -18,6 +20,13 @@ void realMain() async {
     MyApp()
       );
 }
+ Future<void> _checkStoragePermission() async {
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      await Permission.storage.request();
+
+    } 
+  }
 
 class MyApp extends StatefulWidget {
   static void setLocale(BuildContext context, Locale newLocale) {

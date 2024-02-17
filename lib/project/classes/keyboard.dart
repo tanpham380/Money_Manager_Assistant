@@ -52,8 +52,6 @@ class CustomKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: white,
-
-
       child: Padding(
           padding: EdgeInsets.only(bottom: 25.h),
           child: Column(children: [
@@ -76,7 +74,6 @@ class CustomKeyboard extends StatelessWidget {
                             size: 25.sp, color: Colors.blueGrey),
                       ),
                     ),
-
                     GestureDetector(
                       onTap: () {
                         panelController.close();
