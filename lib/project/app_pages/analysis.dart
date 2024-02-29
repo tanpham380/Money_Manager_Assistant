@@ -150,6 +150,7 @@ class ShowMoneyFrame extends StatelessWidget {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          
           Text(
             getTranslated(context, typeName)!,
             style: TextStyle(fontSize: 22.sp),
@@ -183,12 +184,21 @@ class ShowMoneyFrame extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.5.h),
         child: Column(
+          
           children: [
+            
             rowFrame(this.type, typeValue),
             SizedBox(
               height: 12.5.h,
             ),
-            rowFrame('Balance', this.balance)
+            rowFrame('Balance', this.balance),
+                        SizedBox(
+              height: 12.5.h,
+            ),
+           rowFrame('Total', typeValue + balance),
+            SizedBox(
+              height: 12.5.h,
+            ),
           ],
         ),
       ),
