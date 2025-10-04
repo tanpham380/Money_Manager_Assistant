@@ -1,504 +1,338 @@
-import 'dart:collection';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_swipe_action_cell/core/cell.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'dart:io' show Platform;
+import 'package:intl/intl.dart';
 
-import '../classes/alert_dialog.dart';
 import '../classes/app_bar.dart';
-import '../classes/category_item.dart';
 import '../classes/constants.dart';
-import '../classes/custom_toast.dart';
+import '../classes/daily_transaction_group.dart';
 import '../classes/input_model.dart';
-import '../database_management/shared_preferences_services.dart';
-import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
-import 'edit.dart';
+import '../provider/calendar_provider.dart';
+import 'daily_transaction_detail.dart';
 
 class Calendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ChangeNotifierProvider(
+      create: (_) => CalendarProvider(),
+      child: Scaffold(
         backgroundColor: blue1,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
           child: BasicAppBar(getTranslated(context, 'Calendar')!),
         ),
-        body: CalendarBody());
-  }
-}
-
-class CalendarBody extends StatefulWidget {
-  @override
-  _CalendarBodyState createState() => _CalendarBodyState();
-}
-
-class _CalendarBodyState extends State<CalendarBody> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
-      .toggledOff; // Can be toggled on/off by longpressing a date
-  DateTime _focusedDay = DateTime.now(),
-      today = DateTime(
-          DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  DateTime? _selectedDay, _rangeStart, _rangeEnd;
-  late Map<DateTime, List<InputModel>> transactions = {};
-  late ValueNotifier<List<InputModel>> _selectedEvents;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedDay = _focusedDay;
-  }
-
-  @override
-  void dispose() {
-    // _calendarController.dispose();
-    super.dispose();
-  }
-
-  int getHashCode(DateTime key) {
-    return key.day * 1000000 + key.month * 10000 + key.year;
-  }
-
-  /// Returns a list of [DateTime] objects from [first] to [last], inclusive.
-  List<DateTime> daysInRange(DateTime first, DateTime last) {
-    final dayCount = last.difference(first).inDays + 1;
-    return List.generate(
-      dayCount,
-      (index) => DateTime.utc(first.year, first.month, first.day + index),
-    );
-  }
-
-  Widget buildEvents(List<InputModel>? transactions) {
-    Color colorCategory;
-    if (transactions == null) {
-      return Container();
-    }
-    List<CategoryItem> itemList = createItemList(
-      transactions: transactions,
-      forAnalysisPage: false,
-      forSelectIconPage: false,
-      isIncomeType: false,
-    );
-    return ListView.builder(
-        shrinkWrap: true,
-        itemCount: itemList.length,
-        itemBuilder: (context, int) {
-          colorCategory =
-              transactions[int].type == 'Income' ? Colors.lightGreen : red;
-          return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => Edit(
-                              inputModel: transactions[int],
-                              categoryIcon: iconData(itemList[int]),
-                            ))).then((value) => setState(() {}));
-              },
-              child: SwipeActionCell(
-                key: ObjectKey(transactions[int]),
-                firstActionWillCoverAllSpaceOnDeleting: true,
-                trailingActions: <SwipeAction>[
-                  SwipeAction(
-                      title: getTranslated(context, 'Delete') ?? 'Delete',
-                      //setState makes handler experience lagging
-                      onTap: (CompletionHandler handler) {
-                        Platform.isIOS
-                            ? iosDialog(
-                                context,
-                                'Are you sure you want to delete this transaction?',
-                                'Delete', () {
-                                DB.delete(transactions[int].id!);
-                                setState(() {});
-                                customToast(
-                                    context, 'Transaction has been deleted');
-                              })
-                            : androidDialog(
-                                context,
-                                'Are you sure you want to delete this transaction?',
-                                'Delete', () {
-                                DB.delete(transactions[int].id!);
-                                setState(() {});
-                                customToast(
-                                    context, 'Transaction has been deleted');
-                              });
-                      },
-                      color: red),
-                  SwipeAction(
-                      title: getTranslated(context, 'Add') ?? 'Add',
-                      onTap: (CompletionHandler handler) {
-                        var model = transactions[int];
-                        model.id = null;
-                        DB.insert(model);
-                        setState(() {});
-                        customToast(context, 'Transaction has been updated');
-                      },
-                      color: Color.fromRGBO(255, 183, 121, 1)),
-                ],
-                child: Column(
-                  children: [
-                    Container(
-                      color: white,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 15.w, vertical: 15.h),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Icon(
-                              iconData(itemList[int]),
-                              color: colorCategory,
-                            ),
-                            SizedBox(
-                              width: 150.w,
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.only(left: 15.w, right: 10.w),
-                                child: Text(
-                                    getTranslated(
-                                            context, itemList[int].text) ??
-                                        itemList[int].text,
-                                    style: TextStyle(
-                                      fontSize: 18.sp,
-                                    ),
-                                    overflow: TextOverflow.ellipsis),
-                              ),
-                            ),
-                            // Expanded(
-                            //   child: Text('(${transactions[int].description})',
-                            //       style: TextStyle(
-                            //           fontSize: 14.sp,
-                            //           fontStyle: FontStyle.italic),
-                            //       overflow: TextOverflow.fade),
-                            // ),
-                            //this widget will never overflow
-                            Flexible(
-                              flex: 0,
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.only(right: 10.w, left: 7.w),
-                                child: Text(
-                                    format(transactions[int].amount!) +
-                                        ' ' +
-                                        currency,
-                                    style: GoogleFonts.aBeeZee(
-                                      fontSize:
-                                          format(transactions[int].amount!)
-                                                      .length >
-                                                  15
-                                              ? 16.sp
-                                              : 17.sp,
-                                    ),
-                                    overflow: TextOverflow.ellipsis),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 15.5.sp,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Divider(
-                      height: 0,
-                      thickness: 0.25.h,
-                      indent: 20.w,
-                      color: grey,
-                      // color: Color.fromRGBO(213, 215, 217, 1),
-                    ),
-                  ],
-                ),
-              ));
-        });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<InputModel>>(
-        initialData: [],
-        future: DB.inputModelList(),
-        builder: (context, snapshot) {
-          connectionUI(snapshot);
-          Map<String, List<InputModel>> map = {};
-          if (snapshot.data != null) {
-            for (int i = 0; i < snapshot.data!.length; i++) {
-              String description = snapshot.data![i].description!;
-              InputModel map1 = InputModel(
-                  id: snapshot.data![i].id,
-                  type: snapshot.data![i].type,
-                  amount: snapshot.data![i].amount,
-                  category: snapshot.data![i].category,
-                  description: description,
-                  date: snapshot.data![i].date,
-                  time: snapshot.data![i].time);
-
-              void updateMapValue<K, V>(Map<K, List<V>> map, K key, V value) =>
-                  map.update(key, (list) => list..add(value),
-                      ifAbsent: () => [value]);
-
-              updateMapValue(
-                map,
-                '${snapshot.data![i].date}',
-                map1,
+        body: Consumer<CalendarProvider>(
+          builder: (context, provider, child) {
+            if (provider.state == CalendarState.loading) {
+              return Center(
+                child: CircularProgressIndicator(color: blue3),
               );
             }
-            transactions = map.map((key, value) =>
-                MapEntry(DateFormat('dd/MM/yyyy').parse(key), value));
-          }
-
-          late LinkedHashMap linkedHashedMapTransactions =
-              LinkedHashMap<DateTime, List<InputModel>>(
-            equals: isSameDay,
-            hashCode: getHashCode,
-          )..addAll(transactions);
-
-          List<InputModel> transactionsForDay(DateTime? day) =>
-              linkedHashedMapTransactions[day] ?? [];
-
-          if (_selectedDay != null) {
-            _selectedEvents = ValueNotifier(transactionsForDay(_selectedDay));
-          }
-
-          List<InputModel> _getEventsForRange(DateTime start, DateTime end) {
-            final days = daysInRange(start, end);
-
-            return [
-              for (final d in days) ...transactionsForDay(d),
-            ];
-          }
-
-          void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-            if (!isSameDay(_selectedDay, selectedDay)) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-                _rangeStart = null; // Important to clean those
-                _rangeEnd = null;
-                _rangeSelectionMode = RangeSelectionMode.toggledOff;
-              });
-              _selectedEvents.value = transactionsForDay(selectedDay);
+            
+            if (provider.state == CalendarState.error) {
+              return Center(
+                child: Text(
+                  provider.errorMessage ?? 'An error occurred',
+                  style: TextStyle(color: red, fontSize: 16.sp),
+                ),
+              );
             }
-          }
-
-          void _onRangeSelected(
-              DateTime? start, DateTime? end, DateTime focusedDay) {
-            setState(() {
-              _selectedDay = null;
-              _focusedDay = focusedDay;
-              _rangeStart = start;
-              _rangeEnd = end;
-              _rangeSelectionMode = RangeSelectionMode.toggledOn;
-              if (start != null && end != null) {
-                _selectedEvents = ValueNotifier(_getEventsForRange(start, end));
-              } else if (start != null) {
-                _selectedEvents = ValueNotifier(transactionsForDay(start));
-              } else if (end != null) {
-                _selectedEvents = ValueNotifier(transactionsForDay(end));
-              }
-            });
-          }
-
-          return Column(children: [
-            TableCalendar<InputModel>(
-              availableCalendarFormats: {
-                CalendarFormat.month: getTranslated(context, 'Month')!,
-                CalendarFormat.twoWeeks: getTranslated(context, '2 weeks')!,
-                CalendarFormat.week: getTranslated(context, 'Week')!
-              },
-              locale: Localizations.localeOf(context).languageCode,
-              // sixWeekMonthsEnforced: true,
-              // shouldFillViewport: true,
-              rowHeight: 52.h,
-              daysOfWeekHeight: 22.h,
-              firstDay: DateTime.utc(2000, 01, 01),
-              lastDay: DateTime.utc(2050, 01, 01),
-              focusedDay: _focusedDay,
-              calendarFormat: _calendarFormat,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              rangeStartDay: _rangeStart,
-              rangeEndDay: _rangeEnd,
-              rangeSelectionMode: _rangeSelectionMode,
-              eventLoader: transactionsForDay,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              calendarStyle: CalendarStyle(
-                  // weekendTextStyle:
-                  // TextStyle().copyWith(color: Colors.blue[800]),
-                  ),
-
-              headerStyle: HeaderStyle(
-                formatButtonTextStyle: TextStyle(fontSize: 18.sp),
-                formatButtonDecoration: BoxDecoration(
-                    boxShadow: [BoxShadow()],
-                    color: blue2,
-                    borderRadius: BorderRadius.circular(25.r)),
-              ),
-              calendarBuilders: CalendarBuilders(
-                selectedBuilder: (context, date, _) {
-                  return Container(
-                    //see difference between margin and padding below: Margin: Out (for itself), padding: In (for its child)
-                    // margin: EdgeInsets.all(4.0.w),
-                    padding: EdgeInsets.only(top: 6.0.h, left: 6.0.w),
-                    color: Color.fromRGBO(255, 168, 68, 1),
-                    width: 46.w,
-                    height: 46.h,
-                    child: Text(
-                      '${date.day}',
-                      style: TextStyle().copyWith(fontSize: 17.0.sp),
-                    ),
-                  );
-                },
-                todayBuilder: (context, date, _) {
-                  return Container(
-                    padding: EdgeInsets.only(top: 6.0.w, left: 6.0.w),
-                    color: blue2,
-                    width: 46.w,
-                    height: 46.h,
-                    child: Text(
-                      '${date.day}',
-                      style: TextStyle().copyWith(fontSize: 17.0.sp),
-                    ),
-                  );
-                },
-                markerBuilder: (context, date, events) {
-                  if (events.isNotEmpty) {
-                    return Positioned(
-                      right: 1.w,
-                      bottom: 1.h,
-                      child: _buildEventsMarker(date, events),
-                    );
-                  }
-                  return null;
-                },
-              ),
-
-              onDaySelected: _onDaySelected,
-              onRangeSelected: _onRangeSelected,
-              onFormatChanged: (format) {
-                if (_calendarFormat != format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                }
-              },
-              onPageChanged: (focusedDay) {
-                _focusedDay = focusedDay;
-              },
-              pageJumpingEnabled: true,
-            ),
-            SizedBox(height: 8.0.h),
-            Expanded(
-              child: ValueListenableBuilder<List<InputModel>>(
-                valueListenable: _selectedEvents,
-                builder: (context, value, _) {
-                  return Column(children: [
-                    Expanded(child: Balance(value)),
-                    Expanded(child: buildEvents(value))
-                  ]);
-                },
-              ),
-            )
-          ]);
-        });
-  }
-}
-
-Widget _buildEventsMarker(DateTime date, List events) {
-  double width = events.length < 100 ? 18.w : 28.w;
-  return AnimatedContainer(
-    duration: const Duration(milliseconds: 300),
-    decoration: BoxDecoration(
-      shape: BoxShape.rectangle,
-      color: Color.fromRGBO(67, 125, 229, 1),
-    ),
-    width: width,
-    height: 18.0.h,
-    child: Center(
-      child: Text(
-        '${events.length}',
-        style: TextStyle().copyWith(
-          color: white,
-          fontSize: 13.0.sp,
-        ),
-      ),
-    ),
-  );
-}
-
-class Balance extends StatefulWidget {
-  final List? events;
-  Balance(this.events);
-  @override
-  _BalanceState createState() => _BalanceState();
-}
-
-class _BalanceState extends State<Balance> {
-  @override
-  Widget build(BuildContext context) {
-    double income = 0, expense = 0, balance = 0;
-    if (widget.events != null) {
-      for (int i = 0; i < widget.events!.length; i++) {
-        if (widget.events![i].type == 'Income') {
-          income = income + widget.events![i].amount;
-        } else {
-          expense = expense + widget.events![i].amount;
-        }
-        balance = income - expense;
-      }
-    }
-    Widget summaryFrame(String type, double amount, color) => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // this widget will never overflow
-            Text(
-              getTranslated(context, type)!,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 15.sp,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.bold),
-            ),
-            Text(format(amount.toDouble()) + ' ' + currency,
-                style: GoogleFonts.aBeeZee(
-                    color: color,
-                    fontSize: (format(amount.toDouble()).length > 19)
-                        ? 11.5.sp
-                        : format(amount.toDouble()).length > 14
-                            ? 14.sp
-                            : 18.sp,
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis)
-          ],
-        );
-    return Container(
-      color: Colors.white54,
-      height: 69.h,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            summaryFrame(
-              'INCOME',
-              income,
-              Colors.lightGreen,
-            ),
-            Padding(
-                padding: EdgeInsets.symmetric(horizontal: 5.w),
-                child: summaryFrame('EXPENSE', expense, red)),
-            Flexible(
-                child: summaryFrame('TOTAL BALANCE', balance, Colors.black)),
-          ],
+            
+            return _CalendarContent();
+          },
         ),
       ),
     );
+  }
+}
+
+class _CalendarContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CalendarProvider>(
+      builder: (context, provider, child) {
+        return Column(
+          children: [
+            _buildCalendar(context, provider),
+            SizedBox(height: 8.h),
+            if (provider.selectedDayEvents.isNotEmpty && provider.rangeStart == null)
+            Expanded(
+              child: _buildTransactionList(context, provider),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  Widget _buildCalendar(BuildContext context, CalendarProvider provider) {
+    return TableCalendar(
+      locale: Localizations.localeOf(context).languageCode,
+      availableCalendarFormats: {
+        CalendarFormat.month: getTranslated(context, 'Month')!,
+        CalendarFormat.twoWeeks: getTranslated(context, '2 weeks')!,
+        CalendarFormat.week: getTranslated(context, 'Week')!,
+      },
+      rowHeight: 52.h,
+      daysOfWeekHeight: 22.h,
+      firstDay: DateTime.utc(2015, 01, 01),
+      lastDay: DateTime.utc(2100, 01, 01),
+      focusedDay: provider.focusedDay,
+      calendarFormat: provider.calendarFormat,
+      selectedDayPredicate: (day) => isSameDay(provider.selectedDay, day),
+      rangeStartDay: provider.rangeStart,
+      rangeEndDay: provider.rangeEnd,
+      rangeSelectionMode: provider.rangeSelectionMode,
+      eventLoader: provider.getEventsForDay,
+      startingDayOfWeek: StartingDayOfWeek.monday,
+      calendarStyle: CalendarStyle(
+        selectedDecoration: BoxDecoration(
+          color: blue3,
+          shape: BoxShape.circle,
+        ),
+        selectedTextStyle: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16.sp,
+        ),
+        todayDecoration: BoxDecoration(
+          color: blue2,
+          shape: BoxShape.circle,
+        ),
+        todayTextStyle: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16.sp,
+        ),
+        defaultTextStyle: TextStyle(fontSize: 15.sp),
+        weekendTextStyle: TextStyle(fontSize: 15.sp, color: red),
+        outsideTextStyle: TextStyle(fontSize: 15.sp, color: Colors.grey),
+        markerDecoration: BoxDecoration(
+          color: Color.fromRGBO(67, 125, 229, 1),
+          shape: BoxShape.circle,
+        ),
+        markersMaxCount: 1,
+      ),
+      headerStyle: HeaderStyle(
+        formatButtonVisible: true,
+        titleCentered: true,
+        formatButtonShowsNext: false,
+        formatButtonTextStyle: TextStyle(
+          fontSize: 15.sp,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+        formatButtonDecoration: BoxDecoration(
+          color: blue2,
+          borderRadius: BorderRadius.circular(25.r),
+        ),
+        titleTextStyle: TextStyle(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
+      calendarBuilders: CalendarBuilders(
+        markerBuilder: (context, date, events) {
+          if (events.isNotEmpty) {
+            return Positioned(
+              bottom: 4.h,
+              child: _buildEventsMarker(events),
+            );
+          }
+          return null;
+        },
+      ),
+      onDaySelected: provider.onDaySelected,
+      onRangeSelected: provider.onRangeSelected,
+      onFormatChanged: provider.onFormatChanged,
+      onPageChanged: provider.onPageChanged,
+      pageJumpingEnabled: true,
+    );
+  }
+  
+  Widget _buildEventsMarker(List events) {
+    double width = events.length < 100 ? 18.w : 28.w;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      decoration: BoxDecoration(
+        shape: BoxShape.rectangle,
+        color: Color.fromRGBO(67, 125, 229, 1),
+        borderRadius: BorderRadius.circular(4.r),
+      ),
+      width: width,
+      height: 16.h,
+      child: Center(
+        child: Text(
+          '${events.length}',
+          style: TextStyle(
+            color: white,
+            fontSize: 11.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTransactionList(BuildContext context, CalendarProvider provider) {
+    // Kiểm tra xem có đang ở chế độ range selection không
+    final isRangeMode = provider.rangeStart != null || provider.rangeEnd != null;
+    
+    // Nếu đang ở range mode, show empty state
+    if (isRangeMode) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.date_range_rounded,
+              size: 64.sp,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              getTranslated(context, 'Select a single day to view transactions') ??
+                  'Select a single day to view transactions',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Nhóm giao dịch theo ngày từ tất cả các ngày có dữ liệu
+    final groupedTransactions = _groupTransactionsByDate(provider);
+    
+    if (groupedTransactions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_busy_rounded,
+              size: 64.sp,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              getTranslated(context, 'No transactions found') ??
+                  'No transactions found',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return Container(
+      color: Colors.grey[50],
+      child: ListView.builder(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: EdgeInsets.only(
+          top: 8.h,
+          bottom: 24.h,
+          left: 4.w,
+          right: 4.w,
+        ),
+        itemCount: groupedTransactions.length,
+        itemBuilder: (context, index) {
+          final entry = groupedTransactions[index];
+          final date = entry.key;
+          final transactions = entry.value;
+          
+          return DailyTransactionGroup(
+            date: date,
+            transactions: transactions,
+            onTap: () {
+              // Chuyển sang màn hình chi tiết
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DailyTransactionDetail(
+                    date: date,
+                    transactions: transactions,
+                  ),
+                ),
+              ).then((_) {
+                // Reload data khi quay lại
+                provider.fetchTransactions();
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+  
+  /// Nhóm giao dịch theo ngày (sắp xếp từ mới đến cũ)
+  List<MapEntry<DateTime, List<InputModel>>> _groupTransactionsByDate(
+    CalendarProvider provider,
+  ) {
+    final Map<DateTime, List<InputModel>> grouped = {};
+    
+    // Lấy tất cả giao dịch từ selectedDay hoặc focusedMonth
+    final allTransactions = <InputModel>[];
+    
+    // Nếu có ngày được chọn, chỉ lấy giao dịch của ngày đó
+    if (provider.selectedDay != null) {
+      allTransactions.addAll(provider.getEventsForDay(provider.selectedDay!));
+    } else {
+      // Ngược lại, lấy tất cả giao dịch trong tháng hiện tại
+      final firstDayOfMonth = DateTime(
+        provider.focusedDay.year,
+        provider.focusedDay.month,
+        1,
+      );
+      final lastDayOfMonth = DateTime(
+        provider.focusedDay.year,
+        provider.focusedDay.month + 1,
+        0,
+      );
+      
+      // Lấy tất cả ngày trong tháng
+      for (var day = firstDayOfMonth;
+           day.isBefore(lastDayOfMonth.add(Duration(days: 1)));
+           day = day.add(Duration(days: 1))) {
+        final events = provider.getEventsForDay(day);
+        if (events.isNotEmpty) {
+          allTransactions.addAll(events);
+        }
+      }
+    }
+    
+    // Nhóm theo ngày
+    for (final transaction in allTransactions) {
+      if (transaction.date == null) continue;
+      
+      try {
+        final date = DateFormat('dd/MM/yyyy').parse(transaction.date!);
+        final normalizedDate = DateTime(date.year, date.month, date.day);
+        
+        if (!grouped.containsKey(normalizedDate)) {
+          grouped[normalizedDate] = [];
+        }
+        grouped[normalizedDate]!.add(transaction);
+      } catch (e) {
+        // Bỏ qua giao dịch có format ngày không hợp lệ
+      }
+    }
+    
+    // Sắp xếp theo ngày (mới nhất trước)
+    final sortedEntries = grouped.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+    
+    return sortedEntries;
   }
 }

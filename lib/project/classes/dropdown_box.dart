@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
+import '../provider/analysis_provider.dart';
 import 'constants.dart';
 
 class DropDownBox extends StatelessWidget {
@@ -38,12 +39,23 @@ class DropDownBox extends StatelessWidget {
               ),
               onChanged: (value) {
                 if (this.forAnalysis) {
-                  context.read<ChangeSelectedDate>().changeSelectedAnalysisDate(
-                      newSelectedDate: value.toString());
-                  sharedPrefs.selectedDate = value.toString();
+                  // Chỉ cập nhật AnalysisProvider cho màn hình Analysis
+                  try {
+                    final analysisProvider = context.read<AnalysisProvider>();
+                    analysisProvider.updateDateOption(value.toString());
+                    sharedPrefs.selectedDate = value.toString();
+                  } catch (e) {
+                    // Fallback: nếu không tìm thấy AnalysisProvider
+                    print('AnalysisProvider not found in context: $e');
+                  }
                 } else {
-                  context.read<ChangeSelectedDate>().changeSelectedReportDate(
-                      newSelectedDate: value.toString());
+                  // Cho màn hình Report, vẫn dùng provider cũ
+                  try {
+                    context.read<ChangeSelectedDate>().changeSelectedReportDate(
+                        newSelectedDate: value.toString());
+                  } catch (e) {
+                    print('ChangeSelectedDate not found in context: $e');
+                  }
                 }
               },
               items: timeline

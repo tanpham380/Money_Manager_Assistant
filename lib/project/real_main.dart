@@ -4,10 +4,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:money_assistant/project/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'classes/lockscreen.dart';
 import 'database_management/shared_preferences_services.dart';
 import 'database_management/sqflite_services.dart';
 import 'localization/app_localization.dart';
+import 'provider/navigation_provider.dart';
 import 'home.dart';
 
 // Global key để navigate từ bất cứ đâu
@@ -47,7 +49,12 @@ void realMain() async {
     );
   }
 
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => NavigationProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 Future<void> _checkStoragePermission() async {

@@ -48,6 +48,8 @@ dependencies:
   file_picker: ^10.3.3
   flutter_local_notifications: ^19.4.2
   timezone: ^0.10.0
+  collection: ^1.19.1
+  scrollable_positioned_list: ^0.3.8
 
 dependency_overrides:
   flutter_colorpicker: ^1.1.0

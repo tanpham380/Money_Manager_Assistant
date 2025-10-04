@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'app_pages/analysis.dart';
 import 'app_pages/input.dart';
 import 'classes/constants.dart';
 import 'localization/methods.dart';
 import 'app_pages/calendar.dart';
 import 'app_pages/others.dart';
+import 'provider/navigation_provider.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -13,8 +15,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int _selectedIndex = 0;
-  
   // Sử dụng final để cải thiện hiệu năng
   // Các trang này sẽ được giữ trạng thái bởi IndexedStack
   final List<Widget> _pages = [
@@ -50,37 +50,39 @@ class _HomeState extends State<Home> {
       _bottomNavigationBarItem(Icons.account_circle, 'Other'),
     ];
 
-    return Scaffold(
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                spreadRadius: 2,
+    return Consumer<NavigationProvider>(
+      builder: (context, navProvider, child) {
+        return Scaffold(
+            bottomNavigationBar: Container(
+              decoration: const BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: BottomNavigationBar(
-            iconSize: 27.sp,
-            selectedFontSize: 16.sp,
-            unselectedFontSize: 14.sp,
-            backgroundColor: blue1,
-            selectedItemColor: const Color.fromARGB(255, 255, 136, 0),
-            unselectedItemColor: Colors.black87,
-            type: BottomNavigationBarType.fixed,
-            items: bottomItems,
-            currentIndex: _selectedIndex,
-            onTap: (int index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-          ),
-        ),
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _pages,
-        ));
+              child: BottomNavigationBar(
+                iconSize: 27.sp,
+                selectedFontSize: 16.sp,
+                unselectedFontSize: 14.sp,
+                backgroundColor: blue1,
+                selectedItemColor: const Color.fromARGB(255, 255, 136, 0),
+                unselectedItemColor: Colors.black87,
+                type: BottomNavigationBarType.fixed,
+                items: bottomItems,
+                currentIndex: navProvider.currentTabIndex,
+                onTap: (int index) {
+                  navProvider.changeTab(index);
+                },
+              ),
+            ),
+            body: IndexedStack(
+              index: navProvider.currentTabIndex,
+              children: _pages,
+            ));
+      },
+    );
   }
 }

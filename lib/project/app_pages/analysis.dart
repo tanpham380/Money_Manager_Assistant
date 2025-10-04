@@ -3,120 +3,379 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-
 import 'package:provider/provider.dart';
+
 import '../classes/app_bar.dart';
-import '../classes/category_item.dart';
-import '../classes/chart_pie.dart';
+import '../classes/bar_chart.dart';
 import '../classes/constants.dart';
+import '../classes/donut_chart.dart';
 import '../classes/dropdown_box.dart';
-import '../classes/input_model.dart';
 import '../database_management/shared_preferences_services.dart';
-import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
-import '../provider.dart';
-import 'report.dart';
+import '../provider/analysis_provider.dart';
+import '../provider/navigation_provider.dart';
 
-final List<InputModel> chartDataNull = [
-  InputModel(
-      id: null,
-      type: null,
-      amount: 1,
-      category: '',
-      description: null,
-      date: null,
-      time: null,
-      color: const Color.fromRGBO(0, 220, 252, 1))
-];
+/// Màn hình phân tích thu chi - Đã được tái cấu trúc hoàn toàn
+class Analysis extends StatelessWidget {
+  const Analysis({Key? key}) : super(key: key);
 
-class Analysis extends StatefulWidget {
-  @override
-  _AnalysisState createState() => _AnalysisState();
-}
-
-class _AnalysisState extends State<Analysis> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ChangeSelectedDate>(
-      create: (context) => ChangeSelectedDate(),
+    return ChangeNotifierProvider(
+      create: (_) => AnalysisProvider(),
       child: DefaultTabController(
         initialIndex: 0,
         length: 2,
         child: Scaffold(
-            backgroundColor: blue1,
-            appBar: InExAppBar(false),
-            body: Selector<ChangeSelectedDate, String?>(
-                selector: (_, changeSelectedDate) =>
-                    changeSelectedDate.selectedAnalysisDate,
-                builder: (context, selectedAnalysisDate, child) {
-                  selectedAnalysisDate ??= sharedPrefs.selectedDate;
-                  ListView listViewChild(String type) => ListView(
-                        children: [
-                          ShowDate(true, selectedAnalysisDate!),
-                          ShowDetails(type, selectedAnalysisDate),
-                        ],
-                      );
-                  return TabBarView(
+          backgroundColor: blue1,
+          appBar: InExAppBar(false),
+          body: Consumer<AnalysisProvider>(
+            builder: (context, provider, child) {
+              // Xử lý các trạng thái khác nhau
+              switch (provider.state) {
+                case AnalysisState.loading:
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                  
+                case AnalysisState.empty:
+                  return const EmptyStateWidget();
+                  
+                case AnalysisState.error:
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'Đã xảy ra lỗi',
+                          style: TextStyle(fontSize: 20.sp),
+                        ),
+                        if (provider.errorMessage != null)
+                          Padding(
+                            padding: EdgeInsets.all(16.w),
+                            child: Text(
+                              provider.errorMessage!,
+                              style: TextStyle(fontSize: 14.sp),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                  
+                case AnalysisState.loaded:
+                  return Column(
                     children: [
-                      listViewChild('Expense'),
-                      listViewChild('Income')
+                      // Date selector
+                      ShowDate(
+                        selectedDate: provider.selectedDateOption,
+                        onDateChanged: (newDate) {
+                          provider.updateDateOption(newDate);
+                        },
+                      ),
+                      
+                      // Tab view
+                      Expanded(
+                        child: TabBarView(
+                          children: const [
+                            AnalysisTabView(type: 'Expense'),
+                            AnalysisTabView(type: 'Income'),
+                          ],
+                        ),
+                      ),
                     ],
                   );
-                })),
+                  
+                default:
+                  return const SizedBox.shrink();
+              }
+            },
+          ),
+        ),
       ),
     );
   }
 }
 
-class ShowDate extends StatelessWidget {
-  final bool forAnalysis;
-  final String selectedDate;
-  const ShowDate(this.forAnalysis, this.selectedDate);
+/// Widget hiển thị Empty State
+class EmptyStateWidget extends StatelessWidget {
+  const EmptyStateWidget({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 10.w,
-          vertical: 25.h,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.calendar_today,
-              size: 27.sp,
-              color: Color.fromRGBO(82, 179, 252, 1),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 100.sp,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 24.h),
+          Text(
+            getTranslated(context, 'No data available') ?? 'Không có dữ liệu nào',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
             ),
-            SizedBox(
-              width: 10.w,
+          ),
+          SizedBox(height: 16.h),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(context, '/input');
+            },
+            icon: const Icon(Icons.add),
+            label: Text(
+              getTranslated(context, 'Add new transaction') ?? 'Thêm giao dịch mới',
+              style: TextStyle(fontSize: 16.sp),
             ),
-            DateDisplay(this.selectedDate),
-            Spacer(),
-            DropDownBox(this.forAnalysis, this.selectedDate)
-          ],
-        ));
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
+/// Tab view cho từng loại (Income/Expense) với chart toggle
+class AnalysisTabView extends StatefulWidget {
+  final String type;
+
+  const AnalysisTabView({
+    Key? key,
+    required this.type,
+  }) : super(key: key);
+
+  @override
+  State<AnalysisTabView> createState() => _AnalysisTabViewState();
+}
+
+class _AnalysisTabViewState extends State<AnalysisTabView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch trend data khi khởi tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AnalysisProvider>().fetchTrendData(widget.type, 6);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AnalysisProvider>(
+      builder: (context, provider, child) {
+        final summaries = widget.type == 'Income' 
+            ? provider.incomeSummaries 
+            : provider.expenseSummaries;
+        final typeValue = widget.type == 'Income' 
+            ? provider.totalIncome 
+            : provider.totalExpense;
+
+        return CustomScrollView(
+          slivers: [
+            // Money Frame
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: ShowMoneyFrame(
+                  type: widget.type,
+                  typeValue: typeValue,
+                  balance: provider.balance,
+                  total: provider.total,
+                ),
+              ),
+            ),
+            
+            // Chart Type Toggle
+            SliverToBoxAdapter(
+              child: _buildChartToggle(provider),
+            ),
+            
+            // Chart Area - Mở rộng chiếm toàn bộ không gian còn lại
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: _buildChart(provider, summaries),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Widget toggle chọn loại biểu đồ
+  Widget _buildChartToggle(AnalysisProvider provider) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      child: CupertinoSegmentedControl<ChartType>(
+        children: {
+          ChartType.donut: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.donut_small, size: 18.sp),
+                SizedBox(width: 4.w),
+                Text(
+                  getTranslated(context, 'Donut') ?? 'Donut',
+                  style: TextStyle(fontSize: 14.sp),
+                ),
+              ],
+            ),
+          ),
+          ChartType.bar: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.bar_chart, size: 18.sp),
+                SizedBox(width: 4.w),
+                Text(
+                  getTranslated(context, 'Bar') ?? 'Bar',
+                  style: TextStyle(fontSize: 14.sp),
+                ),
+              ],
+            ),
+          ),
+          ChartType.line: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.show_chart, size: 18.sp),
+                SizedBox(width: 4.w),
+                Text(
+                  getTranslated(context, 'Trend') ?? 'Trend',
+                  style: TextStyle(fontSize: 14.sp),
+                ),
+              ],
+            ),
+          ),
+        },
+        groupValue: provider.selectedChartType,
+        onValueChanged: (ChartType value) {
+          provider.updateChartType(value);
+          if (value == ChartType.line) {
+            provider.fetchTrendData(widget.type, 6);
+          }
+        },
+      ),
+    );
+  }
+
+  /// Xây dựng biểu đồ dựa trên loại được chọn
+  Widget _buildChart(AnalysisProvider provider, List<CategorySummary> summaries) {
+    // Callback điều hướng khi người dùng tap vào biểu đồ
+    void handleSelection(int index) {
+      if (index < 0 || index >= summaries.length) return;
+      final summary = summaries[index];
+      
+      // Cập nhật selection trong provider để làm nổi bật
+      provider.updateSelectedIndex(index);
+      
+      // Chuyển sang Calendar tab với filter
+      final navProvider = context.read<NavigationProvider>();
+      navProvider.navigateToCalendarWithFilter(
+        type: widget.type,
+        category: summary.category,
+        icon: summary.icon,
+        color: summary.color,
+      );
+    }
+    
+    switch (provider.selectedChartType) {
+      case ChartType.donut:
+        return DonutChartAnalysis(
+          type: widget.type,
+          summaries: summaries,
+          onSelection: handleSelection,
+        );
+        
+      case ChartType.bar:
+        return BarChartAnalysis(
+          type: widget.type,
+          summaries: summaries,
+          onSelection: handleSelection,
+        );
+        
+      case ChartType.line:
+        return TrendChartAnalysis(
+          type: widget.type,
+          trendData: provider.trendData,
+        );
+    }
+  }
+}
+
+/// Widget hiển thị ngày và dropdown chọn khoảng thời gian
+class ShowDate extends StatelessWidget {
+  final String selectedDate;
+  final Function(String) onDateChanged;
+  
+  const ShowDate({
+    Key? key,
+    required this.selectedDate,
+    required this.onDateChanged,
+  }) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: 10.w,
+        vertical: 25.h,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.calendar_today,
+            size: 27.sp,
+            color: const Color.fromRGBO(82, 179, 252, 1),
+          ),
+          SizedBox(width: 10.w),
+          DateDisplay(selectedDate),
+          const Spacer(),
+          DropDownBox(true, selectedDate),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget hiển thị text ngày đã chọn
 class DateDisplay extends StatelessWidget {
   final String selectedDate;
-  DateDisplay(this.selectedDate);
+  
+  const DateDisplay(this.selectedDate, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final String today = DateFormat(sharedPrefs.dateFormat).format(todayDT);
-    String since = getTranslated(context, 'Since')!;
+    String since = getTranslated(context, 'Since') ?? 'Since';
     TextStyle style =
         GoogleFonts.aBeeZee(fontSize: 20.sp, fontWeight: FontWeight.bold);
 
-    Map<String, Widget> dateMap = {
-      'Today': Text('$today', style: style),
+    final Map<String, Widget> dateMap = {
+      'Today': Text(today, style: style),
       'This week': Text(
         '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisWeek)}',
         style: style,
       ),
       'This month': Text(
-          '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisMonth)}',
-          style: style),
+        '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisMonth)}',
+        style: style,
+      ),
       'This quarter': Text(
         '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisQuarter)}',
         style: style,
@@ -125,77 +384,79 @@ class DateDisplay extends StatelessWidget {
         '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisYear)}',
         style: style,
       ),
-      'All': Text('${getTranslated(context, 'All')!}', style: style)
+      'All': Text(getTranslated(context, 'All') ?? 'All', style: style),
     };
-    var dateListKey = dateMap.keys.toList();
-    var dateListValue = dateMap.values.toList();
-
-    for (int i = 0; i < dateListKey.length; i++) {
-      if (selectedDate == dateListKey[i]) {
-        return dateListValue[i];
-      }
-    }
-    return Container();
+    
+    return dateMap[selectedDate] ?? Container();
   }
 }
 
+/// Widget hiển thị thông tin tổng thu, chi, chênh lệch - Đã nâng cấp
 class ShowMoneyFrame extends StatelessWidget {
   final String type;
-  final double typeValue, balance;
-  const ShowMoneyFrame(this.type, this.typeValue, this.balance);
+  final double typeValue;
+  final double balance;
+  final double total;
+
+  const ShowMoneyFrame({
+    Key? key,
+    required this.type,
+    required this.typeValue,
+    required this.balance,
+    required this.total,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Widget rowFrame(String typeName, double value) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            getTranslated(context, typeName)!,
-            style: TextStyle(fontSize: 22.sp),
-          ),
-          Expanded(
-            child: Text(
-              format(value) + ' ' + currency,
-              style: GoogleFonts.aBeeZee(
-                  fontSize: format(value.toDouble()).length > 22
-                      ? 16.5.sp
-                      : format(value.toDouble()).length > 17
-                          ? 19.5.sp
-                          : 22.sp),
-              // fix here: Overflow is a temporary parameter, fix whatever it is so that the money value will never overflow
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
+    Widget rowFrame(String typeName, double value, {Color? valueColor}) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              getTranslated(context, typeName) ?? typeName,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '${format(value)} $currency',
+                  style: GoogleFonts.aBeeZee(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: valueColor,
+                  ),
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-          color: Color.fromRGBO(239, 247, 253, 1),
-          borderRadius: BorderRadius.circular(40.r),
-          border: Border.all(
-            color: grey,
-            width: 0.4.w,
-          )),
+    // Xác định màu cho chênh lệch
+    Color balanceColor = balance >= 0 ? green : red;
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.5.h),
+        padding: EdgeInsets.all(20.w),
         child: Column(
           children: [
-            rowFrame(this.type, typeValue),
-            SizedBox(
-              height: 12.5.h,
-            ),
-            rowFrame('Balance', this.balance),
-            SizedBox(
-              height: 12.5.h,
-            ),
-            rowFrame('Total', typeValue + balance),
-            SizedBox(
-              height: 12.5.h,
-            ),
+            rowFrame(getTranslated(context, 'Total Income') ?? 'Total Income', total > 0 ? (type == 'Income' ? typeValue : total - typeValue) : 0),
+            Divider(height: 1.h),
+            rowFrame(getTranslated(context, 'Total Expense') ?? 'Total Expense', total > 0 ? (type == 'Expense' ? typeValue : total - typeValue) : 0),
+            Divider(height: 1.h),
+            rowFrame(getTranslated(context, 'Balance') ?? 'Balance', balance, valueColor: balanceColor),
           ],
         ),
       ),
@@ -203,330 +464,75 @@ class ShowMoneyFrame extends StatelessWidget {
   }
 }
 
-class ShowDetails extends StatefulWidget {
-  final String type, selectedDate;
-  ShowDetails(this.type, this.selectedDate);
-
-  @override
-  _ShowDetailsState createState() => _ShowDetailsState();
-}
-
-class _ShowDetailsState extends State<ShowDetails> {
-  Widget showInExDetails(
-    BuildContext context,
-    List<InputModel> transactionsSorted,
-  ) {
-    List<CategoryItem> itemList = widget.type == 'Income'
-        ? createItemList(
-            transactions: transactionsSorted,
-            forAnalysisPage: true,
-            isIncomeType: true,
-            forSelectIconPage: false)
-        : createItemList(
-            transactions: transactionsSorted,
-            forAnalysisPage: true,
-            isIncomeType: false,
-            forSelectIconPage: false);
-
-    return Column(
-        children: List.generate(itemList.length, (int) {
-      return
-          // SwipeActionCell(
-          // backgroundColor: Colors.transparent,
-          //   key: ObjectKey(transactionsSorted[int]),
-          //   performsFirstActionWithFullSwipe: true,
-          //   trailingActions: <SwipeAction>[
-          //     SwipeAction(
-          //         title: "Delete",
-          //         onTap: (CompletionHandler handler) async {
-          //           Future<void> onDeletion() async {
-          //             await handler(true);
-          //             transactionsSorted.removeAt(int);
-          //             customToast(context, 'Transactions has been deleted');
-          //             setState(() {});
-          //           }
-          //
-          //           Platform.isIOS
-          //               ? await iosDialog(
-          //                   context,
-          //                   'Deleted data can not be recovered. Are you sure you want to Delete All Transactions In This Category?',
-          //                   'Delete',
-          //                   onDeletion)
-          //               : await androidDialog(
-          //                   context,
-          //                   'Deleted data can not be recovered. Are you sure you want to Delete All Transactions In This Category?',
-          //                   'Delete',
-          //                   onDeletion);
-          //         },
-          //         color: red),
-          //   ], child:
-          GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => Report(
-                              type: widget.type,
-                              category: itemList[int].text,
-                              selectedDate: widget.selectedDate,
-                              icon: iconData(itemList[int]),
-                            ))).then((value) => setState(() {}));
-              },
-              child: CategoryDetails(
-                  widget.type,
-                  getTranslated(context, itemList[int].text) ??
-                      itemList[int].text,
-                  transactionsSorted[int].amount!,
-                  transactionsSorted[int].color,
-                  iconData(itemList[int]),
-                  false));
-    }));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    late Map<String, double> chartDataMap;
-    return FutureBuilder<List<InputModel>>(
-        initialData: [],
-        future: DB.inputModelList(),
-        builder:
-            (BuildContext context, AsyncSnapshot<List<InputModel>> snapshot) {
-          connectionUI(snapshot);
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return ShowNullDetail(0, null, this.widget.type, false);
-          }
-          if (snapshot.data == null) {
-            return ShowNullDetail(0, chartDataNull, this.widget.type, true);
-          } else {
-            double income = 0, expense = 0, balance = 0;
-
-            List<InputModel> allTransactions =
-                filterData(context, snapshot.data!, widget.selectedDate);
-
-            if (allTransactions.length > 0) {
-              //prepare for MoneyFrame
-
-              List<double?> incomeList = [], expenseList = [];
-              incomeList = allTransactions
-                  .map((data) {
-                    if (data.type == 'Income') {
-                      return data.amount;
-                    }
-                  })
-                  .where((element) => element != null)
-                  .toList();
-
-              expenseList = allTransactions
-                  .map((data) {
-                    if (data.type == 'Expense') {
-                      return data.amount;
-                    }
-                  })
-                  .where((element) => element != null)
-                  .toList();
-
-              if (incomeList.length > 0) {
-                for (int i = 0; i < incomeList.length; i++) {
-                  income = income + incomeList[i]!;
-                }
-              }
-              if (expenseList.length > 0) {
-                for (int i = 0; i < expenseList.length; i++) {
-                  expense = expense + expenseList[i]!;
-                }
-              }
-              balance = income - expense;
-
-              // prepare for InExDetails
-              if (this.widget.type == 'Income') {
-                allTransactions = allTransactions
-                    .map((data) {
-                      if (data.type == 'Income') {
-                        return inputModel(data);
-                      }
-                    })
-                    .where((element) => element != null)
-                    .cast<InputModel>()
-                    .toList();
-              } else {
-                allTransactions = allTransactions
-                    .map((data) {
-                      if (data.type == 'Expense') {
-                        return inputModel(data);
-                      }
-                    })
-                    .where((element) => element != null)
-                    .cast<InputModel>()
-                    .toList();
-              }
-            }
-
-            if (allTransactions.length == 0) {
-              return ShowNullDetail(
-                  balance, chartDataNull, this.widget.type, true);
-            } else {
-              List<InputModel> transactionsSorted = [
-                InputModel(
-                  type: this.widget.type,
-                  amount: allTransactions[0].amount,
-                  category: allTransactions[0].category,
-                )
-              ];
-
-              int i = 1;
-              //cmt: chartDataListDetailed.length must be greater than 2 to execute
-              while (i < allTransactions.length) {
-                allTransactions
-                    .sort((a, b) => a.category!.compareTo(b.category!));
-
-                if (i == 1) {
-                  chartDataMap = {
-                    allTransactions[0].category!: allTransactions[0].amount!
-                  };
-                }
-
-                if (allTransactions[i].category ==
-                    allTransactions[i - 1].category) {
-                  chartDataMap.update(allTransactions[i].category!,
-                      (value) => (value + allTransactions[i].amount!),
-                      ifAbsent: () => (allTransactions[i - 1].amount! +
-                          allTransactions[i].amount!));
-                  i++;
-                } else {
-                  chartDataMap.addAll({
-                    allTransactions[i].category!: allTransactions[i].amount!
-                  });
-
-                  i++;
-                }
-                transactionsSorted = chartDataMap.entries
-                    .map((entry) => InputModel(
-                          type: this.widget.type,
-                          category: entry.key,
-                          amount: entry.value,
-                        ))
-                    .toList();
-              }
-
-              void recurringFunc({required int i, n}) {
-                if (n > i) {
-                  for (int c = 1; c <= n - i; c++) {
-                    transactionsSorted[i + c - 1].color = chartPieColors[c - 1];
-                    recurringFunc(i: i, n: c);
-                  }
-                }
-              }
-
-              for (int n = 1; n <= transactionsSorted.length; n++) {
-                transactionsSorted[n - 1].color = chartPieColors[n - 1];
-                recurringFunc(i: chartPieColors.length, n: n);
-              }
-              return Column(
-                children: [
-                  ShowMoneyFrame(this.widget.type,
-                      this.widget.type == 'Income' ? income : expense, balance),
-                  SizedBox(height: 360.h, child: ChartPie(transactionsSorted)),
-                  showInExDetails(
-                    context,
-                    // sum value of transactions having a same category to one
-                    transactionsSorted,
-                  )
-                ],
-              );
-            }
-          }
-        });
-  }
-}
-
-class ShowNullDetail extends StatelessWidget {
-  final double balanceValue;
-  final List<InputModel>? chartData;
-  final String type;
-  final bool connection;
-  ShowNullDetail(this.balanceValue, this.chartData, this.type, this.connection);
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ShowMoneyFrame(this.type, 0, this.balanceValue),
-        SizedBox(
-            height: 360.h,
-            child: connection == false ? null : ChartPie(this.chartData!)),
-        CategoryDetails(
-            this.type,
-            getTranslated(context, 'Category') ?? 'Category',
-            0,
-            this.type == 'Income' ? green : red,
-            Icons.category_outlined,
-            true)
-      ],
-    );
-  }
-}
-
+/// Widget hiển thị thông tin chi tiết từng category - Đã nâng cấp
 class CategoryDetails extends StatelessWidget {
-  final String type, category;
-  final double amount;
-  final Color? color;
-  final IconData icon;
-  final bool forNullDetail;
-  CategoryDetails(this.type, this.category, this.amount, this.color, this.icon,
-      this.forNullDetail);
+  final CategorySummary summary;
+  final String type;
+  final VoidCallback? onTap;
+  final bool isSelected;
+
+  const CategoryDetails({
+    Key? key,
+    required this.summary,
+    required this.type,
+    this.onTap,
+    this.isSelected = false,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Card(
-        color: white,
-        elevation: 3,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 15.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                this.icon,
-                color: forNullDetail
-                    ? this.type == 'Income'
-                        ? green
-                        : red
-                    : this.color,
-                size: 23.sp,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(left: 15.w, right: 10.w),
-                  child: Text(
-                    this.category,
-                    style: TextStyle(fontSize: 20.sp),
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.start,
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+      elevation: isSelected ? 8 : 2,
+      color: isSelected ? summary.color.withOpacity(0.1) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: isSelected 
+            ? BorderSide(color: summary.color, width: 2)
+            : BorderSide.none,
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: CircleAvatar(
+          backgroundColor: summary.color.withOpacity(0.2),
+          child: Icon(
+            summary.icon,
+            color: summary.color,
+            size: 24.sp,
+          ),
+        ),
+        title: Text(
+          getTranslated(context, summary.category) ?? summary.category,
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '${format(summary.totalAmount)} $currency',
+                  style: GoogleFonts.aBeeZee(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? summary.color : null,
                   ),
                 ),
               ),
-              // attention: This widget will never overflow
-              Flexible(
-                flex: 0,
-                child: Text(
-                  // '${this.color!.red},' + '${this.color!.green},' + '${this.color!.blue},',
-                  format(amount) + ' ' + currency,
-                  style: GoogleFonts.aBeeZee(fontSize: 20.sp),
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                ),
-              ),
-              SizedBox(
-                width: 10.w,
-              ),
-              forNullDetail
-                  ? SizedBox()
-                  : Icon(
-                      Icons.arrow_forward_ios,
-                      size: 18.sp,
-                    ),
-            ],
-          ),
-        ));
+            ),
+            SizedBox(width: 8.w),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16.sp,
+              color: isSelected ? summary.color : Colors.grey,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

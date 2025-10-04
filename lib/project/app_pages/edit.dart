@@ -23,19 +23,18 @@ class Edit extends StatelessWidget {
         child: BasicAppBar(getTranslated(context, 'Edit')!),
       ),
       body: GestureDetector(
-          onTap: () {
-            FocusScopeNode currentFocus = FocusScope.of(context);
-            if (!currentFocus.hasPrimaryFocus) {
-              currentFocus.unfocus();
-            }
-          },
-          child: PanelForKeyboard(
-            AddEditInput(
-              formKey: _formKey3,
-              inputModel: this.inputModel,
-              categoryIcon: this.categoryIcon,
-            ),
-          )),
+        onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
+        },
+        child: AddEditInput(
+          formKey: _formKey3,
+          inputModel: this.inputModel,
+          categoryIcon: this.categoryIcon,
+        ),
+      ),
     );
   }
 }

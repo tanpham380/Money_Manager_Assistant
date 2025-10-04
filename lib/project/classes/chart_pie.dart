@@ -63,9 +63,9 @@ class ChartPie extends StatelessWidget {
                 // final Text = "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount;
                 customToast(
                     context,
-                    "Tiền " +
+                    'Tiền ' +
                         details.dataPoints![details.pointIndex!].x! +
-                        " " +
+                        ' ' +
                         formattedAmount);
               }
             },

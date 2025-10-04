@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import '../classes/constants.dart';
+import 'package:intl/intl.dart';
 
 /// Utility class để xử lý logic format số tiền phức tạp
 /// Tách biệt logic xử lý chuỗi khỏi state management
 class AmountFormatter {
+  /// Format số với dấu phẩy ngăn cách hàng nghìn
+  static String format(double value) =>
+      NumberFormat("#,###,###,###,###,###.##", "en_US").format(value);
   /// Chèn text vào controller tại vị trí cursor
   /// Xử lý các quy tắc:
   /// - Giới hạn độ dài tối đa 13 ký tự
@@ -102,7 +105,7 @@ class AmountFormatter {
     
     try {
       final number = double.parse(text.replaceAll(',', ''));
-      return format(number);
+      return AmountFormatter.format(number);
     } catch (e) {
       return text;
     }
