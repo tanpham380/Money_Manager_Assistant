@@ -17,6 +17,7 @@ import '../database_management/sqflite_services.dart';
 import '../database_management/sync_data.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
+import '../notification_service.dart';
 import 'currency.dart';
 import 'select_date_format.dart';
 import 'select_language.dart';
@@ -82,6 +83,91 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  bool _isReminderEnabled = false;
+  int _reminderHour = 21;
+  int _reminderMinute = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReminderSettings();
+  }
+
+  void _loadReminderSettings() {
+    setState(() {
+      _isReminderEnabled = sharedPrefs.isReminderEnabled;
+      _reminderHour = sharedPrefs.reminderHour;
+      _reminderMinute = sharedPrefs.reminderMinute;
+    });
+  }
+
+  Future<void> _toggleReminder(bool value) async {
+    if (value) {
+      // Request permission trước khi bật reminder
+      bool hasPermission = await NotificationService.requestPermission();
+      if (!hasPermission) {
+        customToast(context, 'Notification permission denied');
+        return;
+      }
+
+      // Bật reminder
+      await NotificationService.scheduleDailyReminder(
+          _reminderHour, _reminderMinute);
+      setState(() {
+        _isReminderEnabled = true;
+      });
+      sharedPrefs.isReminderEnabled = true;
+      customToast(context, 'Daily reminder enabled');
+    } else {
+      // Tắt reminder
+      await NotificationService.cancelReminder();
+      setState(() {
+        _isReminderEnabled = false;
+      });
+      sharedPrefs.isReminderEnabled = false;
+      customToast(context, 'Daily reminder disabled');
+    }
+  }
+
+  Future<void> _pickTime() async {
+    TimeOfDay initialTime =
+        TimeOfDay(hour: _reminderHour, minute: _reminderMinute);
+
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: blue3,
+              onPrimary: Colors.black,
+              surface: white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _reminderHour = picked.hour;
+        _reminderMinute = picked.minute;
+      });
+      sharedPrefs.reminderHour = picked.hour;
+      sharedPrefs.reminderMinute = picked.minute;
+
+      // Nếu reminder đang bật, reschedule với thời gian mới
+      if (_isReminderEnabled) {
+        await NotificationService.scheduleDailyReminder(
+            _reminderHour, _reminderMinute);
+        customToast(context, 'Reminder time updated');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> pageRoute = [
@@ -100,6 +186,7 @@ class _SettingsState extends State<Settings> {
         color: Colors.orangeAccent,
       ),
       Icon(Icons.date_range, size: 32.sp, color: Colors.lightBlue),
+      Icon(Icons.notifications_active, size: 32.sp, color: Colors.orange),
       Icon(Icons.refresh, size: 32.sp, color: Colors.lightBlue),
       Icon(Icons.delete_forever, size: 32.sp, color: red),
       Icon(Icons.lock, size: 32.sp, color: Colors.lightBlue),
@@ -110,6 +197,7 @@ class _SettingsState extends State<Settings> {
       getTranslated(context, 'Currency') ?? 'Currency',
       (getTranslated(context, 'Date format') ?? 'Date format') +
           ' (${DateFormat(sharedPrefs.dateFormat).format(now)})',
+      'Daily Reminder',
       getTranslated(context, 'Reset All Categories') ?? 'Reset All Categories',
       getTranslated(context, 'Delete All Data') ?? 'Delete All Data',
       getTranslated(context, 'Change Passcode') ?? 'Change Passcode',
@@ -121,6 +209,66 @@ class _SettingsState extends State<Settings> {
       child: ListView.builder(
           itemCount: settingsList.length,
           itemBuilder: (context, int) {
+            // Daily Reminder có UI riêng
+            if (int == 3) {
+              return Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 7.h),
+                    child: SizedBox(
+                      child: Center(
+                          child: ListTile(
+                        title: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          child: Text(
+                            settingsList[int],
+                            style: TextStyle(fontSize: 18.5.sp),
+                          ),
+                        ),
+                        subtitle: _isReminderEnabled
+                            ? Padding(
+                                padding: EdgeInsets.only(left: 8.w, top: 4.h),
+                                child: Text(
+                                  '${_reminderHour.toString().padLeft(2, '0')}:${_reminderMinute.toString().padLeft(2, '0')}',
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              )
+                            : null,
+                        leading: CircleAvatar(
+                            radius: 24.r,
+                            backgroundColor: Color.fromRGBO(229, 231, 234, 1),
+                            child: settingsIcons[int]),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_isReminderEnabled)
+                              IconButton(
+                                icon: Icon(Icons.access_time, size: 20.sp),
+                                onPressed: _pickTime,
+                              ),
+                            Switch(
+                              value: _isReminderEnabled,
+                              onChanged: _toggleReminder,
+                              activeColor: Colors.orange,
+                            ),
+                          ],
+                        ),
+                      )),
+                    ),
+                  ),
+                  Divider(
+                    indent: 78.w,
+                    height: 0.1.h,
+                    thickness: 0.4.h,
+                    color: grey,
+                  ),
+                ],
+              );
+            }
+
             return GestureDetector(
               onTap: () async {
                 // ImportExportScreen
@@ -132,7 +280,7 @@ class _SettingsState extends State<Settings> {
                   Navigator.push(context,
                           MaterialPageRoute(builder: (context) => FormatDate()))
                       .then((value) => setState(() {}));
-                } else if (int == 3) {
+                } else if (int == 4) {
                   // Navigator.push(
                   //     context,
                   //     MaterialPageRoute(
@@ -153,7 +301,7 @@ class _SettingsState extends State<Settings> {
                           'This action cannot be undone. Are you sure you want to reset all categories?',
                           'reset',
                           onReset);
-                } else if (int == 4) {
+                } else if (int == 5) {
                   Future onDeletion() async {
                     await DB.deleteAll();
                     customToast(context, 'All data has been deleted');
@@ -170,7 +318,7 @@ class _SettingsState extends State<Settings> {
                           'Deleted data can not be recovered. Are you sure you want to delete all data?',
                           'Delete',
                           onDeletion);
-                } else if (int == 5) {
+                } else if (int == 6) {
                   final controller = InputController();
                   screenLockCreate(
                       context: context,
@@ -199,10 +347,12 @@ class _SettingsState extends State<Settings> {
                         Navigator.of(context).pop();
                         customToast(context, 'Passcode has been changed');
                       });
-                }                               else if ((int == 6)) {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => ImportExportScreen()));
-              }
+                } else if ((int == 7)) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ImportExportScreen()));
+                }
               },
               child: Column(
                 children: [

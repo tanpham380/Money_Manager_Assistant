@@ -7,12 +7,12 @@ import '../localization/methods.dart';
 import 'constants.dart';
 
 class CustomToast extends StatelessWidget {
-final String message;
-CustomToast(this.message);
+  final String message;
+  CustomToast(this.message);
   @override
   Widget build(BuildContext context) {
-    return  Container(
-      padding:  EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
       decoration: BoxDecoration(
         boxShadow: [BoxShadow()],
         borderRadius: BorderRadius.circular(25.r),
@@ -21,21 +21,24 @@ CustomToast(this.message);
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check, color: blue3,),
+          Icon(
+            Icons.check,
+            color: blue3,
+          ),
           SizedBox(
             width: 12.w,
           ),
-      Text(getTranslated(context, message) ??
-              message,
-        style: TextStyle(fontWeight: FontWeight.w500),
-      ),
+          Text(
+            getTranslated(context, message) ?? message,
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
   }
 }
 
-void customToast(BuildContext context, String message){
+void customToast(BuildContext context, String message) {
   var fToast = FToast();
   fToast.init(context);
   fToast.showToast(

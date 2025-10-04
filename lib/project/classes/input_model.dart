@@ -1,7 +1,6 @@
 import 'dart:ui';
 
-class
-InputModel {
+class InputModel {
   int? id;
   String? type;
   double? amount;

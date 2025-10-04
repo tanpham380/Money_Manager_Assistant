@@ -47,7 +47,5 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
-		<key>NSFaceIDUsageDescription</key>
-		<string> my app authenticating using face id to bypass pass code</string>
 	</dict>
 </plist>

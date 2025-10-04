@@ -2,16 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../app_pages/input.dart';
 import '../localization/methods.dart';
 import 'constants.dart';
 
-
-class BasicAppBar extends StatelessWidget  {
+class BasicAppBar extends StatelessWidget {
   final String title;
   const BasicAppBar(this.title);
 
-  @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
 
   @override
@@ -23,43 +20,39 @@ class BasicAppBar extends StatelessWidget  {
   }
 }
 
-
 class InExAppBar extends StatelessWidget implements PreferredSizeWidget {
-final bool isInputPage;
-const InExAppBar(this.isInputPage);
+  final bool isInputPage;
+  const InExAppBar(this.isInputPage);
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     Tab appBarTab(String title) => Tab(
-      child: Container(
-        width: double.maxFinite,
-        height: double.maxFinite,
-        decoration: BoxDecoration(),
-        child: Align(
-            child: Text(
+          child: Container(
+            width: double.maxFinite,
+            height: double.maxFinite,
+            decoration: BoxDecoration(),
+            child: Align(
+                child: Text(
               getTranslated(context, title)!,
               style: TextStyle(fontSize: 19.sp),
             )),
-      ),
-    );
+          ),
+        );
     return AppBar(
       backgroundColor: blue2,
       title: TabBar(
         labelColor: white,
         unselectedLabelColor: white,
         indicatorPadding: EdgeInsets.symmetric(horizontal: 10.r),
-        indicatorSize: TabBarIndicatorSize.tab, 
+        indicatorSize: TabBarIndicatorSize.tab,
         // indicatorSize: TabBarIndicatorSize.tab,
         // indicator: BoxDecoration(
         //   borderRadius: BorderRadius.circular(35.r),
         //   color: Color.fromRGBO(82, 179, 252, 1),
         // ),
-        tabs: [
-         appBarTab('EXPENSE'),
-          appBarTab('INCOME')
-        ],
+        tabs: [appBarTab('EXPENSE'), appBarTab('INCOME')],
       ),
       // actions: isInputPage ? [
       //   IconButton(
@@ -73,7 +66,6 @@ const InExAppBar(this.isInputPage);
     );
   }
 }
-
 
 class CategoryAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget editCategory;
@@ -118,8 +110,8 @@ class CategoryAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-
-class EditCategoryAppBar extends StatelessWidget implements PreferredSizeWidget {
+class EditCategoryAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
   final Widget addCategory;
   const EditCategoryAppBar(this.addCategory);
 
@@ -134,11 +126,11 @@ class EditCategoryAppBar extends StatelessWidget implements PreferredSizeWidget 
         Padding(
           padding: EdgeInsets.only(right: 5.w),
           child: TextButton(
-            onPressed: () =>  Navigator.push(context,
-                MaterialPageRoute(builder: (context) => addCategory)),
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (context) => addCategory)),
             child: Text(
               getTranslated(context, 'Add')!,
-              style: TextStyle(fontSize: 18.5.sp,  color: white),
+              style: TextStyle(fontSize: 18.5.sp, color: white),
             ),
           ),
           // child: Icon(Icons.edit),
@@ -149,5 +141,3 @@ class EditCategoryAppBar extends StatelessWidget implements PreferredSizeWidget 
     );
   }
 }
-
-

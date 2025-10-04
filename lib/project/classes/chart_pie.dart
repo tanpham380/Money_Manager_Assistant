@@ -5,16 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:money_assistant/project/database_management/shared_preferences_services.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-import '../localization/language.dart';
 import '../localization/methods.dart';
-import '../provider.dart';
 import 'custom_toast.dart';
 import 'input_model.dart';
 
 class ChartPie extends StatelessWidget {
   const ChartPie(this.transactionsSorted);
   final List<InputModel> transactionsSorted;
-  
+
   @override
   Widget build(BuildContext context) {
     bool haveRecords;
@@ -23,15 +21,14 @@ class ChartPie extends StatelessWidget {
     double animationDuration;
 // double _calculateTotalAmount
 
-
-  double _calculateTotalAmount(List<InputModel> transactionsSorted) {
-    double totalAmount = 0;
-    for (var i = 0; i < transactionsSorted.length; i++) {
-      totalAmount += transactionsSorted[i].amount!;
+    double _calculateTotalAmount(List<InputModel> transactionsSorted) {
+      double totalAmount = 0;
+      for (var i = 0; i < transactionsSorted.length; i++) {
+        totalAmount += transactionsSorted[i].amount!;
+      }
+      return totalAmount;
     }
-    return totalAmount;
 
-                }
     if (this.transactionsSorted[0].category == '') {
       haveRecords = false;
       width = '67%';
@@ -45,9 +42,7 @@ class ChartPie extends StatelessWidget {
     }
     var totalAmount = _calculateTotalAmount(this.transactionsSorted);
 
-
-    return 
-    SfCircularChart(
+    return SfCircularChart(
       tooltipBehavior: TooltipBehavior(enable: true),
 
       // tooltipBehavior: TooltipBehavior(enable: haveRecords),
@@ -57,15 +52,23 @@ class ChartPie extends StatelessWidget {
       ],
       series: <CircularSeries<InputModel, String>>[
         DoughnutSeries<InputModel, String>(
-              selectionBehavior: SelectionBehavior(enable: true),
-                 onPointTap: (ChartPointDetails details) {    
-                  if (haveRecords){
-                  final formattedAmount = NumberFormat.currency(locale: sharedPrefs.getLocale().toString()).format( (details.dataPoints![details.pointIndex!].y! * totalAmount) / 100  );
-                  // final Text = "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount;
-                  customToast(context, "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount);
-                  }  
-
-                 },
+            selectionBehavior: SelectionBehavior(enable: true),
+            onPointTap: (ChartPointDetails details) {
+              if (haveRecords) {
+                final formattedAmount = NumberFormat.currency(
+                        locale: sharedPrefs.getLocale().toString())
+                    .format((details.dataPoints![details.pointIndex!].y! *
+                            totalAmount) /
+                        100);
+                // final Text = "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount;
+                customToast(
+                    context,
+                    "Tiền " +
+                        details.dataPoints![details.pointIndex!].x! +
+                        " " +
+                        formattedAmount);
+              }
+            },
             startAngle: 90,
             endAngle: 90,
             animationDuration: animationDuration,
@@ -75,8 +78,10 @@ class ChartPie extends StatelessWidget {
             enableTooltip: haveRecords,
             dataSource: this.transactionsSorted,
             pointColorMapper: (InputModel data, _) => data.color,
-            xValueMapper: (InputModel data, _) => getTranslated(context, data.category!)?? data.category,
-            yValueMapper: (InputModel data, _)=> (data.amount! / totalAmount) * 100 ,
+            xValueMapper: (InputModel data, _) =>
+                getTranslated(context, data.category!) ?? data.category,
+            yValueMapper: (InputModel data, _) =>
+                (data.amount! / totalAmount) * 100,
             dataLabelSettings: DataLabelSettings(
               showZeroValue: true,
               useSeriesColor: true,

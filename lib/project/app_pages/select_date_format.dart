@@ -42,49 +42,47 @@ class FormatDate extends StatelessWidget {
               )
             ]),
         body: ChangeNotifierProvider<OnDateFormatSelected>(
-          create: (context) => OnDateFormatSelected(),
-          builder: (context, widget) => Container(
-            color: white,
-            child:  ListView.builder(
-              itemCount: dateFormats.length,
-              itemBuilder: (context, int) => GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () {
-                      context
-                          .read<OnDateFormatSelected>()
-                          .onDateFormatSelected(dateFormats[int]);
-                    },
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.all(
-                                27.h),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '${DateFormat(dateFormats[int]).format(now)}',
-                                  style: TextStyle(
-                                      fontSize: 19.sp,
+            create: (context) => OnDateFormatSelected(),
+            builder: (context, widget) => Container(
+                  color: white,
+                  child: ListView.builder(
+                      itemCount: dateFormats.length,
+                      itemBuilder: (context, int) => GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onTap: () {
+                              context
+                                  .read<OnDateFormatSelected>()
+                                  .onDateFormatSelected(dateFormats[int]);
+                            },
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.all(27.h),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          '${DateFormat(dateFormats[int]).format(now)}',
+                                          style: TextStyle(
+                                            fontSize: 19.sp,
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        context
+                                                    .watch<
+                                                        OnDateFormatSelected>()
+                                                    .dateFormat ==
+                                                dateFormats[int]
+                                            ? Icon(Icons.check_circle,
+                                                size: 25.sp, color: blue3)
+                                            : SizedBox()
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Spacer(),
-                                context
-                                            .watch<OnDateFormatSelected>()
-                                            .dateFormat ==
-                                        dateFormats[int]
-                                    ? Icon(Icons.check_circle,
-                                        size: 25.sp, color: blue3)
-                                    : SizedBox()
-                              ],
-                            ),
-                          ),
-                          Divider(height: 0, thickness: 0.25, color: grey)
-                        ]),
-                  )),
-
-          )
-         
-        ));
+                                  Divider(
+                                      height: 0, thickness: 0.25, color: grey)
+                                ]),
+                          )),
+                )));
   }
 }

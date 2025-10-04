@@ -33,9 +33,8 @@ class _ExpenseCategoryState extends State<ExpenseCategory> {
 }
 
 class ExpenseCategoryBody extends StatefulWidget {
-  final BuildContext? contextExEdit,contextEx;
-  ExpenseCategoryBody(
-      {this.contextExEdit, this.contextEx});
+  final BuildContext? contextExEdit, contextEx;
+  ExpenseCategoryBody({this.contextExEdit, this.contextEx});
 
   @override
   _ExpenseCategoryBodyState createState() => _ExpenseCategoryBodyState();
@@ -44,8 +43,10 @@ class ExpenseCategoryBody extends StatefulWidget {
 class _ExpenseCategoryBodyState extends State<ExpenseCategoryBody> {
   @override
   Widget build(BuildContext context) {
-    var exItemsLists = widget.contextExEdit == null ?
-        Provider.of<ChangeExpenseItem>(widget.contextEx!).exItemsLists : Provider.of<ChangeExpenseItemEdit>(widget.contextExEdit!).exItemsLists;
+    var exItemsLists = widget.contextExEdit == null
+        ? Provider.of<ChangeExpenseItem>(widget.contextEx!).exItemsLists
+        : Provider.of<ChangeExpenseItemEdit>(widget.contextExEdit!)
+            .exItemsLists;
     return SingleChildScrollView(
         child: Padding(
       padding: EdgeInsets.only(left: 10.w, right: 10.w, bottom: 20.h),
@@ -58,7 +59,9 @@ class _ExpenseCategoryBodyState extends State<ExpenseCategoryBody> {
               itemBuilder: (context, int) {
                 return Padding(
                   padding: EdgeInsets.only(top: 20.h),
-                  child: CategoryContainer( contextEx: widget.contextEx , contextExEdit: widget.contextExEdit,
+                  child: CategoryContainer(
+                      contextEx: widget.contextEx,
+                      contextExEdit: widget.contextExEdit,
                       itemsList: exItemsLists[int]),
                 );
               }),
@@ -80,10 +83,10 @@ class _ExpenseCategoryBodyState extends State<ExpenseCategoryBody> {
 // }
 
 class CategoryContainer extends StatefulWidget {
-  final BuildContext? contextEx,contextExEdit;
+  final BuildContext? contextEx, contextExEdit;
   final List<CategoryItem> itemsList;
   const CategoryContainer(
-  { this.contextEx, this.contextExEdit,  required this.itemsList});
+      {this.contextEx, this.contextExEdit, required this.itemsList});
   @override
   _CategoryContainerState createState() => _CategoryContainerState();
 }
@@ -93,10 +96,10 @@ class _CategoryContainerState extends State<CategoryContainer> {
   Widget build(BuildContext context) {
     if (widget.itemsList.length < 2) {
       return ParentCategory(
-        contextEx:  widget.contextEx,
+        contextEx: widget.contextEx,
         contextExEdit: widget.contextExEdit,
         noChildren: true,
-        parentCategory:  widget.itemsList[0],
+        parentCategory: widget.itemsList[0],
       );
     }
     return Container(
@@ -106,24 +109,30 @@ class _CategoryContainerState extends State<CategoryContainer> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         ParentCategory(
-          contextEx:  widget.contextEx,
-        contextExEdit: widget.contextExEdit,
-        noChildren:  false,
-          parentCategory:  widget.itemsList[0],
+          contextEx: widget.contextEx,
+          contextExEdit: widget.contextExEdit,
+          noChildren: false,
+          parentCategory: widget.itemsList[0],
         ),
-        CategoryItems(contextEx: widget.contextEx,         contextExEdit: widget.contextExEdit,
-            categoryItemChildren:  widget.itemsList.sublist(1),parentItem: widget.itemsList[0]),
+        CategoryItems(
+            contextEx: widget.contextEx,
+            contextExEdit: widget.contextExEdit,
+            categoryItemChildren: widget.itemsList.sublist(1),
+            parentItem: widget.itemsList[0]),
       ]),
     );
   }
 }
 
 class CategoryItems extends StatefulWidget {
-  final BuildContext? contextEx,contextExEdit;
+  final BuildContext? contextEx, contextExEdit;
   final List<CategoryItem> categoryItemChildren;
   final CategoryItem parentItem;
-  const CategoryItems({this.contextEx, this.contextExEdit,
-    required this.categoryItemChildren, required this.parentItem});
+  const CategoryItems(
+      {this.contextEx,
+      this.contextExEdit,
+      required this.categoryItemChildren,
+      required this.parentItem});
   @override
   _CategoryItemsState createState() => _CategoryItemsState();
 }
@@ -143,7 +152,7 @@ class _CategoryItemsState extends State<CategoryItems> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onLongPress:(){
+                  onLongPress: () {
                     if (widget.contextExEdit != null) {
                       Navigator.push(
                           context,
@@ -154,7 +163,7 @@ class _CategoryItemsState extends State<CategoryItems> {
                                   type: 'Expense',
                                   appBarTitle: 'Add Expense Category',
                                   categoryName:
-                                  widget.categoryItemChildren[index].text,
+                                      widget.categoryItemChildren[index].text,
                                   categoryIcon: iconData(
                                       widget.categoryItemChildren[index]),
                                   parentItem: widget.parentItem,
@@ -174,7 +183,7 @@ class _CategoryItemsState extends State<CategoryItems> {
                                   type: 'Expense',
                                   appBarTitle: 'Add Expense Category',
                                   categoryName:
-                                  widget.categoryItemChildren[index].text,
+                                      widget.categoryItemChildren[index].text,
                                   categoryIcon: iconData(
                                       widget.categoryItemChildren[index]),
                                   parentItem: widget.parentItem,
@@ -187,7 +196,7 @@ class _CategoryItemsState extends State<CategoryItems> {
                     }
                   },
                   child: Padding(
-                    padding:  EdgeInsets.symmetric(vertical: 15.h),
+                    padding: EdgeInsets.symmetric(vertical: 15.h),
                     child: CircleAvatar(
                         radius: 24.r,
                         backgroundColor: Color.fromRGBO(215, 223, 231, 1),
@@ -220,12 +229,12 @@ class ParentCategory extends StatefulWidget {
   final BuildContext? contextEx, contextExEdit;
   final bool noChildren;
   final CategoryItem parentCategory;
-  ParentCategory(
-  { this.contextEx,
-  this.contextExEdit,
+  ParentCategory({
+    this.contextEx,
+    this.contextExEdit,
     required this.noChildren,
-    required this.parentCategory,}
-  );
+    required this.parentCategory,
+  });
   @override
   _ParentCategoryState createState() => _ParentCategoryState();
 }
@@ -235,7 +244,7 @@ class _ParentCategoryState extends State<ParentCategory> {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onLongPress:(){
+      onLongPress: () {
         if (widget.contextExEdit != null) {
           Navigator.push(
               context,
@@ -256,7 +265,7 @@ class _ParentCategoryState extends State<ParentCategory> {
               context,
               MaterialPageRoute(
                   builder: (context) => AddCategory(
-                    contextEx: widget.contextEx,
+                      contextEx: widget.contextEx,
                       contextExEdit: widget.contextExEdit,
                       type: 'Expense',
                       appBarTitle: 'Add Expense Category',
@@ -272,13 +281,10 @@ class _ParentCategoryState extends State<ParentCategory> {
       child: Container(
         decoration: BoxDecoration(
           color: Color.fromRGBO(222, 174, 112, 1),
-borderRadius: widget.noChildren
-    ? BorderRadius.circular(40.0)  // Assuming 40 is the radius value
-    : BorderRadius.vertical(
-        top: Radius.circular(40.0), 
-        bottom: Radius.zero
-      ),
-
+          borderRadius: widget.noChildren
+              ? BorderRadius.circular(40.0) // Assuming 40 is the radius value
+              : BorderRadius.vertical(
+                  top: Radius.circular(40.0), bottom: Radius.zero),
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 15.w),

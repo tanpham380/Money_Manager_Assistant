@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_pages/analysis.dart';
 import 'app_pages/input.dart';
 import 'classes/constants.dart';
-import 'database_management/sqflite_services.dart';
 import 'localization/methods.dart';
 import 'app_pages/calendar.dart';
 import 'app_pages/others.dart';
@@ -15,20 +14,22 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
-  List<Widget> myBody = [
+  
+  // Sử dụng final để cải thiện hiệu năng
+  // Các trang này sẽ được giữ trạng thái bởi IndexedStack
+  final List<Widget> _pages = [
     AddInput(),
     Analysis(),
     Calendar(),
     Other(),
   ];
-  BottomNavigationBarItem bottomNavigationBarItem(
+
+  BottomNavigationBarItem _bottomNavigationBarItem(
           IconData iconData, String label) =>
       BottomNavigationBarItem(
         icon: Padding(
           padding: EdgeInsets.only(bottom: 0.h),
-          child: Icon(
-            iconData,
-          ),
+          child: Icon(iconData),
         ),
         label: getTranslated(context, label),
       );
@@ -36,25 +37,27 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    DB.init();
-   
+    // DB.init(); // Moved to real_main.dart
   }
 
   @override
   Widget build(BuildContext context) {
-    List<BottomNavigationBarItem> bottomItems = <BottomNavigationBarItem>[
-      bottomNavigationBarItem(Icons.add, 'Input'),
-      bottomNavigationBarItem(Icons.analytics_outlined, 'Analysis'),
-      bottomNavigationBarItem(Icons.calendar_today, 'Calendar'),
-      bottomNavigationBarItem(Icons.account_circle, 'Other'),
+    // Khai báo final vì list này không thay đổi trong suốt quá trình build
+    final List<BottomNavigationBarItem> bottomItems = <BottomNavigationBarItem>[
+      _bottomNavigationBarItem(Icons.add, 'Input'),
+      _bottomNavigationBarItem(Icons.analytics_outlined, 'Analysis'),
+      _bottomNavigationBarItem(Icons.calendar_today, 'Calendar'),
+      _bottomNavigationBarItem(Icons.account_circle, 'Other'),
     ];
 
     return Scaffold(
         bottomNavigationBar: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: grey,
+                color: Colors.black12,
+                blurRadius: 10,
+                spreadRadius: 2,
               ),
             ],
           ),
@@ -75,6 +78,9 @@ class _HomeState extends State<Home> {
             },
           ),
         ),
-        body: myBody[_selectedIndex]);
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: _pages,
+        ));
   }
 }

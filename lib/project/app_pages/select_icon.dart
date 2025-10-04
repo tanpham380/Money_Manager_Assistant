@@ -7,7 +7,6 @@ import '../classes/category_item.dart';
 import '../classes/constants.dart';
 import '../localization/methods.dart';
 
-
 class SelectIcon extends StatelessWidget {
   final String type;
   SelectIcon(this.type);
@@ -33,8 +32,7 @@ class SelectIcon extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: () {
-                    Navigator.pop(context, iconData(icons[index])
-                        );
+                    Navigator.pop(context, iconData(icons[index]));
                   },
                   iconSize: 60.sp,
                   icon: CircleAvatar(

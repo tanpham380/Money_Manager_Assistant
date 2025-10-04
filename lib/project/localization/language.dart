@@ -19,7 +19,6 @@ class Language {
   static List<Language> languageList = [
     Language(
         1, "🇺🇸", "English", "en", 'US', '\$', 'USD', 'United States Dollar'),
-
     Language(
         12, "🇻🇳", "Tiếng Việt", "vi", 'VN', '₫', 'VND', 'Vietnamese Dong'),
   ];

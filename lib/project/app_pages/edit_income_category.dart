@@ -15,17 +15,21 @@ class EditIncomeCategory extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<ChangeIncomeItemEdit>(
         create: (context) => ChangeIncomeItemEdit(),
-    child: Builder(
-        builder: (contextEdit) => Scaffold(
-        backgroundColor: blue1,
-        appBar: EditCategoryAppBar(
-          AddCategory(
-            contextIn: this.buildContext,
-            contextInEdit: contextEdit  ,
-              type: 'Income',
-              appBarTitle: getTranslated(context, 'Add Income Category')!,
-              description: ''),
-        ),
-        body: IncomeCategoryBody( context: this.buildContext, contextEdit: contextEdit,editIncomeCategory: true))));
+        child: Builder(
+            builder: (contextEdit) => Scaffold(
+                backgroundColor: blue1,
+                appBar: EditCategoryAppBar(
+                  AddCategory(
+                      contextIn: this.buildContext,
+                      contextInEdit: contextEdit,
+                      type: 'Income',
+                      appBarTitle:
+                          getTranslated(context, 'Add Income Category')!,
+                      description: ''),
+                ),
+                body: IncomeCategoryBody(
+                    context: this.buildContext,
+                    contextEdit: contextEdit,
+                    editIncomeCategory: true))));
   }
 }

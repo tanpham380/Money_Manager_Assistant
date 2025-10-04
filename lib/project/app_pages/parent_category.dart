@@ -10,7 +10,8 @@ import '../localization/methods.dart';
 class ParentCategoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<CategoryItem> parentCategories = sharedPrefs.getAllExpenseItemsLists()
+    List<CategoryItem> parentCategories = sharedPrefs
+        .getAllExpenseItemsLists()
         .map((item) => CategoryItem(
             item[0].iconCodePoint,
             item[0].iconFontPackage,
@@ -29,9 +30,7 @@ class ParentCategoryList extends StatelessWidget {
           return GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () {
-                Navigator.pop(
-                    context,
-                    parentCategories[int]);
+                Navigator.pop(context, parentCategories[int]);
               },
               child: Column(
                 children: [
@@ -53,7 +52,8 @@ class ParentCategoryList extends StatelessWidget {
                         ),
                         Expanded(
                           child: Text(
-                            getTranslated(context, parentCategories[int].text) ??
+                            getTranslated(
+                                    context, parentCategories[int].text) ??
                                 parentCategories[int].text,
                             style: TextStyle(fontSize: 22.sp),
                             overflow: TextOverflow.ellipsis,

@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
 
 /// Chart import
-import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../classes/alert_dialog.dart';
 import '../classes/app_bar.dart';
@@ -530,52 +529,76 @@ class _ReportBodyState extends State<ReportBody> {
                                                         color: Color.fromRGBO(
                                                             255, 183, 121, 1)),
                                                   ],
-child: Padding(
-  padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 7.h),
-  child: Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Expanded( // Sử dụng Expanded thay vì Flexible
-        child: RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: DateFormat(sharedPrefs.dateFormat)
-                    .format(DateFormat('dd/MM/yyyy')
-                    .parse(selectedTransactions[int].date!)),
-                style: TextStyle(
-                  fontSize: 17.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              TextSpan(text: '\n'),
-              TextSpan(
-                text: selectedTransactions[int].description!,
-                style: TextStyle(
-                  fontSize: 17.sp,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      Spacer(), // Đẩy phần tử tiếp theo về phía cuối dòng
-      Text(
-        '${format(selectedTransactions[int].amount!)} $currency',
-        style: TextStyle(fontSize: 18.5.sp),
-      ),
-      SizedBox(width: 5.w), // Khoảng cách giữa số tiền và biểu tượng ">"
-      Icon(
-        Icons.arrow_forward_ios,
-        size: 17.sp,
-      ),
-    ],
-  ),
-),
-
-
+                                                  child: Padding(
+                                                    padding: EdgeInsets.only(
+                                                        left: 15.w,
+                                                        right: 15.w,
+                                                        top: 7.h),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Expanded(
+                                                          // Sử dụng Expanded thay vì Flexible
+                                                          child: RichText(
+                                                            text: TextSpan(
+                                                              children: [
+                                                                TextSpan(
+                                                                  text: DateFormat(
+                                                                          sharedPrefs
+                                                                              .dateFormat)
+                                                                      .format(DateFormat(
+                                                                              'dd/MM/yyyy')
+                                                                          .parse(
+                                                                              selectedTransactions[int].date!)),
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        17.sp,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: Colors
+                                                                        .black,
+                                                                  ),
+                                                                ),
+                                                                TextSpan(
+                                                                    text: '\n'),
+                                                                TextSpan(
+                                                                  text: selectedTransactions[
+                                                                          int]
+                                                                      .description!,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        17.sp,
+                                                                    color: Colors
+                                                                        .black87,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Spacer(), // Đẩy phần tử tiếp theo về phía cuối dòng
+                                                        Text(
+                                                          '${format(selectedTransactions[int].amount!)} $currency',
+                                                          style: TextStyle(
+                                                              fontSize:
+                                                                  18.5.sp),
+                                                        ),
+                                                        SizedBox(
+                                                            width: 5
+                                                                .w), // Khoảng cách giữa số tiền và biểu tượng ">"
+                                                        Icon(
+                                                          Icons
+                                                              .arrow_forward_ios,
+                                                          size: 17.sp,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
                                                 ),
                                               );
                                             }),
@@ -590,71 +613,6 @@ child: Padding(
               });
         });
   }
-}
-
-/// Returns the list of spline area series with horizontal gradient.
-List<CartesianSeries<dynamic, dynamic>> _getGradientAreaSeries(
-    String type, List<MonthAmount> monthAmountList) {
-  // final List<Color> color = <Color>[];
-  // color.add(Colors.blue[200]!);
-  // color.add(Colors.orange[200]!);
-
-  // final List<double> stops = <double>[];
-  // stops.add(0.2);
-  // stops.add(0.7);
-
-  return <SplineAreaSeries<MonthAmount, String>>[
-    SplineAreaSeries<MonthAmount, String>(
-      /// To set the gradient colors for border here.
-      borderGradient: type == 'Income'
-          ? const LinearGradient(colors: <Color>[
-              Color.fromRGBO(56, 135, 5, 1),
-              Color.fromRGBO(159, 196, 135, 1)
-            ], stops: <double>[
-              0.2,
-              0.9
-            ])
-          : const LinearGradient(colors: <Color>[
-              Color.fromRGBO(212, 126, 166, 1),
-              Color.fromRGBO(222, 187, 104, 1)
-            ], stops: <double>[
-              0.2,
-              0.9
-            ]),
-
-      /// To set the gradient colors for series.
-      gradient: type == 'Income'
-          ? const LinearGradient(colors: <Color>[
-              Color.fromRGBO(101, 181, 60, 1),
-              Color.fromRGBO(139, 194, 72, 1),
-              Color.fromRGBO(203, 241, 119, 0.9)
-            ], stops: <double>[
-              0.2,
-              0.5,
-              0.9
-            ])
-          : const LinearGradient(colors: <Color>[
-              Color.fromRGBO(224, 139, 207, 0.9),
-              Color.fromRGBO(255, 232, 149, 0.9)
-            ], stops: <double>[
-              0.2,
-              0.9
-            ]),
-      borderWidth: 2.5.w,
-      markerSettings: MarkerSettings(
-        isVisible: true,
-        height: 8.h,
-        width: 8.h,
-        borderColor:
-            type == 'Income' ? Color.fromRGBO(161, 171, 35, 1) : Colors.white,
-        borderWidth: 2.w,
-      ),
-      borderDrawMode: BorderDrawMode.all,
-      dataSource: monthAmountList,
-      xValueMapper: (MonthAmount monthAmount, _) => monthAmount.month,
-      yValueMapper: (MonthAmount monthAmount, _) => monthAmount.amount,
-    )
-  ];
 }
 
 class MonthAmount {

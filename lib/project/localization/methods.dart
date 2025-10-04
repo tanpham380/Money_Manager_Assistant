@@ -14,7 +14,8 @@ Locale locale(String languageCode) {
 }
 
 String? getTranslated(BuildContext context, String key) {
-  return AppLocalization.of(context)?.translate(key);
+  return AppLocalization.of(context)?.translate(key) ??
+      key; // Fallback to key if not found
 }
 
 Map<String, String>? localizedMap(BuildContext context) =>

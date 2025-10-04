@@ -10,8 +10,8 @@ import 'constants.dart';
 class CustomKeyboard extends StatelessWidget {
   CustomKeyboard(
       {required this.panelController,
-       this.mainFocus,
-       this.nextFocus,
+      this.mainFocus,
+      this.nextFocus,
       required this.onTextInput,
       required this.onBackspace,
       required this.page});
@@ -69,7 +69,7 @@ class CustomKeyboard extends StatelessWidget {
                       },
                       child: SizedBox(
                         height: 35.h,
-                        width:60.w,
+                        width: 60.w,
                         child: Icon(Icons.keyboard_arrow_down,
                             size: 25.sp, color: Colors.blueGrey),
                       ),

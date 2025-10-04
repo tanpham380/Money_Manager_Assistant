@@ -108,7 +108,7 @@ class _CalendarBodyState extends State<CalendarBody> {
                   SwipeAction(
                       title: getTranslated(context, 'Delete') ?? 'Delete',
                       //setState makes handler experience lagging
-                      onTap: (CompletionHandler handler)  {
+                      onTap: (CompletionHandler handler) {
                         Platform.isIOS
                             ? iosDialog(
                                 context,
@@ -337,8 +337,7 @@ class _CalendarBodyState extends State<CalendarBody> {
                 formatButtonDecoration: BoxDecoration(
                     boxShadow: [BoxShadow()],
                     color: blue2,
-                    borderRadius: BorderRadius.circular(25.r)
-                    ),
+                    borderRadius: BorderRadius.circular(25.r)),
               ),
               calendarBuilders: CalendarBuilders(
                 selectedBuilder: (context, date, _) {
@@ -375,6 +374,7 @@ class _CalendarBodyState extends State<CalendarBody> {
                       child: _buildEventsMarker(date, events),
                     );
                   }
+                  return null;
                 },
               ),
 
@@ -394,10 +394,7 @@ class _CalendarBodyState extends State<CalendarBody> {
             ),
             SizedBox(height: 8.0.h),
             Expanded(
-              child: 
-              
-              
-              ValueListenableBuilder<List<InputModel>>(
+              child: ValueListenableBuilder<List<InputModel>>(
                 valueListenable: _selectedEvents,
                 builder: (context, value, _) {
                   return Column(children: [
@@ -406,7 +403,6 @@ class _CalendarBodyState extends State<CalendarBody> {
                   ]);
                 },
               ),
-              
             )
           ]);
         });

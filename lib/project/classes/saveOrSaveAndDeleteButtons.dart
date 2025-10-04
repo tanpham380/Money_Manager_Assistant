@@ -5,7 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:provider/provider.dart';
 
-import '../app_pages/input.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
@@ -14,30 +13,35 @@ import 'category_item.dart';
 import 'constants.dart';
 import 'custom_toast.dart';
 
-class SaveButton extends StatefulWidget {
-  final bool saveInput;
+class SaveButton extends StatelessWidget {
+  final VoidCallback? onSave;
   final Function? saveCategoryFunc;
-  final bool? saveFunction;
-  const SaveButton(this.saveInput, this.saveCategoryFunc, this.saveFunction);
+  final bool saveInput;
 
-  @override
-  _SaveButtonState createState() => _SaveButtonState();
-}
+  const SaveButton({
+    Key? key,
+    this.onSave,
+    this.saveCategoryFunc,
+    this.saveInput = false,
+  }) : super(key: key);
 
-class _SaveButtonState extends State<SaveButton> {
   @override
   Widget build(BuildContext context) {
     return Center(
       child: ElevatedButton.icon(
         onPressed: () {
-          if (widget.saveInput) {
-            saveInputFunc(context, widget.saveFunction!);
-          } else {
-            widget.saveCategoryFunc!();
+          if (saveInput && onSave != null) {
+            onSave!();
+          } else if (saveCategoryFunc != null) {
+            saveCategoryFunc!();
           }
         },
         style: ElevatedButton.styleFrom(
-          foregroundColor: white, backgroundColor: Color.fromRGBO(236, 158, 66, 1), padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 20.w), disabledForegroundColor: grey.withOpacity(0.38), disabledBackgroundColor: grey.withOpacity(0.12),
+          foregroundColor: white,
+          backgroundColor: const Color.fromRGBO(236, 158, 66, 1),
+          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 20.w),
+          disabledForegroundColor: grey.withOpacity(0.38),
+          disabledBackgroundColor: grey.withOpacity(0.12),
           elevation: 10,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18.0.r),
@@ -59,12 +63,18 @@ class _SaveButtonState extends State<SaveButton> {
 class SaveAndDeleteButton extends StatelessWidget {
   final bool saveAndDeleteInput;
   final Function? saveCategory;
+  final VoidCallback? onSave;
+  final VoidCallback? onDelete;
   final String? parentExpenseItem, categoryName;
   final BuildContext? contextEx, contextExEdit, contextIn, contextInEdit;
   final GlobalKey<FormState>? formKey;
+  
   const SaveAndDeleteButton({
+    Key? key,
     required this.saveAndDeleteInput,
     this.saveCategory,
+    this.onSave,
+    this.onDelete,
     this.categoryName,
     this.parentExpenseItem,
     this.contextEx,
@@ -72,7 +82,7 @@ class SaveAndDeleteButton extends StatelessWidget {
     this.contextIn,
     this.contextInEdit,
     this.formKey,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -81,24 +91,26 @@ class SaveAndDeleteButton extends StatelessWidget {
       children: [
         ElevatedButton.icon(
             onPressed: () {
-              if (this.saveAndDeleteInput) {
-                deleteInputFunction(
-                  context,
-                );
+              if (saveAndDeleteInput && onDelete != null) {
+                onDelete!();
               } else {
                 deleteCategoryFunction(
                   context: context,
-                  categoryName: this.categoryName!,
-                  parentExpenseItem: this.parentExpenseItem,
-                  contextEx: this.contextEx,
-                  contextExEdit: this.contextExEdit,
-                  contextIn: this.contextIn,
-                  contextInEdit: this.contextInEdit,
+                  categoryName: categoryName!,
+                  parentExpenseItem: parentExpenseItem,
+                  contextEx: contextEx,
+                  contextExEdit: contextExEdit,
+                  contextIn: contextIn,
+                  contextInEdit: contextInEdit,
                 );
               }
             },
             style: ElevatedButton.styleFrom(
-                foregroundColor: red, backgroundColor: white, padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 20.w), disabledForegroundColor: grey.withOpacity(0.38), disabledBackgroundColor: grey.withOpacity(0.12),
+                foregroundColor: red,
+                backgroundColor: white,
+                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 20.w),
+                disabledForegroundColor: grey.withOpacity(0.38),
+                disabledBackgroundColor: grey.withOpacity(0.12),
                 side: BorderSide(
                   color: red,
                   width: 2.h,
@@ -115,7 +127,11 @@ class SaveAndDeleteButton extends StatelessWidget {
               getTranslated(context, 'Delete')!,
               style: TextStyle(fontSize: 25.sp),
             )),
-        SaveButton(saveAndDeleteInput, this.saveCategory, false),
+        SaveButton(
+          saveInput: saveAndDeleteInput,
+          onSave: onSave,
+          saveCategoryFunc: saveCategory,
+        ),
       ],
     );
   }
@@ -159,13 +175,18 @@ Future<void> deleteCategoryFunction(
           .getAllExpenseItems();
     }
     Navigator.pop(context);
-    customToast(context,'Category has been deleted');
+    customToast(context, 'Category has been deleted');
   }
 
   Platform.isIOS
       ? await iosDialog(
           context,
-              'Are you sure you want to delete this category?', 'Delete',
+          'Are you sure you want to delete this category?',
+          'Delete',
           onDeletion)
-      : await androidDialog(context,  'Are you sure you want to delete this category?', 'Delete',onDeletion);
+      : await androidDialog(
+          context,
+          'Are you sure you want to delete this category?',
+          'Delete',
+          onDeletion);
 }

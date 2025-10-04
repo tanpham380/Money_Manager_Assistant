@@ -30,9 +30,7 @@ class SharedPrefs {
   static SharedPreferences? _sharedPrefs;
 
   sharePrefsInit() async {
-    if (_sharedPrefs == null) {
-      _sharedPrefs = await SharedPreferences.getInstance();
-    }
+    _sharedPrefs ??= await SharedPreferences.getInstance();
   }
 
   String get selectedDate => _sharedPrefs!.getString('selectedDate')!;
@@ -53,7 +51,6 @@ class SharedPrefs {
   set dateFormat(String dateFormat) =>
       _sharedPrefs!.setString('dateFormat', dateFormat);
 
-
   bool get isPasscodeOn => _sharedPrefs!.getBool('isPasscodeOn') ?? false;
 
   set isPasscodeOn(bool value) => _sharedPrefs!.setBool('isPasscodeOn', value);
@@ -63,6 +60,22 @@ class SharedPrefs {
 
   set passcodeScreenLock(String value) =>
       _sharedPrefs!.setString('passcodeScreenLock', value);
+
+  // Daily Reminder Settings
+  bool get isReminderEnabled =>
+      _sharedPrefs!.getBool('isReminderEnabled') ?? false;
+
+  set isReminderEnabled(bool value) =>
+      _sharedPrefs!.setBool('isReminderEnabled', value);
+
+  int get reminderHour => _sharedPrefs!.getInt('reminderHour') ?? 21;
+
+  set reminderHour(int value) => _sharedPrefs!.setInt('reminderHour', value);
+
+  int get reminderMinute => _sharedPrefs!.getInt('reminderMinute') ?? 0;
+
+  set reminderMinute(int value) =>
+      _sharedPrefs!.setInt('reminderMinute', value);
 
   List<String> get parentExpenseItemNames =>
       _sharedPrefs!.getStringList('parent expense item names')!;
@@ -78,7 +91,7 @@ class SharedPrefs {
   }
 
   Locale getLocale() {
-    String languageCode = _sharedPrefs!.getString('languageCode') ?? "en";
+    String languageCode = _sharedPrefs!.getString('languageCode') ?? 'en';
     return locale(languageCode);
   }
 
@@ -156,6 +169,7 @@ class SharedPrefs {
         categoryItem(MdiIcons.food, 'Food & Beverages'),
         categoryItem(MdiIcons.foodDrumstick, 'Food'),
         categoryItem(Icons.local_bar, 'Beverages'),
+        categoryItem(Icons.coffee, 'Coffee'),
         categoryItem(Icons.add_shopping_cart, 'Daily Necessities'),
       ]);
 

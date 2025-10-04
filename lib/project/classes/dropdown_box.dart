@@ -10,24 +10,21 @@ import '../localization/methods.dart';
 import '../provider.dart';
 import 'constants.dart';
 
-
-
 class DropDownBox extends StatelessWidget {
   final bool forAnalysis;
   final String selectedDate;
   const DropDownBox(this.forAnalysis, this.selectedDate);
   @override
   Widget build(BuildContext context) {
-    return  DecoratedBox(
+    return DecoratedBox(
       decoration: ShapeDecoration(
         shadows: [BoxShadow()],
         color: blue2,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(15.r))
-            ),
+            borderRadius: BorderRadius.all(Radius.circular(15.r))),
       ),
       child: SizedBox(
-        height:  35.h,
+        height: 35.h,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           child: DropdownButtonHideUnderline(
@@ -41,28 +38,23 @@ class DropDownBox extends StatelessWidget {
               ),
               onChanged: (value) {
                 if (this.forAnalysis) {
-                  context
-                      .read<ChangeSelectedDate>()
-                      .changeSelectedAnalysisDate(
+                  context.read<ChangeSelectedDate>().changeSelectedAnalysisDate(
                       newSelectedDate: value.toString());
                   sharedPrefs.selectedDate = value.toString();
                 } else {
-                  context
-                      .read<ChangeSelectedDate>()
-                      .changeSelectedReportDate(
+                  context.read<ChangeSelectedDate>().changeSelectedReportDate(
                       newSelectedDate: value.toString());
                 }
               },
               items: timeline
                   .map((time) => DropdownMenuItem(
-                value: time,
-                child: Text(
-                  getTranslated(context, time)!,
-                  style: TextStyle(
-                      fontSize: 18.5.sp),
-                  textAlign: TextAlign.center,
-                ),
-              ))
+                        value: time,
+                        child: Text(
+                          getTranslated(context, time)!,
+                          style: TextStyle(fontSize: 18.5.sp),
+                          textAlign: TextAlign.center,
+                        ),
+                      ))
                   .toList(),
             ),
           ),
@@ -71,5 +63,3 @@ class DropDownBox extends StatelessWidget {
     );
   }
 }
-
-

@@ -9,8 +9,8 @@ import 'database_management/sqflite_services.dart';
 class ChangeCategoryA with ChangeNotifier {
   CategoryItem? categoryItemA;
 
-  void changeCategory(CategoryItem? newItem) {
-    categoryItemA = newItem ?? categoryItemA;
+  void changeCategory(CategoryItem newItem) {
+    categoryItemA = newItem;
     notifyListeners();
   }
 }

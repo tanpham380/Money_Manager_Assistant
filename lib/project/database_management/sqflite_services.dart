@@ -30,9 +30,9 @@ abstract class DB {
   //why in Git uses Future<int>?
   // static Future<List<Map<String, dynamic>>> query() async =>
   //     await _db.query('input');
- static Future<List<Map<String, dynamic>>> query() async =>
+  static Future<List<Map<String, dynamic>>> query() async =>
       await _db!.query('input');
-      
+
   static Future<List<InputModel>> inputModelList() async {
     List<Map<String, dynamic>> inputList = await _db!.query('input');
     return inputList.map((item) => InputModel.fromMap(item)).toList();
@@ -54,6 +54,5 @@ abstract class DB {
   static Future<int> delete(int id) async =>
       await _db!.delete('input', where: 'id = ?', whereArgs: [id]);
 
-  static Future<int> deleteAll () async =>
-      await _db!.delete('input');
+  static Future<int> deleteAll() async => await _db!.delete('input');
 }

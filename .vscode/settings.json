@@ -1,0 +1,11 @@
+{
+  "dart.flutterSdkPath": ".fvm/flutter_sdk",
+  // (tuỳ chọn thêm)
+  "dart.runPubGetOnPubspecChanges": "never",
+  "files.watcherExclude": {
+    "**/.fvm": true
+  },
+  "search.exclude": {
+    "**/.fvm": true
+  }
+}

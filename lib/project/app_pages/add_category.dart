@@ -174,6 +174,7 @@ class _CategoryNameState extends State<CategoryName> {
                 return getTranslated(context, 'Category already exists');
               }
             }
+            return null;
           },
           decoration: InputDecoration(
               border: InputBorder.none,
@@ -533,7 +534,7 @@ class _SaveState extends State<Save> {
     }
 
     if (widget.categoryName == null && widget.parentItem == null) {
-      return SaveButton(false, saveCategoryFunction, null);
+      return SaveButton();
     } else {
       return SaveAndDeleteButton(
           saveAndDeleteInput: false,

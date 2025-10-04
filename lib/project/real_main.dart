@@ -2,31 +2,60 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app_lock/flutter_app_lock.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:money_assistant/project/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'classes/lockscreen.dart';
 import 'database_management/shared_preferences_services.dart';
+import 'database_management/sqflite_services.dart';
 import 'localization/app_localization.dart';
 import 'home.dart';
 
+// Global key để navigate từ bất cứ đâu
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void realMain() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
+
+  // Set up callback để xử lý khi user tap notification
+  NotificationService.onNotificationTap = (String? payload) {
+    if (payload == 'add_input') {
+      // Navigate đến tab Input (index 0)
+      if (navigatorKey.currentContext != null) {
+        // Đợi một chút để đảm bảo context đã sẵn sàng
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (navigatorKey.currentState != null) {
+            // Đưa về màn hình Home tab Input
+            navigatorKey.currentState!.popUntil((route) => route.isFirst);
+          }
+        });
+      }
+    }
+  };
   await sharedPrefs.sharePrefsInit();
+  await DB.init(); // Initialize database early
   await _checkStoragePermission();
   sharedPrefs.setItems(setCategoriesToDefault: false);
   sharedPrefs.getCurrency();
   sharedPrefs.getAllExpenseItemsLists();
 
-  runApp(
-    MyApp()
-      );
-}
- Future<void> _checkStoragePermission() async {
-    var status = await Permission.storage.status;
-    if (!status.isGranted) {
-      await Permission.storage.request();
-
-    } 
+  // Reschedule reminder nếu đã được bật
+  if (sharedPrefs.isReminderEnabled) {
+    await NotificationService.scheduleDailyReminder(
+      sharedPrefs.reminderHour,
+      sharedPrefs.reminderMinute,
+    );
   }
+
+  runApp(MyApp());
+}
+
+Future<void> _checkStoragePermission() async {
+  var status = await Permission.storage.status;
+  if (!status.isGranted) {
+    await Permission.storage.request();
+  }
+}
 
 class MyApp extends StatefulWidget {
   static void setLocale(BuildContext context, Locale newLocale) {
@@ -68,6 +97,7 @@ class _MyAppState extends State<MyApp> {
       return ScreenUtilInit(
         designSize: Size(428.0, 926.0),
         builder: (_, child) => MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Money Save',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
@@ -89,15 +119,16 @@ class _MyAppState extends State<MyApp> {
                 TextSelectionThemeData(cursorColor: Colors.amberAccent),
           ),
           builder: (context, widget) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1)),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(1)),
             child: widget!,
           ),
           // home: Home(),
           home: AppLock(
             builder: (BuildContext context, Object? args) => Home(),
             lockScreenBuilder: (BuildContext context) => MainLockScreen(),
-            enabled:  true,
-            
+            initiallyEnabled: true,
+            initialBackgroundLockLatency: const Duration(seconds: 10),
           ),
           // Home(),
           locale: _locale,
