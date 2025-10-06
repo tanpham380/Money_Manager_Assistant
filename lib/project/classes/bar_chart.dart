@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
+ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:responsive_scaler/responsive_scaler.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../classes/constants.dart';
@@ -34,14 +34,14 @@ class BarChartAnalysis extends StatelessWidget {
           children: [
             Icon(
               Icons.bar_chart,
-              size: 64.sp,
+              size: scale(64),
               color: Colors.grey[400],
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: scale(16)),
             Text(
               getTranslated(context, 'There is no data') ?? 'Không có dữ liệu',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: scale(16),
                 color: Colors.grey[600],
               ),
             ),
@@ -56,7 +56,7 @@ class BarChartAnalysis extends StatelessWidget {
         text: getTranslated(context, type == 'Income' ? 'Income by Category' : 'Expense by Category') ??
             (type == 'Income' ? 'Thu nhập theo danh mục' : 'Chi tiêu theo danh mục'),
         textStyle: TextStyle(
-          fontSize: 16.sp,
+          fontSize: scale(16),
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -73,14 +73,14 @@ class BarChartAnalysis extends StatelessWidget {
       
       // Axes
       primaryXAxis: CategoryAxis(
-        labelStyle: TextStyle(fontSize: 11.sp),
+        labelStyle: TextStyle(fontSize: scale(11)),
         labelRotation: -45,
         majorGridLines: const MajorGridLines(width: 0),
       ),
       
       primaryYAxis: NumericAxis(
         labelFormat: '{value}',
-        labelStyle: TextStyle(fontSize: 11.sp),
+        labelStyle: TextStyle(fontSize: scale(11)),
         numberFormat: NumberFormat.compact(),
       ),
       
@@ -116,12 +116,12 @@ class BarChartAnalysis extends StatelessWidget {
           // Data labels
           dataLabelSettings: DataLabelSettings(
             isVisible: false,
-            textStyle: TextStyle(fontSize: 10.sp),
+            textStyle: TextStyle(fontSize: scale(10)),
           ),
           
           // Border
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(4.r),
+            top: Radius.circular(scale(4)),
           ),
         ),
       ],
@@ -151,14 +151,14 @@ class TrendChartAnalysis extends StatelessWidget {
           children: [
             Icon(
               Icons.show_chart,
-              size: 64.sp,
+              size: scale(64),
               color: Colors.grey[400],
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: scale(16)),
             Text(
               getTranslated(context, 'There is no data') ?? 'Không có dữ liệu',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: scale(16),
                 color: Colors.grey[600],
               ),
             ),
@@ -173,7 +173,7 @@ class TrendChartAnalysis extends StatelessWidget {
         text: getTranslated(context, type == 'Income' ? 'Income Trend' : 'Expense Trend') ??
             (type == 'Income' ? 'Xu hướng thu nhập' : 'Xu hướng chi tiêu'),
         textStyle: TextStyle(
-          fontSize: 16.sp,
+          fontSize: scale(16),
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -194,7 +194,7 @@ class TrendChartAnalysis extends StatelessWidget {
       
       // Axes
       primaryXAxis: DateTimeAxis(
-        labelStyle: TextStyle(fontSize: 11.sp),
+        labelStyle: TextStyle(fontSize: scale(11)),
         dateFormat: DateFormat('MMM yy'),
         intervalType: DateTimeIntervalType.months,
         majorGridLines: const MajorGridLines(width: 0.5),
@@ -202,7 +202,7 @@ class TrendChartAnalysis extends StatelessWidget {
       
       primaryYAxis: NumericAxis(
         labelFormat: '{value}',
-        labelStyle: TextStyle(fontSize: 11.sp),
+        labelStyle: TextStyle(fontSize: scale(11)),
         numberFormat: NumberFormat.compact(),
       ),
       

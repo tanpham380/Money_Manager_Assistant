@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
-import '../classes/custom_toast.dart';
 import '../classes/input_model.dart';
 import '../classes/transaction_list_item.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
+import '../services/alert_service.dart';
 import '../utils/category_icon_helper.dart';
+import '../provider/transaction_provider.dart';
 import 'edit.dart';
 
 /// Màn hình hiển thị chi tiết các giao dịch trong một ngày
@@ -41,41 +43,56 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
   Future<void> _reloadTransactions() async {
     final allTransactions = await DB.inputModelList();
     final dateString = DateFormat('dd/MM/yyyy').format(widget.date);
-    
+
     setState(() {
-      _transactions = allTransactions
-          .where((t) => t.date == dateString)
-          .toList()
-        ..sort((a, b) {
-          // Sort by time if available
-          if (a.time != null && b.time != null) {
-            return b.time!.compareTo(a.time!);
-          }
-          return 0;
-        });
+      _transactions =
+          allTransactions.where((t) => t.date == dateString).toList()
+            ..sort((a, b) {
+              // Sort by time if available
+              if (a.time != null && b.time != null) {
+                return b.time!.compareTo(a.time!);
+              }
+              return 0;
+            });
     });
   }
 
-  /// Xóa giao dịch
+  /// Xóa giao dịch với confirmation
   Future<void> _deleteTransaction(int id) async {
-    try {
-      await DB.delete(id);
-      await _reloadTransactions();
-      if (mounted) {
-        customToast(
-          context,
-          getTranslated(context, 'Transaction has been deleted') ??
-              'Transaction has been deleted',
-        );
-      }
-    } catch (e) {
-      print('Error deleting transaction: $e');
-      if (mounted) {
-        customToast(
-          context,
-          getTranslated(context, 'Error deleting transaction') ??
-              'Error deleting transaction',
-        );
+    final confirmed = await NotificationService.show(
+      context,
+      type: NotificationType.delete,
+      title: 'Delete Transaction',
+      message:
+          'Are you sure you want to delete this transaction? This action cannot be undone.',
+      actionText: 'Delete',
+      cancelText: 'Cancel',
+    );
+
+    if (confirmed == true) {
+      try {
+        // Sử dụng TransactionProvider thay vì DB trực tiếp
+        final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+        await transactionProvider.deleteTransaction(id);
+        
+        if (mounted) {
+          NotificationService.show(
+            context,
+            type: NotificationType.success,
+            message: getTranslated(context, 'Transaction has been deleted') ??
+                'Transaction has been deleted',
+          );
+        }
+      } catch (e) {
+        print('Error deleting transaction: $e');
+        if (mounted) {
+          NotificationService.show(
+            context,
+            type: NotificationType.error,
+            message: getTranslated(context, 'Error deleting transaction') ??
+                'Error deleting transaction',
+          );
+        }
       }
     }
   }
@@ -83,31 +100,25 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
   /// Sao chép giao dịch
   Future<void> _duplicateTransaction(InputModel transaction) async {
     try {
-      final newTransaction = InputModel(
-        type: transaction.type,
-        amount: transaction.amount,
-        category: transaction.category,
-        description: transaction.description,
-        date: transaction.date,
-        time: transaction.time,
-      );
-      
-      await DB.insert(newTransaction);
-      await _reloadTransactions();
+      // Sử dụng TransactionProvider thay vì DB trực tiếp
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      await transactionProvider.duplicateTransaction(transaction);
       
       if (mounted) {
-        customToast(
+        NotificationService.show(
           context,
-          getTranslated(context, 'Transaction has been duplicated') ??
+          type: NotificationType.success,
+          message: getTranslated(context, 'Transaction has been duplicated') ??
               'Transaction has been duplicated',
         );
       }
     } catch (e) {
       print('Error duplicating transaction: $e');
       if (mounted) {
-        customToast(
+        NotificationService.show(
           context,
-          getTranslated(context, 'Error duplicating transaction') ??
+          type: NotificationType.error,
+          message: getTranslated(context, 'Error duplicating transaction') ??
               'Error duplicating transaction',
         );
       }
@@ -119,7 +130,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
     // Tính toán tổng thu nhập và chi phí
     double totalIncome = 0.0;
     double totalExpense = 0.0;
-    
+
     for (final transaction in _transactions) {
       if (transaction.type == 'Income') {
         totalIncome += transaction.amount ?? 0.0;
@@ -127,13 +138,13 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
         totalExpense += transaction.amount ?? 0.0;
       }
     }
-    
+
     final balance = totalIncome - totalExpense;
-    
+
     // Format ngày
     final isToday = _isToday(widget.date);
     final isYesterday = _isYesterday(widget.date);
-    
+
     String dateLabel;
     if (isToday) {
       dateLabel = getTranslated(context, 'Today') ?? 'Today';
@@ -165,7 +176,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
-                  color: blue3.withOpacity(0.3),
+                  color: blue3.withValues(alpha: 0.3),
                   blurRadius: 12.r,
                   offset: Offset(0, 6.h),
                 ),
@@ -193,9 +204,9 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
                     ),
                   ],
                 ),
-                
+
                 SizedBox(height: 20.h),
-                
+
                 // Income, Expense, Balance summary
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -206,26 +217,22 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
                       amount: totalIncome,
                       icon: Icons.arrow_downward_rounded,
                     ),
-                    
                     Container(
                       width: 1.w,
                       height: 50.h,
-                      color: white.withOpacity(0.3),
+                      color: white.withValues(alpha: 0.3),
                     ),
-                    
                     _buildSummaryColumn(
                       context,
                       label: 'Expense',
                       amount: totalExpense,
                       icon: Icons.arrow_upward_rounded,
                     ),
-                    
                     Container(
                       width: 1.w,
                       height: 50.h,
-                      color: white.withOpacity(0.3),
+                      color: white.withValues(alpha: 0.3),
                     ),
-                    
                     _buildSummaryColumn(
                       context,
                       label: 'Balance',
@@ -237,7 +244,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
               ],
             ),
           ),
-          
+
           // Transaction list
           Expanded(
             child: Container(
@@ -256,7 +263,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
                 separatorBuilder: (context, index) => SizedBox(height: 6.h),
                 itemBuilder: (context, index) {
                   final transaction = _transactions[index];
-                  
+
                   return TransactionListItem(
                     transaction: transaction,
                     onTap: () async {
@@ -291,7 +298,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
       ),
     );
   }
-  
+
   Widget _buildSummaryColumn(
     BuildContext context, {
     required String label,
@@ -310,7 +317,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
           getTranslated(context, label) ?? label,
           style: TextStyle(
             fontSize: 12.sp,
-            color: white.withOpacity(0.9),
+            color: white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -329,34 +336,49 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
       ],
     );
   }
-  
+
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && 
-           date.month == now.month && 
-           date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
-  
+
   bool _isYesterday(DateTime date) {
     final yesterday = DateTime.now().subtract(Duration(days: 1));
-    return date.year == yesterday.year && 
-           date.month == yesterday.month && 
-           date.day == yesterday.day;
+    return date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day;
   }
-  
+
   /// Format ngày theo locale của người dùng
   String _formatDate(BuildContext context, DateTime date) {
     final locale = Localizations.localeOf(context).languageCode;
-    
+
     if (locale == 'vi') {
       // Format tiếng Việt: Thứ Hai, 04 Tháng 10 2025
       final weekdayNames = [
-        'Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư',
-        'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'
+        'Chủ Nhật',
+        'Thứ Hai',
+        'Thứ Ba',
+        'Thứ Tư',
+        'Thứ Năm',
+        'Thứ Sáu',
+        'Thứ Bảy'
       ];
       final monthNames = [
-        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+        'Tháng 1',
+        'Tháng 2',
+        'Tháng 3',
+        'Tháng 4',
+        'Tháng 5',
+        'Tháng 6',
+        'Tháng 7',
+        'Tháng 8',
+        'Tháng 9',
+        'Tháng 10',
+        'Tháng 11',
+        'Tháng 12'
       ];
       final weekday = weekdayNames[date.weekday % 7];
       final month = monthNames[date.month - 1];

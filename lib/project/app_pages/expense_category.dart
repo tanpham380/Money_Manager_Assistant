@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/app_bar.dart';
@@ -56,13 +55,13 @@ class _ExpenseCategoryBodyState extends State<ExpenseCategoryBody> {
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemCount: exItemsLists.length,
-              itemBuilder: (context, int) {
+              itemBuilder: (context, index) {
                 return Padding(
                   padding: EdgeInsets.only(top: 20.h),
                   child: CategoryContainer(
                       contextEx: widget.contextEx,
                       contextExEdit: widget.contextExEdit,
-                      itemsList: exItemsLists[int]),
+                      itemsList: exItemsLists[index]),
                 );
               }),
         ],
@@ -144,7 +143,7 @@ class _CategoryItemsState extends State<CategoryItems> {
       padding: EdgeInsets.only(bottom: 25.h, top: 10.h),
       child: Wrap(
         children: List.generate(widget.categoryItemChildren.length, (index) {
-          final cellWidth = (1.sw - 20.w) / 4;
+          final cellWidth = (MediaQuery.of(context).size.width - 20.w) / 4;
           return SizedBox(
             width: cellWidth,
             child: Column(

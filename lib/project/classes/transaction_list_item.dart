@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../classes/constants.dart';
@@ -85,8 +85,8 @@ class TransactionListItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16.r),
-          splashColor: categoryColor.withOpacity(0.1),
-          highlightColor: categoryColor.withOpacity(0.05),
+          splashColor: categoryColor.withValues(alpha: 0.1),
+          highlightColor: categoryColor.withValues(alpha: 0.05),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             child: Row(
@@ -94,7 +94,7 @@ class TransactionListItem extends StatelessWidget {
                 // Icon Category
                 CircleAvatar(
                   radius: 24.r,
-                  backgroundColor: categoryColor.withOpacity(0.15),
+                  backgroundColor: categoryColor.withValues(alpha: 0.15),
                   child: Icon(
                     categoryIcon,
                     color: categoryColor,

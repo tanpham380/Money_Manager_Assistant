@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 
 import '../classes/app_bar.dart';
 import '../classes/category_item.dart';
@@ -26,11 +26,11 @@ class ParentCategoryList extends StatelessWidget {
       ),
       body: ListView.builder(
         itemCount: parentCategories.length,
-        itemBuilder: (context, int) {
+        itemBuilder: (context, index) {
           return GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () {
-                Navigator.pop(context, parentCategories[int]);
+                Navigator.pop(context, parentCategories[index]);
               },
               child: Column(
                 children: [
@@ -43,7 +43,7 @@ class ParentCategoryList extends StatelessWidget {
                             backgroundColor: Color.fromRGBO(215, 223, 231, 1),
                             radius: 20.r,
                             child: Icon(
-                              iconData(parentCategories[int]),
+                              iconData(parentCategories[index]),
                               size: 25.sp,
                               color: red,
                             )),
@@ -53,8 +53,8 @@ class ParentCategoryList extends StatelessWidget {
                         Expanded(
                           child: Text(
                             getTranslated(
-                                    context, parentCategories[int].text) ??
-                                parentCategories[int].text,
+                                    context, parentCategories[index].text) ??
+                                parentCategories[index].text,
                             style: TextStyle(fontSize: 22.sp),
                             overflow: TextOverflow.ellipsis,
                           ),

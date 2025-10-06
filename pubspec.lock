@@ -267,14 +267,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.2.2+2"
-  flutter_screenutil:
-    dependency: "direct main"
-    description:
-      name: flutter_screenutil
-      sha256: "8239210dd68bee6b0577aa4a090890342d04a136ce1c81f98ee513fc0ce891de"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.9.3"
   flutter_swipe_action_cell:
     dependency: "direct main"
     description:
@@ -317,6 +309,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.3.2"
+  guardo:
+    dependency: "direct main"
+    description:
+      name: guardo
+      sha256: "46249204f107e95a1d4546aebc28af81dee553abeb5bb88f3dd16272213e2d3f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   html:
     dependency: transitive
     description:
@@ -373,14 +373,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.9.0"
-  keyboard_actions:
-    dependency: "direct main"
-    description:
-      name: keyboard_actions
-      sha256: "31e0ab2a706ac8f58887efa60efc1f19aecdf37d8ab0f665a0f156d1fbeab650"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.2.0"
   leak_tracker:
     dependency: transitive
     description:
@@ -406,7 +398,7 @@ packages:
     source: hosted
     version: "3.0.2"
   local_auth:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: local_auth
       sha256: "434d854cf478f17f12ab29a76a02b3067f86a63a6d6c4eb8fbfdcfe4879c1b7b"
@@ -494,13 +486,13 @@ packages:
     source: hosted
     version: "1.0.0"
   path:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: path
-      sha256: "087ce49c3f0dc39180befefc60fdb4acd8f8620e5682fe2476afd0b3688bb4af"
+      sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.1"
   path_provider:
     dependency: transitive
     description:
@@ -637,14 +629,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
-  scrollable_positioned_list:
+  responsive_scaler:
     dependency: "direct main"
     description:
-      name: scrollable_positioned_list
-      sha256: "1b54d5f1329a1e263269abc9e2543d90806131aa14fe7c6062a8054d57249287"
+      name: responsive_scaler
+      sha256: "215930927663387a54a0603cbe9ecc7b074347bffe0795d2c188bace0ec7a437"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.8"
+    version: "0.1.0"
   shared_preferences:
     dependency: "direct main"
     description:

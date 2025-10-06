@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../classes/constants.dart';
@@ -76,7 +76,7 @@ class DailyTransactionGroup extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: blue2.withOpacity(0.1),
+                          color: blue2.withValues( alpha: 0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Icon(
@@ -187,7 +187,7 @@ class DailyTransactionGroup extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 6.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(

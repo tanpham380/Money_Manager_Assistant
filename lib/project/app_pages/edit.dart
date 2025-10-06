@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
@@ -31,8 +30,8 @@ class Edit extends StatelessWidget {
         },
         child: AddEditInput(
           formKey: _formKey3,
-          inputModel: this.inputModel,
-          categoryIcon: this.categoryIcon,
+          inputModel: inputModel,
+          categoryIcon: categoryIcon,
         ),
       ),
     );

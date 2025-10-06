@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:responsive_scaler/responsive_scaler.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../classes/constants.dart';
@@ -101,7 +101,7 @@ class DonutChartAnalysis extends StatelessWidget {
             useSeriesColor: true,
             labelPosition: ChartDataLabelPosition.outside,
             isVisible: hasData,
-            textStyle: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
+            textStyle: TextStyle(fontSize: scale(12), fontWeight: FontWeight.w600),
           ),
           
           innerRadius: '60%', // Tạo lỗ ở giữa lớn hơn
@@ -124,7 +124,7 @@ class DonutChartAnalysis extends StatelessWidget {
       shadowColor: Colors.black26,
       color: const Color.fromRGBO(245, 245, 245, 1),
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.all(scale(16)),
         child: hasData
             ? _buildDataAnnotation(context, provider, totalAmount)
             : _buildEmptyAnnotation(context),
@@ -148,15 +148,15 @@ class DonutChartAnalysis extends StatelessWidget {
         children: [
           Icon(
             selectedSummary.icon,
-            size: 24.sp,
+            size: scale(24),
             color: selectedSummary.color,
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: scale(4)),
           Flexible(
             child: Text(
               getTranslated(context, selectedSummary.category) ?? selectedSummary.category,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: scale(12),
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
@@ -165,14 +165,14 @@ class DonutChartAnalysis extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(height: 2.h),
+          SizedBox(height: scale(2)),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 '${format(selectedSummary.totalAmount)} $currency',
                 style: GoogleFonts.aBeeZee(
-                  fontSize: 14.sp,
+                  fontSize: scale(14),
                   fontWeight: FontWeight.bold,
                   color: selectedSummary.color,
                 ),
@@ -181,11 +181,11 @@ class DonutChartAnalysis extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 2.h),
+          SizedBox(height: scale(2)),
           Text(
             '${((selectedSummary.totalAmount / totalAmount) * 100).toStringAsFixed(1)}%',
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: scale(11),
               color: Colors.black54,
             ),
           ),
@@ -203,7 +203,7 @@ class DonutChartAnalysis extends StatelessWidget {
             getTranslated(context, type == 'Income' ? 'Total Income' : 'Total Expense') ??
                 (type == 'Income' ? 'Tổng Thu' : 'Tổng Chi'),
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: scale(11),
               color: Colors.black54,
               fontWeight: FontWeight.w500,
             ),
@@ -212,14 +212,14 @@ class DonutChartAnalysis extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: scale(4)),
         Flexible(
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               '${format(totalAmount)}',
               style: GoogleFonts.aBeeZee(
-                fontSize: 18.sp,
+                fontSize: scale(18),
                 fontWeight: FontWeight.bold,
                 color: type == 'Income' ? green : red,
               ),
@@ -228,11 +228,11 @@ class DonutChartAnalysis extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 2.h),
+        SizedBox(height: scale(2)),
         Text(
           currency,
           style: TextStyle(
-            fontSize: 12.sp,
+            fontSize: scale(12),
             color: Colors.black54,
           ),
         ),
@@ -248,7 +248,7 @@ class DonutChartAnalysis extends StatelessWidget {
         textAlign: TextAlign.center,
         style: TextStyle(
           color: const Color.fromRGBO(0, 0, 0, 0.5),
-          fontSize: 15.sp,
+          fontSize: scale(15),
           fontStyle: FontStyle.italic,
         ),
       ),

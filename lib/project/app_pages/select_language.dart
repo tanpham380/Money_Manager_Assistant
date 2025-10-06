@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/constants.dart';
@@ -41,16 +41,16 @@ class _SelectLanguageState extends State<SelectLanguage> {
                   color: white,
                   child: ListView.builder(
                       itemCount: languageList.length,
-                      itemBuilder: (context, int) {
+                      itemBuilder: (context, index) {
                         return GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onTap: () {
                             Locale _locale = sharedPrefs
-                                .setLocale(languageList[int].languageCode);
+                                .setLocale(languageList[index].languageCode);
                             MyApp.setLocale(context, _locale);
                             context
                                 .read<OnLanguageSelected>()
-                                .onSelect(languageList[int].languageCode);
+                                .onSelect(languageList[index].languageCode);
                           },
                           child: Column(
                             children: [
@@ -60,13 +60,13 @@ class _SelectLanguageState extends State<SelectLanguage> {
                                 child: Row(
                                   children: [
                                     Text(
-                                      languageList[int].flag,
+                                      languageList[index].flag,
                                       style: TextStyle(fontSize: 45.sp),
                                     ),
                                     SizedBox(
                                       width: 35.w,
                                     ),
-                                    Text(languageList[int].name,
+                                    Text(languageList[index].name,
                                         style: TextStyle(
                                           fontSize: 20.sp,
                                         )),
@@ -74,7 +74,7 @@ class _SelectLanguageState extends State<SelectLanguage> {
                                     context
                                                 .watch<OnLanguageSelected>()
                                                 .languageCode ==
-                                            languageList[int].languageCode
+                                            languageList[index].languageCode
                                         ? Icon(Icons.check_circle,
                                             size: 25.sp, color: blue3)
                                         : SizedBox(),

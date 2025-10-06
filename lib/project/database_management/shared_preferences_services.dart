@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -29,7 +27,7 @@ var incomeItems = sharedPrefs.getItems('income items');
 class SharedPrefs {
   static SharedPreferences? _sharedPrefs;
 
-  sharePrefsInit() async {
+  Future<void> sharePrefsInit() async {
     _sharedPrefs ??= await SharedPreferences.getInstance();
   }
 
@@ -124,9 +122,9 @@ class SharedPrefs {
 
   List<List<CategoryItem>> getAllExpenseItemsLists() {
     List<List<CategoryItem>> expenseItemsLists = [];
-    for (int i = 0; i < this.parentExpenseItemNames.length; i++) {
+    for (int i = 0; i < parentExpenseItemNames.length; i++) {
       var parentExpenseItem =
-          sharedPrefs.getItems(this.parentExpenseItemNames[i]);
+          sharedPrefs.getItems(parentExpenseItemNames[i]);
       expenseItemsLists.add(parentExpenseItem);
     }
     return expenseItemsLists;

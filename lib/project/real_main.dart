@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app_lock/flutter_app_lock.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:money_assistant/project/notification_service.dart';
+ import 'package:money_assistant/project/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:responsive_scaler/responsive_scaler.dart';
 import 'classes/lockscreen.dart';
 import 'database_management/shared_preferences_services.dart';
 import 'database_management/sqflite_services.dart';
@@ -49,6 +49,14 @@ void realMain() async {
     );
   }
 
+  // Initialize ResponsiveScaler
+  ResponsiveScaler.init(
+    designWidth: 428,
+    minScale: 0.8,
+    maxScale: 1.3,
+    maxAccessibilityScale: 1.5,
+  );
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => NavigationProvider(),
@@ -76,7 +84,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late Locale? _locale;
-  setLocale(Locale locale) {
+  void setLocale(Locale locale) {
     setState(() {
       _locale = locale;
     });
@@ -86,14 +94,14 @@ class _MyAppState extends State<MyApp> {
   void didChangeDependencies() {
     Locale appLocale = sharedPrefs.getLocale();
     setState(() {
-      this._locale = appLocale;
+      _locale = appLocale;
     });
     super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (this._locale == null) {
+    if (_locale == null) {
       return Container(
         child: Center(
           child: CircularProgressIndicator(
@@ -101,64 +109,69 @@ class _MyAppState extends State<MyApp> {
         ),
       );
     } else {
-      return ScreenUtilInit(
-        designSize: Size(428.0, 926.0),
-        builder: (_, child) => MaterialApp(
-          navigatorKey: navigatorKey,
-          title: 'Money Save',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            textTheme: TextTheme(
-              displaySmall: TextStyle(
-                fontFamily: 'OpenSans',
-                fontSize: 45.0,
-                color: Colors.deepOrangeAccent,
-              ),
-              labelLarge: TextStyle(
-                fontFamily: 'OpenSans',
-              ),
-              titleMedium: TextStyle(fontFamily: 'NotoSans'),
-              bodyMedium: TextStyle(fontFamily: 'NotoSans'),
+      return MaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'Money Save',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          textTheme: TextTheme(
+            displaySmall: TextStyle(
+              fontFamily: 'OpenSans',
+              fontSize: 45.0,
+              color: Colors.deepOrangeAccent,
             ),
-            colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo)
-                .copyWith(secondary: Colors.orange),
-            textSelectionTheme:
-                TextSelectionThemeData(cursorColor: Colors.amberAccent),
+            labelLarge: TextStyle(
+              fontFamily: 'OpenSans',
+            ),
+            titleMedium: TextStyle(fontFamily: 'NotoSans'),
+            bodyMedium: TextStyle(fontFamily: 'NotoSans'),
           ),
-          builder: (context, widget) => MediaQuery(
+          colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo)
+              .copyWith(secondary: Colors.orange),
+          textSelectionTheme:
+              TextSelectionThemeData(cursorColor: Colors.amberAccent),
+        ),
+        builder: (context, widget) {
+          // Apply ResponsiveScaler
+          final scaledChild = ResponsiveScaler.scale(
+            context: context,
+            child: widget!,
+          );
+          
+          return MediaQuery(
             data: MediaQuery.of(context)
                 .copyWith(textScaler: TextScaler.linear(1)),
-            child: widget!,
-          ),
-          // home: Home(),
-          home: AppLock(
-            builder: (BuildContext context, Object? args) => Home(),
-            lockScreenBuilder: (BuildContext context) => MainLockScreen(),
-            initiallyEnabled: true,
-            initialBackgroundLockLatency: const Duration(seconds: 10),
-          ),
-          // Home(),
-          locale: _locale,
-          localizationsDelegates: [
-            AppLocalization.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          localeResolutionCallback: (locale, supportedLocales) {
-            for (var supportedLocale in supportedLocales) {
-              if (supportedLocale.languageCode == locale!.languageCode &&
-                  supportedLocale.countryCode == locale.countryCode) {
-                return supportedLocale;
-              }
-            }
-            return supportedLocales.first;
-          },
-          supportedLocales: [
-            Locale("en", "US"),
-            Locale("vi", "VN"),
-          ],
+            child: scaledChild,
+          );
+        },
+        // home: Home(),
+        home: AppLock(
+          builder: (BuildContext context, Object? args) => Home(),
+          lockScreenBuilder: (BuildContext context) => MainLockScreen(),
+          initiallyEnabled: true,
+          initialBackgroundLockLatency: const Duration(seconds: 10),
         ),
+        // Home(),
+        locale: _locale,
+        localizationsDelegates: [
+          AppLocalization.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        localeResolutionCallback: (locale, supportedLocales) {
+          for (var supportedLocale in supportedLocales) {
+            if (supportedLocale.languageCode == locale!.languageCode &&
+                supportedLocale.countryCode == locale.countryCode) {
+              return supportedLocale;
+            }
+          }
+          return supportedLocales.first;
+        },
+        supportedLocales: [
+          Locale('en', 'US'),
+          Locale('vi', 'VN'),
+        ],
       );
     }
   }

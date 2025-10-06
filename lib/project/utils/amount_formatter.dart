@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 class AmountFormatter {
   /// Format số với dấu phẩy ngăn cách hàng nghìn
   static String format(double value) =>
-      NumberFormat("#,###,###,###,###,###.##", "en_US").format(value);
+      NumberFormat('#,###,###,###,###,###.##', 'en_US').format(value);
   /// Chèn text vào controller tại vị trí cursor
   /// Xử lý các quy tắc:
   /// - Giới hạn độ dài tối đa 13 ký tự

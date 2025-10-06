@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -484,7 +484,7 @@ class CategoryDetails extends StatelessWidget {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       elevation: isSelected ? 8 : 2,
-      color: isSelected ? summary.color.withOpacity(0.1) : null,
+      color: isSelected ? summary.color.withValues(alpha: 0.1) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
         side: isSelected 
@@ -494,7 +494,7 @@ class CategoryDetails extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: summary.color.withOpacity(0.2),
+          backgroundColor: summary.color.withValues(alpha: 0.2),
           child: Icon(
             summary.icon,
             color: summary.color,

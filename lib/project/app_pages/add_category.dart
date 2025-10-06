@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:provider/provider.dart';
@@ -52,46 +51,46 @@ class AddCategory extends StatelessWidget {
           backgroundColor: blue1,
           appBar: PreferredSize(
             preferredSize: Size.fromHeight(kToolbarHeight),
-            child: BasicAppBar(this.appBarTitle),
+            child: BasicAppBar(appBarTitle),
           ),
           body: Form(
-            key: this.type == 'Income' ? _formKey4 : _formKey5,
+            key: type == 'Income' ? _formKey4 : _formKey5,
             child: ChangeNotifierProvider<ChangeCategory>(
               create: (context) => ChangeCategory(),
               child: ListView(
                 children: [
                   SizedBox(height: 20.h),
                   CategoryName(
-                      this.type,
-                      this.categoryName == null
+                      type,
+                      categoryName == null
                           ? null
-                          : getTranslated(context, this.categoryName!) ??
-                              this.categoryName,
-                      this.categoryIcon),
+                          : getTranslated(context, categoryName!) ??
+                              categoryName,
+                      categoryIcon),
                   // Hide ParentCategoryCard when either type is Income or users press on parent category
                   // Fix this? why not (this.categoryName == null && this.parentCategory != null)
                   SizedBox(height: 20.h),
-                  this.type == 'Income' ||
-                          (this.categoryName != null && this.parentItem == null)
+                  type == 'Income' ||
+                          (categoryName != null && parentItem == null)
                       ? SizedBox()
-                      : ParentCategoryCard(this.parentItem),
+                      : ParentCategoryCard(parentItem),
                   SizedBox(
                     height: 20.h,
                   ),
-                  Description(this.description),
+                  Description(description),
                   Padding(
                       padding: EdgeInsets.symmetric(vertical: 90.h),
                       child: Save(
                           formKey:
-                              this.type == 'Income' ? _formKey4 : _formKey5,
-                          contextEx: this.contextEx,
-                          contextExEdit: this.contextExEdit,
-                          contextIn: this.contextIn,
-                          contextInEdit: this.contextInEdit,
-                          categoryName: this.categoryName,
-                          categoryIcon: this.categoryIcon,
-                          parentItem: this.parentItem,
-                          description: this.description))
+                              type == 'Income' ? _formKey4 : _formKey5,
+                          contextEx: contextEx,
+                          contextExEdit: contextExEdit,
+                          contextIn: contextIn,
+                          contextInEdit: contextInEdit,
+                          categoryName: categoryName,
+                          categoryIcon: categoryIcon,
+                          parentItem: parentItem,
+                          description: description))
                 ],
               ),
             ),
@@ -184,7 +183,7 @@ class _CategoryNameState extends State<CategoryName> {
                   color: grey,
                   fontStyle: FontStyle.italic,
                   fontWeight: FontWeight.normal),
-              suffixIcon: categoryNameController.text.length > 0
+              suffixIcon: categoryNameController.text.isNotEmpty
                   ? IconButton(
                       icon: Icon(Icons.clear),
                       onPressed: () {
@@ -352,7 +351,7 @@ class _DescriptionState extends State<Description> {
                     fontSize: 21.5.sp,
                     fontStyle: FontStyle.italic,
                   ),
-                  suffixIcon: descriptionController.text.length > 0
+                  suffixIcon: descriptionController.text.isNotEmpty
                       ? IconButton(
                           icon: Icon(Icons.clear),
                           onPressed: () {

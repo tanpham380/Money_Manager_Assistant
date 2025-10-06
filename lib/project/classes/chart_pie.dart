@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:intl/intl.dart';
 import 'package:money_assistant/project/database_management/shared_preferences_services.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -29,7 +28,7 @@ class ChartPie extends StatelessWidget {
       return totalAmount;
     }
 
-    if (this.transactionsSorted[0].category == '') {
+    if (transactionsSorted[0].category == '') {
       haveRecords = false;
       width = '67%';
       height = '67%';
@@ -40,7 +39,7 @@ class ChartPie extends StatelessWidget {
       height = '67%';
       animationDuration = 270;
     }
-    var totalAmount = _calculateTotalAmount(this.transactionsSorted);
+    var totalAmount = _calculateTotalAmount(transactionsSorted);
 
     return SfCircularChart(
       tooltipBehavior: TooltipBehavior(enable: true),
@@ -62,11 +61,7 @@ class ChartPie extends StatelessWidget {
                         100);
                 // final Text = "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount;
                 customToast(
-                    context,
-                    'Tiền ' +
-                        details.dataPoints![details.pointIndex!].x! +
-                        ' ' +
-                        formattedAmount);
+                    context, 'Tiền ${details.dataPoints![details.pointIndex!].x!} $formattedAmount');
               }
             },
             startAngle: 90,
@@ -76,7 +71,7 @@ class ChartPie extends StatelessWidget {
             sortingOrder: SortingOrder.descending,
             sortFieldValueMapper: (InputModel data, _) => data.category,
             enableTooltip: haveRecords,
-            dataSource: this.transactionsSorted,
+            dataSource: transactionsSorted,
             pointColorMapper: (InputModel data, _) => data.color,
             xValueMapper: (InputModel data, _) =>
                 getTranslated(context, data.category!) ?? data.category,

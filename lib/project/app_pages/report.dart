@@ -1,7 +1,6 @@
 /// Package import
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -65,7 +64,7 @@ class _ReportState extends State<Report> {
               children: [
                 Padding(
                   padding: EdgeInsets.only(right: 15.w),
-                  child: Icon(this.widget.icon, size: 30.sp, color: color),
+                  child: Icon(widget.icon, size: 30.sp, color: color),
                 ),
                 Flexible(
                   child: Text(
@@ -145,7 +144,7 @@ class _ReportBodyState extends State<ReportBody> {
                       ? sortByCategory(snapshot.data!, 'Income')
                       : sortByCategory(snapshot.data!, 'Expense');
 
-                  List<InputModel> transactionsYearly = (transactions
+                  List<InputModel> transactionsYearly = transactions
                           .map((data) {
                             DateTime dateSelectedDT =
                                 DateFormat('dd/MM/yyyy').parse(data.date!);
@@ -158,10 +157,10 @@ class _ReportBodyState extends State<ReportBody> {
                             }
                           })
                           .where((element) => element != null)
-                          .toList())
+                          .toList()
                       .cast<InputModel>();
 
-                  if (transactionsYearly.length > 0) {
+                  if (transactionsYearly.isNotEmpty) {
                     for (InputModel? transaction in transactionsYearly) {
                       yearAmount = yearAmount + transaction!.amount!;
                     }
@@ -361,7 +360,7 @@ class _ReportBodyState extends State<ReportBody> {
                                     filterData(context, transactions,
                                         selectedAnalysisDate);
                                 double totalAmount = 0;
-                                if (selectedTransactions.length > 0) {
+                                if (selectedTransactions.isNotEmpty) {
                                   for (InputModel? transaction
                                       in selectedTransactions) {
                                     totalAmount =
@@ -424,7 +423,7 @@ class _ReportBodyState extends State<ReportBody> {
                                             shrinkWrap: true,
                                             itemCount:
                                                 selectedTransactions.length,
-                                            itemBuilder: (context, int) {
+                                            itemBuilder: (context, index) {
                                               return GestureDetector(
                                                 behavior:
                                                     HitTestBehavior.translucent,
@@ -436,7 +435,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                               Edit(
                                                                 inputModel:
                                                                     selectedTransactions[
-                                                                        int],
+                                                                        index],
                                                                 categoryIcon:
                                                                     widget.icon,
                                                               ))).then(
@@ -451,7 +450,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                       Colors.transparent,
                                                   key: ObjectKey(
                                                       selectedTransactions[
-                                                          int]),
+                                                          index]),
                                                   firstActionWillCoverAllSpaceOnDeleting:
                                                       true,
                                                   trailingActions: <SwipeAction>[
@@ -464,14 +463,14 @@ class _ReportBodyState extends State<ReportBody> {
                                                             (CompletionHandler
                                                                 handler) async {
                                                           Platform.isIOS
-                                                              ? iosDialog(
+                                                              ? await iosDialog(
                                                                   context,
                                                                   'Are you sure you want to delete this transaction?',
                                                                   'Delete',
                                                                   () async {
-                                                                  DB.delete(
+                                                                  await DB.delete(
                                                                       selectedTransactions[
-                                                                              int]
+                                                                              index]
                                                                           .id!);
                                                                   await handler(
                                                                       true);
@@ -484,14 +483,14 @@ class _ReportBodyState extends State<ReportBody> {
                                                                       context,
                                                                       'Transaction has been deleted');
                                                                 })
-                                                              : androidDialog(
+                                                              : await androidDialog(
                                                                   context,
                                                                   'Are you sure you want to delete this transaction?',
                                                                   'Delete',
                                                                   () async {
-                                                                  DB.delete(
+                                                                  await DB.delete(
                                                                       selectedTransactions[
-                                                                              int]
+                                                                              index]
                                                                           .id!);
                                                                   await handler(
                                                                       true);
@@ -516,7 +515,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                                 handler) {
                                                           var model =
                                                               selectedTransactions[
-                                                                  int];
+                                                                  index];
                                                           model.id = null;
                                                           DB.insert(model);
                                                           Provider.of<InputModelList>(
@@ -551,7 +550,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                                       .format(DateFormat(
                                                                               'dd/MM/yyyy')
                                                                           .parse(
-                                                                              selectedTransactions[int].date!)),
+                                                                              selectedTransactions[index].date!)),
                                                                   style:
                                                                       TextStyle(
                                                                     fontSize:
@@ -567,7 +566,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                                     text: '\n'),
                                                                 TextSpan(
                                                                   text: selectedTransactions[
-                                                                          int]
+                                                                          index]
                                                                       .description!,
                                                                   style:
                                                                       TextStyle(
@@ -583,7 +582,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                         ),
                                                         Spacer(), // Đẩy phần tử tiếp theo về phía cuối dòng
                                                         Text(
-                                                          '${format(selectedTransactions[int].amount!)} $currency',
+                                                          '${format(selectedTransactions[index].amount!)} $currency',
                                                           style: TextStyle(
                                                               fontSize:
                                                                   18.5.sp),

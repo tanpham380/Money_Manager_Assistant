@@ -17,7 +17,7 @@ class ImportExportScreen extends StatefulWidget {
 class _ImportExportScreenState extends State<ImportExportScreen> {
   late TextEditingController _fileNameController;
   Directory? documentsDirectory;
-  String documentsPath = "";
+  String documentsPath = '';
   List<FileSystemEntity> files = [];
 
   @override
@@ -41,7 +41,7 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
       return;
     }
     documentsPath = documentsDirectory!.path;
-    files = await documentsDirectory!.listSync();
+    files = documentsDirectory!.listSync();
     setState(() {});
   }
 
@@ -171,22 +171,22 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text(
-                getTranslated(context, "Confirm Delete") ?? "Confirm Delete"),
+                getTranslated(context, 'Confirm Delete') ?? 'Confirm Delete'),
             content: Text(getTranslated(
-                    context, "Are you sure you want to delete this file?") ??
-                "Are you sure you want to delete this file?"),
+                    context, 'Are you sure you want to delete this file?') ??
+                'Are you sure you want to delete this file?'),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(false); // Do not delete
                 },
-                child: Text(getTranslated(context, "Cancel") ?? "Cancel"),
+                child: Text(getTranslated(context, 'Cancel') ?? 'Cancel'),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(true); // Delete
                 },
-                child: Text(getTranslated(context, "Delete") ?? "Delete"),
+                child: Text(getTranslated(context, 'Delete') ?? 'Delete'),
               ),
             ],
           );
@@ -256,7 +256,7 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
                 if (result != null) {
                   String? filePath = result.files.single.path;
                   if (filePath != null) {
-                    _importData(context, filePath);
+                    await _importData(context, filePath);
                   }
                 }
               },
@@ -269,7 +269,7 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
                 itemBuilder: (context, index) {
                   FileSystemEntity file = files[index];
                   return ListTile(
-                    title: Text("$index-" + file.path.split('/').last),
+                    title: Text('$index-${file.path.split('/').last}'),
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () {

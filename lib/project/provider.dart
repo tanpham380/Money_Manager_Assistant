@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 import 'classes/category_item.dart';
 import 'classes/input_model.dart';
@@ -18,7 +18,7 @@ class ChangeCategoryA with ChangeNotifier {
 class ChangeModelType with ChangeNotifier {
   String? modelType;
   void changeModelType(String newType) {
-    this.modelType = newType;
+    modelType = newType;
     notifyListeners();
   }
 }
@@ -87,7 +87,7 @@ class ChangeCategory with ChangeNotifier {
   CategoryItem? parentItem;
 
   void changeCategoryIcon(IconData? selectedIcon) {
-    this.selectedCategoryIcon = selectedIcon;
+    selectedCategoryIcon = selectedIcon;
     notifyListeners();
   }
 

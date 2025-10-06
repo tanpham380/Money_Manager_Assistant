@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../classes/app_bar.dart';
@@ -20,7 +19,7 @@ class EditIncomeCategory extends StatelessWidget {
                 backgroundColor: blue1,
                 appBar: EditCategoryAppBar(
                   AddCategory(
-                      contextIn: this.buildContext,
+                      contextIn: buildContext,
                       contextInEdit: contextEdit,
                       type: 'Income',
                       appBarTitle:
@@ -28,7 +27,7 @@ class EditIncomeCategory extends StatelessWidget {
                       description: ''),
                 ),
                 body: IncomeCategoryBody(
-                    context: this.buildContext,
+                    context: buildContext,
                     contextEdit: contextEdit,
                     editIncomeCategory: true))));
   }

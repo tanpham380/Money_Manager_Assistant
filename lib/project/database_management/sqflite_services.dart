@@ -22,7 +22,7 @@ abstract class DB {
     }
   }
 
-  static onCreate(Database db, int version) {
+  static Future<void> onCreate(Database db, int version) {
     return db.execute(
         'CREATE TABLE input (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, amount REAL, category TEXT, description TEXT, date TEXT, time TEXT)');
   }
@@ -35,7 +35,7 @@ abstract class DB {
 
   static Future<List<InputModel>> inputModelList() async {
     List<Map<String, dynamic>> inputList = await _db!.query('input');
-    return inputList.map((item) => InputModel.fromMap(item)).toList();
+    return inputList.map(InputModel.fromMap).toList();
   }
 
   static Future<int> insert(InputModel model) async => await _db!.insert(

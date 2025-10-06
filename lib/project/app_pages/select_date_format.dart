@@ -1,7 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/constants.dart';
@@ -47,12 +46,12 @@ class FormatDate extends StatelessWidget {
                   color: white,
                   child: ListView.builder(
                       itemCount: dateFormats.length,
-                      itemBuilder: (context, int) => GestureDetector(
+                      itemBuilder: (context, index) => GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
                               context
                                   .read<OnDateFormatSelected>()
-                                  .onDateFormatSelected(dateFormats[int]);
+                                  .onDateFormatSelected(dateFormats[index]);
                             },
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +61,7 @@ class FormatDate extends StatelessWidget {
                                     child: Row(
                                       children: [
                                         Text(
-                                          '${DateFormat(dateFormats[int]).format(now)}',
+                                          '${DateFormat(dateFormats[index]).format(now)}',
                                           style: TextStyle(
                                             fontSize: 19.sp,
                                           ),
@@ -72,7 +71,7 @@ class FormatDate extends StatelessWidget {
                                                     .watch<
                                                         OnDateFormatSelected>()
                                                     .dateFormat ==
-                                                dateFormats[int]
+                                                dateFormats[index]
                                             ? Icon(Icons.check_circle,
                                                 size: 25.sp, color: blue3)
                                             : SizedBox()

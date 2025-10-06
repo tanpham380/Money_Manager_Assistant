@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 
 import '../classes/app_bar.dart';
 import '../classes/category_item.dart';
@@ -41,7 +40,7 @@ class SelectIcon extends StatelessWidget {
                       child: Icon(
                         iconData(icons[index]),
                         size: 30.sp,
-                        color: this.type == 'Income' ? green : red,
+                        color: type == 'Income' ? green : red,
                       )),
                 ),
               ],

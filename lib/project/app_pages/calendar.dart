@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -10,13 +10,22 @@ import '../classes/daily_transaction_group.dart';
 import '../classes/input_model.dart';
 import '../localization/methods.dart';
 import '../provider/calendar_provider.dart';
+import '../provider/transaction_provider.dart';
 import 'daily_transaction_detail.dart';
 
 class Calendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CalendarProvider(),
+    // Use the TransactionProvider from the ancestor (Home widget)
+    return ChangeNotifierProxyProvider<TransactionProvider, CalendarProvider>(
+      create: (context) => CalendarProvider(context.read<TransactionProvider>()),
+      update: (context, transactionProvider, previous) {
+        // Reuse previous CalendarProvider if it exists
+        if (previous != null) {
+          return previous;
+        }
+        return CalendarProvider(transactionProvider);
+      },
       child: Scaffold(
         backgroundColor: blue1,
         appBar: PreferredSize(
@@ -25,13 +34,13 @@ class Calendar extends StatelessWidget {
         ),
         body: Consumer<CalendarProvider>(
           builder: (context, provider, child) {
-            if (provider.state == CalendarState.loading) {
+            if (provider.isLoading) {
               return Center(
                 child: CircularProgressIndicator(color: blue3),
               );
             }
             
-            if (provider.state == CalendarState.error) {
+            if (provider.errorMessage != null) {
               return Center(
                 child: Text(
                   provider.errorMessage ?? 'An error occurred',
@@ -266,8 +275,8 @@ class _CalendarContent extends StatelessWidget {
                   ),
                 ),
               ).then((_) {
-                // Reload data khi quay lại
-                provider.fetchTransactions();
+                // Refresh data khi quay lại
+                provider.refreshData();
               });
             },
           );

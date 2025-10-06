@@ -80,7 +80,7 @@ List<Color> chartPieColors = [
 ];
 
 String format(double number) =>
-    NumberFormat("#,###,###,###,###,###.##", "en_US").format(number);
+    NumberFormat('#,###,###,###,###,###.##', 'en_US').format(number);
 
 IconData iconData(CategoryItem item) => IconData(item.iconCodePoint,
     fontPackage: item.iconFontPackage, fontFamily: item.iconFontFamily);
@@ -176,7 +176,7 @@ InputModel inputModel(data) => InputModel(
 List<InputModel> filterData(
     BuildContext context, List<InputModel> data, String selectedDate) {
   // filter data based on user's selected day
-  return (data
+  return data
           .map((data) {
             DateTime dateSelectedDT =
                 DateFormat('dd/MM/yyyy').parse(data.date!);
@@ -218,7 +218,7 @@ List<InputModel> filterData(
             }
           })
           .where((element) => element != null)
-          .toList())
+          .toList()
       .cast<InputModel>();
 }
 

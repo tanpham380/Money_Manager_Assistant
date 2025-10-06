@@ -7,7 +7,7 @@ Locale locale(String languageCode) {
     case 'en':
       return Locale('en', 'US');
     case 'vi':
-      return Locale('vi', "VN");
+      return Locale('vi', 'VN');
     default:
       return Locale('en', 'US');
   }

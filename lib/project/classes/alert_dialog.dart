@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:money_assistant/project/classes/constants.dart';
+ import 'package:money_assistant/project/classes/constants.dart';
+import 'package:responsive_scaler/responsive_scaler.dart';
 
 import '../localization/methods.dart';
 
@@ -13,25 +13,25 @@ Future<void> iosDialog(BuildContext context, String content, String action,
           return CupertinoAlertDialog(
             title: Padding(
               padding: EdgeInsets.only(
-                bottom: 8.h,
+                bottom: scale(8),
               ),
               child: Text(
                 getTranslated(context, 'Please Confirm') ?? 'Please Confirm',
-                style: TextStyle(fontSize: 21.sp),
+                style: TextStyle(fontSize: scale(21)),
               ),
             ),
             content: Text(getTranslated(context, content) ?? content,
-                style: TextStyle(fontSize: 15.5.sp)),
+                style: TextStyle(fontSize: scale(15.5))),
             actions: [
               CupertinoDialogAction(
                 onPressed: () {
                   Navigator.pop(context);
                 },
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 3.w),
+                  padding: EdgeInsets.symmetric(vertical: scale(6), horizontal: scale(3)),
                   child: Text(getTranslated(context, 'Cancel') ?? 'Cancel',
                       style: TextStyle(
-                          fontSize: 19.5.sp, fontWeight: FontWeight.w600)),
+                          fontSize: scale(19.5), fontWeight: FontWeight.w600)),
                 ),
                 isDefaultAction: false,
                 isDestructiveAction: false,
@@ -42,10 +42,10 @@ Future<void> iosDialog(BuildContext context, String content, String action,
                   Navigator.pop(context);
                 },
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 3.w),
+                  padding: EdgeInsets.symmetric(vertical: scale(6), horizontal: scale(3)),
                   child: Text(getTranslated(context, action) ?? action,
                       style: TextStyle(
-                          fontSize: 19.5.sp, fontWeight: FontWeight.w600)),
+                          fontSize: scale(19.5), fontWeight: FontWeight.w600)),
                 ),
                 isDefaultAction: true,
                 isDestructiveAction: true,

@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -40,8 +39,8 @@ class CustomKeyboard extends StatelessWidget {
       keys.add(
         TextKey(
           text: i,
-          onTextInput: this.onTextInput,
-          onBackspace: this.onBackspace,
+          onTextInput: onTextInput,
+          onBackspace: onBackspace,
         ),
       );
     }
@@ -77,10 +76,10 @@ class CustomKeyboard extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         panelController.close();
-                        this.mainFocus!.unfocus();
+                        mainFocus!.unfocus();
                       },
                       child: Text(
-                        getTranslated(context, "Done")!,
+                        getTranslated(context, 'Done')!,
                         style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
@@ -113,25 +112,25 @@ class TextKey extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // color: white,
-      width: 1.sw / 3,
+      width: MediaQuery.of(context).size.width / 3,
       height: 55.h,
       child: Material(
         color: white,
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () {
-            this.text.isEmpty
-                ? this.onBackspace?.call()
-                : this.onTextInput?.call(this.text);
+            text.isEmpty
+                ? onBackspace?.call()
+                : onTextInput?.call(text);
           },
           child: Center(
-              child: this.text.isEmpty
+              child: text.isEmpty
                   ? Icon(
                       Icons.backspace_outlined,
                       color: red,
                     )
                   : Text(
-                      this.text,
+                      text,
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     )),

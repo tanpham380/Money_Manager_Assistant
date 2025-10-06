@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/app_bar.dart';
@@ -49,12 +48,12 @@ class _IncomeCategoryBodyState extends State<IncomeCategoryBody> {
       padding: EdgeInsets.only(top: 30.h),
       child: ListView.builder(
         itemCount: incomeList.length,
-        itemBuilder: (context, int) {
+        itemBuilder: (context, index) {
           return Padding(
             padding: EdgeInsets.only(top: 3.h, left: 10.w, right: 10.w),
             child: GestureDetector(
               onLongPress: () {
-                if (this.widget.editIncomeCategory) {
+                if (widget.editIncomeCategory) {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -63,13 +62,13 @@ class _IncomeCategoryBodyState extends State<IncomeCategoryBody> {
                               contextInEdit: widget.contextEdit,
                               type: 'Income',
                               appBarTitle: 'Add Income Category',
-                              categoryName: incomeList[int].text,
-                              categoryIcon: iconData(incomeList[int]),
-                              description: incomeList[int].description!)));
+                              categoryName: incomeList[index].text,
+                              categoryIcon: iconData(incomeList[index]),
+                              description: incomeList[index].description!)));
                 }
               },
               onTap: () {
-                if (this.widget.editIncomeCategory) {
+                if (widget.editIncomeCategory) {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -78,11 +77,11 @@ class _IncomeCategoryBodyState extends State<IncomeCategoryBody> {
                               contextInEdit: widget.contextEdit,
                               type: 'Income',
                               appBarTitle: 'Add Income Category',
-                              categoryName: incomeList[int].text,
-                              categoryIcon: iconData(incomeList[int]),
-                              description: incomeList[int].description!)));
+                              categoryName: incomeList[index].text,
+                              categoryIcon: iconData(incomeList[index]),
+                              description: incomeList[index].description!)));
                 } else {
-                  Navigator.pop(context, incomeList[int]);
+                  Navigator.pop(context, incomeList[index]);
                 }
               },
               child: Card(
@@ -102,7 +101,7 @@ class _IncomeCategoryBodyState extends State<IncomeCategoryBody> {
                         backgroundColor: Color.fromRGBO(215, 223, 231, 1),
                         radius: 25.r,
                         child: Icon(
-                          iconData(incomeList[int]),
+                          iconData(incomeList[index]),
                           size: 33.sp,
                           color: green,
                         ),
@@ -111,8 +110,8 @@ class _IncomeCategoryBodyState extends State<IncomeCategoryBody> {
                         width: 25.w,
                       ),
                       Text(
-                        getTranslated(context, incomeList[int].text) ??
-                            incomeList[int].text,
+                        getTranslated(context, incomeList[index].text) ??
+                            incomeList[index].text,
                         style: TextStyle(
                             fontSize: 20.sp, fontWeight: FontWeight.bold),
                       )

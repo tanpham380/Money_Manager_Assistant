@@ -1,15 +1,13 @@
 import 'dart:core';
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_material_pickers/helpers/show_date_picker.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
-import '../classes/alert_dialog.dart';
 import '../classes/app_bar.dart';
 import '../classes/category_item.dart';
 import '../classes/constants.dart';
@@ -19,6 +17,7 @@ import '../classes/saveOrSaveAndDeleteButtons.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider/form_provider.dart';
+import '../provider/transaction_provider.dart';
 import 'expense_category.dart';
 import 'income_category.dart';
 import 'package:day_night_time_picker/day_night_time_picker.dart';
@@ -69,7 +68,7 @@ class PanelForKeyboard extends StatelessWidget {
     required this.formProvider,
     Key? key,
   }) : super(key: key);
-  
+
   final Widget body;
   final FormProvider formProvider;
 
@@ -89,12 +88,8 @@ class PanelForKeyboard extends StatelessWidget {
           panelController: provider.panelController,
           mainFocus: provider.amountFocusNode,
           nextFocus: provider.descriptionFocusNode,
-          onTextInput: (myText) {
-            provider.insertAmountText(myText);
-          },
-          onBackspace: () {
-            provider.backspaceAmount();
-          },
+          onTextInput: provider.insertAmountText,
+          onBackspace: provider.backspaceAmount,
           page: provider.model.type == 'Income'
               ? IncomeCategory()
               : ExpenseCategory(),
@@ -118,12 +113,33 @@ class AddEditInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => FormProvider(
-        input: inputModel,
-        type: type,
-        categoryIcon: categoryIcon,
-      ),
+    // Use the TransactionProvider from the ancestor (Home widget)
+    return ChangeNotifierProxyProvider<TransactionProvider, FormProvider>(
+      create: (context) {
+        // Don't access TransactionProvider here - it will be provided in update
+        // Create a temporary FormProvider that will be replaced by update
+        return FormProvider(
+          input: inputModel,
+          type: type,
+          categoryIcon: categoryIcon,
+          transactionProvider: context.read<TransactionProvider>(),
+        );
+      },
+      update: (context, transactionProvider, previous) {
+        // If previous exists and has the same input, reuse it
+        if (previous != null && 
+            previous.model.id == inputModel?.id &&
+            previous.model.type == (type ?? inputModel?.type)) {
+          return previous;
+        }
+        // Otherwise create new FormProvider with the TransactionProvider
+        return FormProvider(
+          input: inputModel,
+          type: type,
+          categoryIcon: categoryIcon,
+          transactionProvider: transactionProvider,
+        );
+      },
       child: Consumer<FormProvider>(
         builder: (context, provider, child) {
           return PanelForKeyboard(
@@ -142,7 +158,7 @@ class AddEditInput extends StatelessWidget {
                     child: const AmountCard(),
                   ),
                 ),
-                
+
                 // Smart Suggestions
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.0.h),
@@ -152,48 +168,56 @@ class AddEditInput extends StatelessWidget {
                       if (provider.model.type != 'Expense') {
                         return const SizedBox.shrink();
                       }
-                      
+
                       return Wrap(
                         spacing: 8.0.w,
                         runSpacing: 4.0.h,
                         children: [
                           ActionChip(
-                            avatar: const Icon(Icons.free_breakfast_outlined, size: 18),
+                            avatar: const Icon(Icons.free_breakfast_outlined,
+                                size: 18),
                             label: Text(
-                              getTranslated(context, 'Breakfast') ?? 'Breakfast',
+                              getTranslated(context, 'Breakfast') ??
+                                  'Breakfast',
                               style: TextStyle(fontSize: 13.sp),
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
-                                  getTranslated(context, 'Breakfast') ?? 'Breakfast';
-                              p.updateCategory(categoryItem(MdiIcons.food, 'Food'));
+                              p.descriptionController.text =
+                                  getTranslated(context, 'Breakfast') ??
+                                      'Breakfast';
+                              p.updateCategory(
+                                  categoryItem(MdiIcons.food, 'Food'));
                             },
                           ),
                           ActionChip(
-                            avatar: const Icon(Icons.restaurant_outlined, size: 18),
+                            avatar:
+                                const Icon(Icons.restaurant_outlined, size: 18),
                             label: Text(
                               getTranslated(context, 'Lunch') ?? 'Lunch',
                               style: TextStyle(fontSize: 13.sp),
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
+                              p.descriptionController.text =
                                   getTranslated(context, 'Lunch') ?? 'Lunch';
-                              p.updateCategory(categoryItem(MdiIcons.food, 'Food'));
+                              p.updateCategory(
+                                  categoryItem(MdiIcons.food, 'Food'));
                             },
                           ),
                           ActionChip(
-                            avatar: const Icon(Icons.dinner_dining_outlined, size: 18),
+                            avatar: const Icon(Icons.dinner_dining_outlined,
+                                size: 18),
                             label: Text(
                               getTranslated(context, 'Dinner') ?? 'Dinner',
                               style: TextStyle(fontSize: 13.sp),
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
+                              p.descriptionController.text =
                                   getTranslated(context, 'Dinner') ?? 'Dinner';
-                              p.updateCategory(categoryItem(MdiIcons.food, 'Food'));
+                              p.updateCategory(
+                                  categoryItem(MdiIcons.food, 'Food'));
                             },
                           ),
                           ActionChip(
@@ -204,9 +228,10 @@ class AddEditInput extends StatelessWidget {
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
+                              p.descriptionController.text =
                                   getTranslated(context, 'Coffee') ?? 'Coffee';
-                              p.updateCategory(categoryItem(Icons.coffee, 'Coffee'));
+                              p.updateCategory(
+                                  categoryItem(Icons.coffee, 'Coffee'));
                             },
                           ),
                           ActionChip(
@@ -217,35 +242,44 @@ class AddEditInput extends StatelessWidget {
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
-                                  getTranslated(context, 'Internet') ?? 'Internet';
-                              p.updateCategory(categoryItem(IcoFontIcons.globe, 'Internet'));
+                              p.descriptionController.text =
+                                  getTranslated(context, 'Internet') ??
+                                      'Internet';
+                              p.updateCategory(
+                                  categoryItem(IcoFontIcons.globe, 'Internet'));
                             },
                           ),
                           ActionChip(
-                            avatar: const Icon(Icons.shopping_cart_outlined, size: 18),
+                            avatar: const Icon(Icons.shopping_cart_outlined,
+                                size: 18),
                             label: Text(
-                              getTranslated(context, 'Daily Necessities') ?? 'Daily Necessities',
+                              getTranslated(context, 'Daily Necessities') ??
+                                  'Daily Necessities',
                               style: TextStyle(fontSize: 13.sp),
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
-                                  getTranslated(context, 'Daily Necessities') ?? 'Daily Necessities';
-                              p.updateCategory(categoryItem(Icons.add_shopping_cart, 'Daily Necessities'));
+                              p.descriptionController.text =
+                                  getTranslated(context, 'Daily Necessities') ??
+                                      'Daily Necessities';
+                              p.updateCategory(categoryItem(
+                                  Icons.add_shopping_cart,
+                                  'Daily Necessities'));
                             },
                           ),
                           ActionChip(
-                            avatar: const Icon(Icons.local_gas_station, size: 18),
+                            avatar:
+                                const Icon(Icons.local_gas_station, size: 18),
                             label: Text(
                               getTranslated(context, 'Fuel') ?? 'Fuel',
                               style: TextStyle(fontSize: 13.sp),
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
+                              p.descriptionController.text =
                                   getTranslated(context, 'Fuel') ?? 'Fuel';
-                              p.updateCategory(categoryItem(Icons.local_gas_station, 'Fuel'));
+                              p.updateCategory(categoryItem(
+                                  Icons.local_gas_station, 'Fuel'));
                             },
                           ),
                           ActionChip(
@@ -256,9 +290,10 @@ class AddEditInput extends StatelessWidget {
                             ),
                             onPressed: () {
                               final p = context.read<FormProvider>();
-                              p.descriptionController.text = 
+                              p.descriptionController.text =
                                   getTranslated(context, 'Movies') ?? 'Movies';
-                              p.updateCategory(categoryItem(Icons.movie_filter, 'Movies'));
+                              p.updateCategory(
+                                  categoryItem(Icons.movie_filter, 'Movies'));
                             },
                           ),
                         ],
@@ -266,9 +301,9 @@ class AddEditInput extends StatelessWidget {
                     },
                   ),
                 ),
-                
+
                 const SizedBox(height: 16.0),
-                
+
                 // Card cho nhóm Category, Description, Date
                 Card(
                   elevation: 4.0,
@@ -285,19 +320,21 @@ class AddEditInput extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 70.h),
                   child: inputModel != null
                       ? SaveAndDeleteButton(
                           saveAndDeleteInput: true,
                           formKey: formKey,
-                          onSave: () => provider.saveInput(context, isNewInput: false),
+                          onSave: () =>
+                              provider.saveInput(context, isNewInput: false),
                           onDelete: () => _showDeleteDialog(context, provider),
                         )
                       : SaveButton(
                           saveInput: true,
-                          onSave: () => provider.saveInput(context, isNewInput: true),
+                          onSave: () =>
+                              provider.saveInput(context, isNewInput: true),
                           isLoading: provider.isLoading,
                         ),
                 )
@@ -309,22 +346,10 @@ class AddEditInput extends StatelessWidget {
     );
   }
 
-  Future<void> _showDeleteDialog(BuildContext context, FormProvider provider) async {
-    void onDeletion() {
-      provider.deleteInput(context);
-    }
-
-    Platform.isIOS
-        ? await iosDialog(
-            context,
-            'Are you sure you want to delete this transaction?',
-            'Delete',
-            onDeletion)
-        : await androidDialog(
-            context,
-            'Are you sure you want to delete this transaction?',
-            'Delete',
-            onDeletion);
+  Future<void> _showDeleteDialog(
+      BuildContext context, FormProvider provider) async {
+    // deleteInput đã có confirmation built-in
+    await provider.deleteInput(context);
   }
 }
 
@@ -359,7 +384,7 @@ class AmountCard extends StatelessWidget {
                 onTap: () {
                   // Request focus và mở panel bàn phím
                   provider.amountFocusNode.requestFocus();
-                  
+
                   // Mở panel nếu chưa mở
                   if (!provider.panelController.isPanelOpen) {
                     provider.panelController.open();
@@ -391,9 +416,7 @@ class AmountCard extends StatelessWidget {
                             Icons.clear,
                             size: 24.sp,
                           ),
-                          onPressed: () {
-                            amountController.clear();
-                          })
+                          onPressed: amountController.clear)
                       : const SizedBox(),
                 ),
               ),
@@ -414,7 +437,7 @@ class CategoryCard extends StatelessWidget {
       builder: (context, provider, child) {
         final categoryItem = provider.selectedCategory;
         final isDefaultCategory = categoryItem.text == 'Category';
-        
+
         return GestureDetector(
           onTap: () async {
             CategoryItem? newCategoryItem = await Navigator.push(
@@ -432,7 +455,9 @@ class CategoryCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               // Highlight màu đỏ nhạt nếu chưa chọn category
-              color: isDefaultCategory ? Colors.red.withOpacity(0.05) : Colors.transparent,
+              color: isDefaultCategory
+                  ? Colors.red.withValues(alpha: 0.05)
+                  : Colors.transparent,
               border: Border(
                 left: BorderSide(
                   color: isDefaultCategory ? Colors.red : Colors.transparent,
@@ -445,13 +470,13 @@ class CategoryCard extends StatelessWidget {
                   left: 20.w, right: 20.w, top: 20.h, bottom: 21.h),
               child: Row(
                 children: [
-                  Icon(
-                    iconData(categoryItem),
-                    size: 40.sp,
-                    color: isDefaultCategory 
-                        ? Colors.grey 
-                        : (provider.model.type == 'Income' ? green : red),
-                  ),
+                  // Icon(
+                  //   iconData(categoryItem),
+                  //   size: 40.sp,
+                  //   color: isDefaultCategory
+                  //       ? Colors.grey
+                  //       : (provider.model.type == 'Income' ? green : red),
+                  // ),
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.only(left: 31.w),
@@ -525,9 +550,7 @@ class DescriptionCard extends StatelessWidget {
                               Icons.clear,
                               size: 20.sp,
                             ),
-                            onPressed: () {
-                              descriptionController.clear();
-                            })
+                            onPressed: descriptionController.clear)
                         : const SizedBox(),
                     icon: Padding(
                       padding: EdgeInsets.only(right: 15.w),
@@ -539,7 +562,7 @@ class DescriptionCard extends StatelessWidget {
                     )),
               ),
             ),
-            
+
             // Keyboard control bar - hiển thị khi focus
             if (provider.descriptionFocusNode.hasFocus)
               Container(
@@ -555,13 +578,15 @@ class DescriptionCard extends StatelessWidget {
                   children: [
                     // Back to Amount button - nhỏ hơn
                     TextButton.icon(
-                      icon: Icon(Icons.arrow_upward, size: 16.sp, color: colorMain),
+                      icon: Icon(Icons.arrow_upward,
+                          size: 16.sp, color: colorMain),
                       label: Text(
                         getTranslated(context, 'Amount') ?? 'Amount',
                         style: TextStyle(fontSize: 13.sp, color: colorMain),
                       ),
                       style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.w, vertical: 8.h),
                       ),
                       onPressed: () {
                         provider.descriptionFocusNode.unfocus();
@@ -573,8 +598,6 @@ class DescriptionCard extends StatelessWidget {
                         });
                       },
                     ),
-                    
-
                   ],
                 ),
               ),
@@ -681,5 +704,3 @@ class DateCard extends StatelessWidget {
     );
   }
 }
-
-

@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:core';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +17,7 @@ import '../database_management/sqflite_services.dart';
 import '../database_management/sync_data.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
-import '../notification_service.dart';
+import '../services/notification_service.dart';
 import 'currency.dart';
 import 'select_date_format.dart';
 import 'select_language.dart';
@@ -195,8 +195,7 @@ class _SettingsState extends State<Settings> {
     List<String> settingsList = [
       getTranslated(context, 'Language') ?? 'Language',
       getTranslated(context, 'Currency') ?? 'Currency',
-      (getTranslated(context, 'Date format') ?? 'Date format') +
-          ' (${DateFormat(sharedPrefs.dateFormat).format(now)})',
+      '${getTranslated(context, 'Date format') ?? 'Date format'} (${DateFormat(sharedPrefs.dateFormat).format(now)})',
       'Daily Reminder',
       getTranslated(context, 'Reset All Categories') ?? 'Reset All Categories',
       getTranslated(context, 'Delete All Data') ?? 'Delete All Data',
@@ -208,9 +207,9 @@ class _SettingsState extends State<Settings> {
       color: white,
       child: ListView.builder(
           itemCount: settingsList.length,
-          itemBuilder: (context, int) {
+          itemBuilder: (context, index) {
             // Daily Reminder có UI riêng
-            if (int == 3) {
+            if (index == 3) {
               return Column(
                 children: [
                   Padding(
@@ -221,7 +220,7 @@ class _SettingsState extends State<Settings> {
                         title: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8.w),
                           child: Text(
-                            settingsList[int],
+                            settingsList[index],
                             style: TextStyle(fontSize: 18.5.sp),
                           ),
                         ),
@@ -240,7 +239,7 @@ class _SettingsState extends State<Settings> {
                         leading: CircleAvatar(
                             radius: 24.r,
                             backgroundColor: Color.fromRGBO(229, 231, 234, 1),
-                            child: settingsIcons[int]),
+                            child: settingsIcons[index]),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -252,7 +251,7 @@ class _SettingsState extends State<Settings> {
                             Switch(
                               value: _isReminderEnabled,
                               onChanged: _toggleReminder,
-                              activeColor: Colors.orange,
+                              activeThumbColor: Colors.orange,
                             ),
                           ],
                         ),
@@ -273,14 +272,14 @@ class _SettingsState extends State<Settings> {
               onTap: () async {
                 // ImportExportScreen
 
-                if ((int == 0 || int == 1)) {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => pageRoute[int]));
-                } else if (int == 2) {
-                  Navigator.push(context,
+                if (index == 0 || index == 1) {
+                  unawaited(Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => pageRoute[index])));
+                } else if (index == 2) {
+                  unawaited(Navigator.push(context,
                           MaterialPageRoute(builder: (context) => FormatDate()))
-                      .then((value) => setState(() {}));
-                } else if (int == 4) {
+                      .then((value) => setState(() {})));
+                } else if (index == 4) {
                   // Navigator.push(
                   //     context,
                   //     MaterialPageRoute(
@@ -301,7 +300,7 @@ class _SettingsState extends State<Settings> {
                           'This action cannot be undone. Are you sure you want to reset all categories?',
                           'reset',
                           onReset);
-                } else if (int == 5) {
+                } else if (index == 5) {
                   Future onDeletion() async {
                     await DB.deleteAll();
                     customToast(context, 'All data has been deleted');
@@ -318,9 +317,9 @@ class _SettingsState extends State<Settings> {
                           'Deleted data can not be recovered. Are you sure you want to delete all data?',
                           'Delete',
                           onDeletion);
-                } else if (int == 6) {
+                } else if (index == 6) {
                   final controller = InputController();
-                  screenLockCreate(
+                  await screenLockCreate(
                       context: context,
                       title: Text(
                         getTranslated(context, 'Change Passcode') ??
@@ -333,9 +332,7 @@ class _SettingsState extends State<Settings> {
                       digits: 6,
                       inputController: controller,
                       customizedButtonChild: Icon(Icons.lock_reset),
-                      customizedButtonTap: () {
-                        controller.unsetConfirmed();
-                      },
+                      customizedButtonTap: controller.unsetConfirmed,
                       // footer: TextButton(
                       //         onPressed: () {
                       //            controller.unsetConfirmed();
@@ -347,11 +344,11 @@ class _SettingsState extends State<Settings> {
                         Navigator.of(context).pop();
                         customToast(context, 'Passcode has been changed');
                       });
-                } else if ((int == 7)) {
-                  Navigator.push(
+                } else if (index == 7) {
+                  unawaited(Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => ImportExportScreen()));
+                          builder: (context) => ImportExportScreen())));
                 }
               },
               child: Column(
@@ -364,14 +361,14 @@ class _SettingsState extends State<Settings> {
                         title: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8.w),
                           child: Text(
-                            '${settingsList[int]}',
+                            '${settingsList[index]}',
                             style: TextStyle(fontSize: 18.5.sp),
                           ),
                         ),
                         leading: CircleAvatar(
                             radius: 24.r,
                             backgroundColor: Color.fromRGBO(229, 231, 234, 1),
-                            child: settingsIcons[int]),
+                            child: settingsIcons[index]),
                         trailing: Icon(
                           Icons.arrow_forward_ios,
                           size: 20.sp,

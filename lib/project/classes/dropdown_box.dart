@@ -1,9 +1,7 @@
-import 'dart:ui';
 import 'package:provider/provider.dart';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
@@ -38,7 +36,7 @@ class DropDownBox extends StatelessWidget {
                 size: 28.sp,
               ),
               onChanged: (value) {
-                if (this.forAnalysis) {
+                if (forAnalysis) {
                   // Chỉ cập nhật AnalysisProvider cho màn hình Analysis
                   try {
                     final analysisProvider = context.read<AnalysisProvider>();

@@ -4,10 +4,10 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import '../classes/input_model.dart';
 import '../classes/category_item.dart';
 import '../classes/constants.dart';
-import '../database_management/sqflite_services.dart';
-import '../classes/custom_toast.dart';
+import '../services/alert_service.dart';
 import '../localization/methods.dart';
 import '../utils/amount_formatter.dart';
+import 'transaction_provider.dart';
 
 class FormProvider with ChangeNotifier {
   late InputModel _model;
@@ -18,13 +18,19 @@ class FormProvider with ChangeNotifier {
   late CategoryItem _selectedCategory;
   late PanelController panelController;
   late TimeOfDay _currentTime;
+  final TransactionProvider _transactionProvider;
 
   InputModel get model => _model;
   CategoryItem get selectedCategory => _selectedCategory;
   TimeOfDay get currentTime => _currentTime;
 
   // Constructor để khởi tạo state cho form
-  FormProvider({InputModel? input, String? type, IconData? categoryIcon}) {
+  FormProvider({
+    InputModel? input, 
+    String? type, 
+    IconData? categoryIcon,
+    required TransactionProvider transactionProvider,
+  }) : _transactionProvider = transactionProvider {
     // Khởi tạo các controller và focus node
     amountFocusNode = FocusNode();
     descriptionFocusNode = FocusNode();
@@ -38,7 +44,7 @@ class FormProvider with ChangeNotifier {
           TextEditingController(text: format(_model.amount ?? 0));
       descriptionController =
           TextEditingController(text: _model.description ?? '');
-      
+
       // Parse time từ string nếu có
       if (_model.time != null) {
         _currentTime = _parseTimeOfDay(_model.time!);
@@ -119,18 +125,18 @@ class FormProvider with ChangeNotifier {
     // Kiểm tra amount
     final amount = AmountFormatter.parseAmount(amountController.text);
     if (amount <= 0) {
-      return getTranslated(context, 'Please enter an amount greater than 0') ?? 
-             'Please enter an amount greater than 0';
+      return getTranslated(context, 'Please enter an amount greater than 0') ??
+          'Please enter an amount greater than 0';
     }
-    
+
     // Kiểm tra category đã được chọn chưa
-    if (_model.category == null || 
-        _model.category == 'Category' || 
+    if (_model.category == null ||
+        _model.category == 'Category' ||
         _model.category!.isEmpty) {
-      return getTranslated(context, 'Please select a category') ?? 
-             'Please select a category';
+      return getTranslated(context, 'Please select a category') ??
+          'Please select a category';
     }
-    
+
     return null; // Valid
   }
 
@@ -146,7 +152,11 @@ class FormProvider with ChangeNotifier {
     // Validate trước khi save
     final validationError = validateInput(context);
     if (validationError != null) {
-      customToast(context, validationError);
+      NotificationService.show(
+        context,
+        type: NotificationType.error,
+        message: validationError,
+      );
       return; // Dừng lại nếu không hợp lệ
     }
 
@@ -161,9 +171,9 @@ class FormProvider with ChangeNotifier {
       _model.time = _formatTimeToString(_currentTime); // Format chuẩn
 
       if (isNewInput) {
-        // Logic thêm mới - AWAIT database operation
-        await DB.insert(_model);
-        
+        // Logic thêm mới - Sử dụng TransactionProvider
+        await _transactionProvider.addTransaction(_model);
+
         // Clear form sau khi lưu THÀNH CÔNG
         amountController.clear();
         descriptionController.clear();
@@ -172,24 +182,33 @@ class FormProvider with ChangeNotifier {
         _model.category = 'Category';
         // Reset time to now
         _currentTime = TimeOfDay.now();
-        
-        customToast(context, getTranslated(context, 'Data has been saved') ?? 'Data has been saved');
+
+        NotificationService.show(
+          context,
+          type: NotificationType.success,
+          message: getTranslated(context, 'Data has been saved') ??
+              'Data has been saved',
+        );
       } else {
-        // Logic cập nhật - AWAIT database operation
-        await DB.update(_model);
-        
+        // Logic cập nhật - Sử dụng TransactionProvider
+        await _transactionProvider.updateTransaction(_model);
+
         Navigator.pop(context);
-        customToast(
-            context,
-            getTranslated(context, 'Transaction has been updated') ??
-                'Transaction has been updated');
+        NotificationService.show(
+          context,
+          type: NotificationType.success,
+          message: getTranslated(context, 'Transaction has been updated') ??
+              'Transaction has been updated',
+        );
       }
     } catch (e) {
       // Xử lý lỗi khi save
       print('Error saving input: $e');
-      customToast(
-        context, 
-        getTranslated(context, 'Error saving data') ?? 'Error saving data: ${e.toString()}'
+      NotificationService.show(
+        context,
+        type: NotificationType.error,
+        message:
+            getTranslated(context, 'Error saving data') ?? 'Error saving data',
       );
     } finally {
       // Tắt loading state
@@ -198,11 +217,38 @@ class FormProvider with ChangeNotifier {
     }
   }
 
-  // Hàm xóa dữ liệu
-  void deleteInput(BuildContext context) {
-    DB.delete(_model.id!);
-    Navigator.pop(context);
-    customToast(context, getTranslated(context, 'Transaction has been deleted') ?? 'Transaction has been deleted');
+  // Hàm xóa dữ liệu với confirmation alert
+  Future<void> deleteInput(BuildContext context) async {
+    final confirmed = await NotificationService.show(
+      context,
+      type: NotificationType.delete,
+      title: 'Delete Transaction',
+      message:
+          'Are you sure you want to delete this transaction? This action cannot be undone.',
+      actionText: 'Delete',
+      cancelText: 'Cancel',
+    );
+
+    if (confirmed == true) {
+      try {
+        await _transactionProvider.deleteTransaction(_model.id!);
+        Navigator.pop(context);
+        NotificationService.show(
+          context,
+          type: NotificationType.success,
+          message: getTranslated(context, 'Transaction has been deleted') ??
+              'Transaction has been deleted',
+        );
+      } catch (e) {
+        print('Error deleting input: $e');
+        NotificationService.show(
+          context,
+          type: NotificationType.error,
+          message: getTranslated(context, 'Error deleting data') ??
+              'Error deleting data',
+        );
+      }
+    }
   }
 
   // Rất quan trọng: Giải phóng tài nguyên

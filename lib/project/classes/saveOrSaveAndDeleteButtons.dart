@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+ import '../utils/responsive_extensions.dart';
 
 import 'package:provider/provider.dart';
 
@@ -42,8 +41,8 @@ class SaveButton extends StatelessWidget {
           foregroundColor: white,
           backgroundColor: const Color.fromRGBO(236, 158, 66, 1),
           padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 20.w),
-          disabledForegroundColor: grey.withOpacity(0.38),
-          disabledBackgroundColor: grey.withOpacity(0.12),
+          disabledForegroundColor: grey.withValues(alpha: 0.38),
+          disabledBackgroundColor: grey.withValues(alpha: 0.12),
           elevation: 10,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18.0.r),
@@ -122,8 +121,8 @@ class SaveAndDeleteButton extends StatelessWidget {
                 foregroundColor: red,
                 backgroundColor: white,
                 padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 20.w),
-                disabledForegroundColor: grey.withOpacity(0.38),
-                disabledBackgroundColor: grey.withOpacity(0.12),
+                disabledForegroundColor: grey.withValues(alpha: 0.38),
+                disabledBackgroundColor: grey.withValues(alpha: 0.12),
                 side: BorderSide(
                   color: red,
                   width: 2.h,

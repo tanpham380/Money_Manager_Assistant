@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../classes/input_model.dart';
-import '../database_management/sqflite_services.dart';
+import 'transaction_provider.dart';
 
 /// Trạng thái của màn hình Calendar
 enum CalendarState {
@@ -16,7 +15,7 @@ enum CalendarState {
 class CalendarProvider with ChangeNotifier {
   // ============ THUỘC TÍNH PRIVATE ============
   
-  CalendarState _state = CalendarState.loading;
+  final TransactionProvider _transactionProvider;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -24,15 +23,11 @@ class CalendarProvider with ChangeNotifier {
   DateTime? _rangeEnd;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
   
-  // Dữ liệu giao dịch
-  Map<DateTime, List<InputModel>> _allEvents = {};
+  // Dữ liệu giao dịch (computed từ TransactionProvider)
   List<InputModel> _selectedDayEvents = [];
-  
-  String? _errorMessage;
   
   // ============ GETTERS ============
   
-  CalendarState get state => _state;
   CalendarFormat get calendarFormat => _calendarFormat;
   DateTime get focusedDay => _focusedDay;
   DateTime? get selectedDay => _selectedDay;
@@ -40,84 +35,61 @@ class CalendarProvider with ChangeNotifier {
   DateTime? get rangeEnd => _rangeEnd;
   RangeSelectionMode get rangeSelectionMode => _rangeSelectionMode;
   List<InputModel> get selectedDayEvents => _selectedDayEvents;
-  String? get errorMessage => _errorMessage;
+  
+  // Delegate từ TransactionProvider
+  List<InputModel> get allTransactions => _transactionProvider.allTransactions;
+  bool get isLoading => _transactionProvider.isLoading;
+  String? get errorMessage => _transactionProvider.errorMessage;
+  
+  // Computed state
+  CalendarState get state {
+    if (_transactionProvider.isLoading) return CalendarState.loading;
+    if (_transactionProvider.errorMessage != null) return CalendarState.error;
+    if (_transactionProvider.allTransactions.isEmpty) return CalendarState.empty;
+    return CalendarState.loaded;
+  }
   
   // ============ CONSTRUCTOR ============
   
-  CalendarProvider() {
+  CalendarProvider(this._transactionProvider) {
     _selectedDay = _focusedDay;
-    fetchTransactions();
+    _updateSelectedDayEvents();
+    
+    // Listen changes từ TransactionProvider
+    _transactionProvider.addListener(_onTransactionsChanged);
+  }
+  
+  // ============ CLEANUP ============
+  
+  @override
+  void dispose() {
+    _transactionProvider.removeListener(_onTransactionsChanged);
+    super.dispose();
+  }
+  
+  // ============ PRIVATE METHODS ============
+  
+  /// Callback khi TransactionProvider có changes
+  void _onTransactionsChanged() {
+    _updateSelectedDayEvents();
+    notifyListeners();
   }
   
   // ============ PHƯƠNG THỨC CHÍNH ============
   
-  /// Tải và xử lý tất cả giao dịch từ database
-  Future<void> fetchTransactions() async {
-    try {
-      // Đặt trạng thái loading
-      _state = CalendarState.loading;
-      notifyListeners();
-      
-      // Gọi DB MỘT LẦN duy nhất
-      final List<InputModel> allTransactions = await DB.inputModelList();
-      
-      // Kiểm tra nếu không có dữ liệu
-      if (allTransactions.isEmpty) {
-        _state = CalendarState.empty;
-        _allEvents = {};
-        _selectedDayEvents = [];
-        notifyListeners();
-        return;
-      }
-      
-      // Nhóm giao dịch theo ngày
-      _allEvents = _groupTransactionsByDate(allTransactions);
-      
-      // Cập nhật giao dịch cho ngày được chọn
-      _updateSelectedDayEvents();
-      
-      // Cập nhật trạng thái thành công
-      _state = CalendarState.loaded;
-      
-    } catch (e) {
-      _state = CalendarState.error;
-      _errorMessage = e.toString();
-      _allEvents = {};
-      _selectedDayEvents = [];
-    } finally {
-      notifyListeners();
-    }
+  /// Refresh data từ TransactionProvider
+  Future<void> refreshData() async {
+    await _transactionProvider.fetchAllTransactions();
   }
   
-  /// Xóa giao dịch và làm mới dữ liệu
+  /// Xóa giao dịch (delegate cho TransactionProvider)
   Future<void> deleteTransaction(int id) async {
-    try {
-      await DB.delete(id);
-      await fetchTransactions();
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
+    await _transactionProvider.deleteTransaction(id);
   }
   
-  /// Nhân bản giao dịch và làm mới dữ liệu
+  /// Nhân bản giao dịch (delegate cho TransactionProvider)
   Future<void> duplicateTransaction(InputModel model) async {
-    try {
-      // Tạo bản sao với id = null để insert mới
-      final duplicatedModel = InputModel(
-        type: model.type,
-        amount: model.amount,
-        category: model.category,
-        description: model.description,
-        date: model.date,
-        time: model.time,
-      );
-      await DB.insert(duplicatedModel);
-      await fetchTransactions();
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
+    await _transactionProvider.duplicateTransaction(model);
   }
   
   // ============ XỬ LÝ SỰ KIỆN CALENDAR ============
@@ -172,38 +144,7 @@ class CalendarProvider with ChangeNotifier {
   
   /// Lấy danh sách giao dịch cho một ngày cụ thể
   List<InputModel> getEventsForDay(DateTime day) {
-    return _allEvents[_normalizeDate(day)] ?? [];
-  }
-  
-  /// Nhóm giao dịch theo ngày
-  Map<DateTime, List<InputModel>> _groupTransactionsByDate(
-    List<InputModel> transactions,
-  ) {
-    final Map<DateTime, List<InputModel>> grouped = {};
-    
-    for (final transaction in transactions) {
-      if (transaction.date == null) continue;
-      
-      try {
-        final DateTime date = DateFormat('dd/MM/yyyy').parse(transaction.date!);
-        final DateTime normalizedDate = _normalizeDate(date);
-        
-        if (grouped[normalizedDate] == null) {
-          grouped[normalizedDate] = [];
-        }
-        grouped[normalizedDate]!.add(transaction);
-      } catch (e) {
-        // Bỏ qua giao dịch có format ngày không hợp lệ
-        continue;
-      }
-    }
-    
-    return grouped;
-  }
-  
-  /// Chuẩn hóa ngày về UTC 00:00:00
-  DateTime _normalizeDate(DateTime date) {
-    return DateTime.utc(date.year, date.month, date.day);
+    return _transactionProvider.getTransactionsForDate(day);
   }
   
   /// Cập nhật danh sách giao dịch cho ngày được chọn
