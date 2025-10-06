@@ -1,18 +1,17 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_material_pickers/helpers/show_date_picker.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
 import '../classes/app_bar.dart';
 import '../classes/category_item.dart';
 import '../classes/constants.dart';
 import '../classes/input_model.dart';
-import '../classes/keyboard.dart';
 import '../classes/saveOrSaveAndDeleteButtons.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
@@ -62,41 +61,7 @@ class _AddInputState extends State<AddInput> {
   }
 }
 
-class PanelForKeyboard extends StatelessWidget {
-  const PanelForKeyboard(
-    this.body, {
-    required this.formProvider,
-    Key? key,
-  }) : super(key: key);
-
-  final Widget body;
-  final FormProvider formProvider;
-
-  @override
-  Widget build(BuildContext context) {
-    // Luôn sử dụng provider được truyền vào
-    final provider = formProvider;
-
-    return SlidingUpPanel(
-        controller: provider.panelController,
-        minHeight: 0,
-        maxHeight: 300.h,
-        parallaxEnabled: true,
-        isDraggable: false,
-        panelSnapping: true,
-        panel: CustomKeyboard(
-          panelController: provider.panelController,
-          mainFocus: provider.amountFocusNode,
-          nextFocus: provider.descriptionFocusNode,
-          onTextInput: provider.insertAmountText,
-          onBackspace: provider.backspaceAmount,
-          page: provider.model.type == 'Income'
-              ? IncomeCategory()
-              : ExpenseCategory(),
-        ),
-        body: body);
-  }
-}
+// PanelForKeyboard đã bị XÓA - Sử dụng native keyboard thay thế
 
 class AddEditInput extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -113,49 +78,44 @@ class AddEditInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use the TransactionProvider from the ancestor (Home widget)
-    return ChangeNotifierProxyProvider<TransactionProvider, FormProvider>(
-      create: (context) {
-        // Don't access TransactionProvider here - it will be provided in update
-        // Create a temporary FormProvider that will be replaced by update
-        return FormProvider(
-          input: inputModel,
-          type: type,
-          categoryIcon: categoryIcon,
-          transactionProvider: context.read<TransactionProvider>(),
-        );
-      },
-      update: (context, transactionProvider, previous) {
-        // If previous exists and has the same input, reuse it
-        if (previous != null && 
-            previous.model.id == inputModel?.id &&
-            previous.model.type == (type ?? inputModel?.type)) {
-          return previous;
-        }
-        // Otherwise create new FormProvider with the TransactionProvider
-        return FormProvider(
-          input: inputModel,
-          type: type,
-          categoryIcon: categoryIcon,
-          transactionProvider: transactionProvider,
-        );
-      },
+    // ĐÃ ĐƠN GIẢN HÓA - Sử dụng ChangeNotifierProvider trực tiếp
+    return ChangeNotifierProvider(
+      create: (context) => FormProvider(
+        input: inputModel,
+        type: type,
+        categoryIcon: categoryIcon,
+        transactionProvider: context.read<TransactionProvider>(),
+      ),
       child: Consumer<FormProvider>(
         builder: (context, provider, child) {
-          return PanelForKeyboard(
-            formProvider: provider, // Truyền provider vào
-            ListView(
+          return GestureDetector(
+            onTap: () {
+              // Ẩn keyboard khi tap ra ngoài
+              FocusScope.of(context).unfocus();
+            },
+            child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               children: [
-                // Card cho AmountCard
+                // CARD DUY NHẤT - Merge tất cả các trường vào một Card
                 Card(
                   elevation: 4.0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0.r),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0.w),
-                    child: const AmountCard(),
+                  child: Column(
+                    children: [
+                      // Amount Field
+                      const AmountCard(),
+                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
+                      // Category Field
+                      const CategoryCard(),
+                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
+                      // Description Field
+                      const DescriptionCard(),
+                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
+                      // Date & Time Field
+                      const DateCard(),
+                    ],
                   ),
                 ),
 
@@ -302,25 +262,7 @@ class AddEditInput extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 16.0),
-
-                // Card cho nhóm Category, Description, Date
-                Card(
-                  elevation: 4.0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0.r),
-                  ),
-                  child: Column(
-                    children: [
-                      const CategoryCard(),
-                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
-                      const DescriptionCard(),
-                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
-                      const DateCard(),
-                    ],
-                  ),
-                ),
-
+                // Save/Delete Buttons
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 70.h),
                   child: inputModel != null
@@ -377,19 +319,20 @@ class AmountCard extends StatelessWidget {
               ),
               TextFormField(
                 controller: amountController,
-                readOnly: true,
+                // SỬ DỤNG BÀN PHÍM NATIVE
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.next,
                 showCursor: true,
-                maxLines: null,
-                minLines: 1,
-                onTap: () {
-                  // Request focus và mở panel bàn phím
-                  provider.amountFocusNode.requestFocus();
-
-                  // Mở panel nếu chưa mở
-                  if (!provider.panelController.isPanelOpen) {
-                    provider.panelController.open();
-                  }
+                maxLines: 1,
+                autofocus: false,
+                onFieldSubmitted: (_) {
+                  // Chuyển sang trường Description
+                  provider.descriptionFocusNode.requestFocus();
                 },
+                // Chỉ cho phép nhập số và dấu chấm
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                ],
                 cursorColor: colorMain,
                 style: GoogleFonts.aBeeZee(
                     color: colorMain,
@@ -397,9 +340,10 @@ class AmountCard extends StatelessWidget {
                     fontWeight: FontWeight.bold),
                 focusNode: provider.amountFocusNode,
                 decoration: InputDecoration(
+                  border: InputBorder.none,
                   hintText: '0',
                   hintStyle: GoogleFonts.aBeeZee(
-                      color: colorMain,
+                      color: colorMain.withValues(alpha: 0.5),
                       fontSize: 35.sp,
                       fontWeight: FontWeight.bold),
                   icon: Padding(
@@ -517,91 +461,49 @@ class DescriptionCard extends StatelessWidget {
         final descriptionController = provider.descriptionController;
         final colorMain = provider.model.type == 'Income' ? green : red;
 
-        return Column(
-          children: [
-            // Input field
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.5.h),
-              child: TextFormField(
-                controller: descriptionController,
-                maxLines: null,
-                minLines: 1,
-                keyboardType: TextInputType.text,
-                keyboardAppearance: Brightness.light,
-                cursorColor: colorMain,
-                textCapitalization: TextCapitalization.sentences,
-                style: TextStyle(fontSize: 20.sp),
-                focusNode: provider.descriptionFocusNode,
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) {
-                  // Đóng keyboard khi nhấn Done
-                  provider.descriptionFocusNode.unfocus();
-                },
-                decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: getTranslated(context, 'Description'),
-                    hintStyle: GoogleFonts.cousine(
-                      fontSize: 22.sp,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    suffixIcon: descriptionController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              size: 20.sp,
-                            ),
-                            onPressed: descriptionController.clear)
-                        : const SizedBox(),
-                    icon: Padding(
-                      padding: EdgeInsets.only(right: 15.w),
-                      child: Icon(
-                        Icons.description_outlined,
-                        size: 40.sp,
-                        color: Colors.blueGrey,
-                      ),
-                    )),
-              ),
-            ),
-
-            // Keyboard control bar - hiển thị khi focus
-            if (provider.descriptionFocusNode.hasFocus)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  border: Border(
-                    top: BorderSide(color: Colors.grey[300]!, width: 1),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.5.h),
+          child: TextFormField(
+            controller: descriptionController,
+            maxLines: null,
+            minLines: 1,
+            keyboardType: TextInputType.text,
+            keyboardAppearance: Brightness.light,
+            cursorColor: colorMain,
+            textCapitalization: TextCapitalization.sentences,
+            style: TextStyle(fontSize: 20.sp),
+            focusNode: provider.descriptionFocusNode,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) {
+              // Đóng keyboard khi nhấn Done
+              provider.descriptionFocusNode.unfocus();
+            },
+            decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: getTranslated(context, 'Description'),
+                hintStyle: GoogleFonts.cousine(
+                  fontSize: 22.sp,
+                  fontStyle: FontStyle.italic,
+                ),
+                suffixIcon: descriptionController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.clear,
+                          size: 20.sp,
+                        ),
+                        onPressed: () {
+                          descriptionController.clear();
+                        })
+                    : const SizedBox(),
+                icon: Padding(
+                  padding: EdgeInsets.only(right: 15.w),
+                  child: Icon(
+                    Icons.description_outlined,
+                    size: 40.sp,
+                    color: Colors.blueGrey,
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Back to Amount button - nhỏ hơn
-                    TextButton.icon(
-                      icon: Icon(Icons.arrow_upward,
-                          size: 16.sp, color: colorMain),
-                      label: Text(
-                        getTranslated(context, 'Amount') ?? 'Amount',
-                        style: TextStyle(fontSize: 13.sp, color: colorMain),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 8.h),
-                      ),
-                      onPressed: () {
-                        provider.descriptionFocusNode.unfocus();
-                        Future.delayed(Duration(milliseconds: 100), () {
-                          provider.amountFocusNode.requestFocus();
-                          if (!provider.panelController.isPanelOpen) {
-                            provider.panelController.open();
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-          ],
+                )),
+          ),
         );
       },
     );

@@ -2,23 +2,30 @@ import 'package:flutter/material.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../classes/constants.dart';
 import '../classes/input_model.dart';
+import '../classes/transaction_list_item.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
+import '../utils/category_icon_helper.dart';
+import '../provider/transaction_provider.dart';
+import '../app_pages/edit.dart';
+import '../services/alert_service.dart' show AlertService, NotificationType;
+
+// Alias để giữ tính tương thích
+typedef NotificationService = AlertService;
 
 /// Widget hiển thị nhóm giao dịch theo ngày
-/// Tap để xem chi tiết
+/// SỬ DỤNG EXPANSIONTILE - Xem transactions in-place không cần navigate
 class DailyTransactionGroup extends StatelessWidget {
   final DateTime date;
   final List<InputModel> transactions;
-  final VoidCallback onTap;
 
   const DailyTransactionGroup({
     Key? key,
     required this.date,
     required this.transactions,
-    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -52,83 +59,50 @@ class DailyTransactionGroup extends StatelessWidget {
       dateLabel = _formatDate(context, date);
     }
 
+    // SỬ DỤNG EXPANSIONTILE - Cho phép mở rộng để xem transactions
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       elevation: 2.0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          childrenPadding: EdgeInsets.only(bottom: 12.h),
+          leading: Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: blue2.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(
+              Icons.calendar_today_rounded,
+              color: blue3,
+              size: 20.sp,
+            ),
+          ),
+          title: Text(
+            dateLabel,
+            style: GoogleFonts.poppins(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Ngày và số lượng giao dịch
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Ngày
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(8.w),
-                        decoration: BoxDecoration(
-                          color: blue2.withValues( alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Icon(
-                          Icons.calendar_today_rounded,
-                          color: blue3,
-                          size: 20.sp,
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            dateLabel,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'transaction' : 'transactions') ?? (transactions.length == 1 ? 'transaction' : 'transactions')}',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  
-                  // Arrow icon
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.grey[400],
-                    size: 28.sp,
-                  ),
-                ],
+              SizedBox(height: 4.h),
+              Text(
+                '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'transaction' : 'transactions') ?? (transactions.length == 1 ? 'transaction' : 'transactions')}',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey[600],
+                ),
               ),
-              
-              SizedBox(height: 16.h),
-              
-              // Divider
-              Container(
-                height: 1.h,
-                color: Colors.grey[200],
-              ),
-              
-              SizedBox(height: 16.h),
-              
+              SizedBox(height: 12.h),
               // Summary: Thu nhập, Chi phí, Cân đối
               Row(
                 children: [
@@ -142,9 +116,7 @@ class DailyTransactionGroup extends StatelessWidget {
                       icon: Icons.arrow_downward_rounded,
                     ),
                   ),
-                  
-                  SizedBox(width: 12.w),
-                  
+                  SizedBox(width: 8.w),
                   // Chi phí
                   Expanded(
                     child: _buildSummaryItem(
@@ -155,9 +127,7 @@ class DailyTransactionGroup extends StatelessWidget {
                       icon: Icons.arrow_upward_rounded,
                     ),
                   ),
-                  
-                  SizedBox(width: 12.w),
-                  
+                  SizedBox(width: 8.w),
                   // Cân đối
                   Expanded(
                     child: _buildSummaryItem(
@@ -172,6 +142,34 @@ class DailyTransactionGroup extends StatelessWidget {
               ),
             ],
           ),
+          children: [
+            // Danh sách các transactions - hiển thị khi mở rộng
+            ...transactions.map((transaction) => Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              child: TransactionListItem(
+                transaction: transaction,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Edit(
+                        inputModel: transaction,
+                        categoryIcon: CategoryIconHelper.getIconForCategory(
+                          transaction.category ?? 'Category',
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                onDelete: () async {
+                  await _deleteTransaction(context, transaction.id!);
+                },
+                onDuplicate: () async {
+                  await _duplicateTransaction(context, transaction);
+                },
+              ),
+            )).toList(),
+          ],
         ),
       ),
     );
@@ -223,6 +221,70 @@ class DailyTransactionGroup extends StatelessWidget {
     );
   }
   
+  /// Xóa giao dịch với confirmation
+  Future<void> _deleteTransaction(BuildContext context, int id) async {
+    final confirmed = await NotificationService.show(
+      context,
+      type: NotificationType.delete,
+      title: getTranslated(context, 'Delete Transaction') ?? 'Delete Transaction',
+      message: getTranslated(context, 'Are you sure you want to delete this transaction?') ??
+          'Are you sure you want to delete this transaction?',
+      actionText: getTranslated(context, 'Delete') ?? 'Delete',
+      cancelText: getTranslated(context, 'Cancel') ?? 'Cancel',
+    );
+
+    if (confirmed == true) {
+      try {
+        final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+        await transactionProvider.deleteTransaction(id);
+        
+        if (context.mounted) {
+          NotificationService.show(
+            context,
+            type: NotificationType.success,
+            message: getTranslated(context, 'Transaction has been deleted') ??
+                'Transaction has been deleted',
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          NotificationService.show(
+            context,
+            type: NotificationType.error,
+            message: getTranslated(context, 'Error deleting transaction') ??
+                'Error deleting transaction',
+          );
+        }
+      }
+    }
+  }
+
+  /// Sao chép giao dịch
+  Future<void> _duplicateTransaction(BuildContext context, InputModel transaction) async {
+    try {
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      await transactionProvider.duplicateTransaction(transaction);
+      
+      if (context.mounted) {
+        NotificationService.show(
+          context,
+          type: NotificationType.success,
+          message: getTranslated(context, 'Transaction has been duplicated') ??
+              'Transaction has been duplicated',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        NotificationService.show(
+          context,
+          type: NotificationType.error,
+          message: getTranslated(context, 'Error duplicating transaction') ??
+              'Error duplicating transaction',
+        );
+      }
+    }
+  }
+
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year && 

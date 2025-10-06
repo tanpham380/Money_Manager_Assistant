@@ -8,11 +8,11 @@ import '../classes/app_bar.dart';
 import '../classes/constants.dart';
 import '../classes/daily_transaction_group.dart';
 import '../classes/input_model.dart';
+import '../classes/state_widgets.dart';
 import '../localization/methods.dart';
 import '../provider/calendar_provider.dart';
 import '../provider/transaction_provider.dart';
 import '../provider/navigation_provider.dart';
-import 'daily_transaction_detail.dart';
 
 class Calendar extends StatelessWidget {
   @override
@@ -39,17 +39,15 @@ class Calendar extends StatelessWidget {
         body: Consumer<CalendarProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading) {
-              return Center(
-                child: CircularProgressIndicator(color: blue3),
+              return LoadingStateWidget(
+                message: getTranslated(context, 'Loading calendar') ?? 'Loading calendar...',
               );
             }
             
             if (provider.errorMessage != null) {
-              return Center(
-                child: Text(
-                  provider.errorMessage ?? 'An error occurred',
-                  style: TextStyle(color: red, fontSize: 16.sp),
-                ),
+              return ErrorStateWidget(
+                message: provider.errorMessage,
+                onRetry: () => provider.refreshData(),
               );
             }
             
@@ -196,27 +194,11 @@ class _CalendarContent extends StatelessWidget {
     
     // Nếu đang ở range mode, show empty state
     if (isRangeMode) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.date_range_rounded,
-              size: 64.sp,
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              getTranslated(context, 'Select a single day to view transactions') ??
-                  'Select a single day to view transactions',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      return EmptyStateWidget(
+        icon: Icons.date_range_rounded,
+        title: getTranslated(context, 'Range selection mode') ?? 'Range selection mode',
+        message: getTranslated(context, 'Select a single day to view transactions') ??
+            'Select a single day to view transactions',
       );
     }
     
@@ -224,26 +206,12 @@ class _CalendarContent extends StatelessWidget {
     final groupedTransactions = _groupTransactionsByDate(provider);
     
     if (groupedTransactions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.event_busy_rounded,
-              size: 64.sp,
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              getTranslated(context, 'No transactions found') ??
-                  'No transactions found',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
+      return NoTransactionsWidget(
+        date: provider.selectedDay,
+        onAddTransaction: () {
+          final navProvider = context.read<NavigationProvider>();
+          navProvider.changeTab(0); // Navigate to Input tab
+        },
       );
     }
     
@@ -268,20 +236,7 @@ class _CalendarContent extends StatelessWidget {
           return DailyTransactionGroup(
             date: date,
             transactions: transactions,
-            onTap: () {
-              // Chuyển sang màn hình chi tiết - CHỈ TRUYỀN DATE
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DailyTransactionDetail(
-                    date: date,
-                  ),
-                ),
-              ).then((_) {
-                // Refresh data khi quay lại
-                provider.refreshData();
-              });
-            },
+            // Không cần onTap nữa - ExpansionTile tự động xử lý
           );
         },
       ),

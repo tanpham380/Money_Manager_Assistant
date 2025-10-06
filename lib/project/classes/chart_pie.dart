@@ -5,7 +5,7 @@ import 'package:money_assistant/project/database_management/shared_preferences_s
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../localization/methods.dart';
-import 'custom_toast.dart';
+import '../services/alert_service.dart';
 import 'input_model.dart';
 
 class ChartPie extends StatelessWidget {
@@ -60,8 +60,11 @@ class ChartPie extends StatelessWidget {
                             totalAmount) /
                         100);
                 // final Text = "Tiền " + details.dataPoints![details.pointIndex!].x! + " "+formattedAmount;
-                customToast(
-                    context, 'Tiền ${details.dataPoints![details.pointIndex!].x!} $formattedAmount');
+                AlertService.show(
+                  context,
+                  type: NotificationType.info,
+                  message: 'Tiền ${details.dataPoints![details.pointIndex!].x!} $formattedAmount',
+                );
               }
             },
             startAngle: 90,

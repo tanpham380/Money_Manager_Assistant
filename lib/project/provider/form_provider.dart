@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 import '../classes/input_model.dart';
 import '../classes/category_item.dart';
 import '../classes/constants.dart';
@@ -16,7 +15,6 @@ class FormProvider with ChangeNotifier {
   late FocusNode amountFocusNode;
   late FocusNode descriptionFocusNode;
   late CategoryItem _selectedCategory;
-  late PanelController panelController;
   late TimeOfDay _currentTime;
   final TransactionProvider _transactionProvider;
 
@@ -34,7 +32,6 @@ class FormProvider with ChangeNotifier {
     // Khởi tạo các controller và focus node
     amountFocusNode = FocusNode();
     descriptionFocusNode = FocusNode();
-    panelController = PanelController();
 
     if (input != null) {
       // Trường hợp chỉnh sửa (Edit)
@@ -58,7 +55,7 @@ class FormProvider with ChangeNotifier {
       _model = InputModel(
         type: type,
         date: DateFormat('dd/MM/yyyy').format(now),
-        time: null, // Sẽ được format khi cần hiển thị
+        time: null,
       );
       _selectedCategory = categoryItem(Icons.category_outlined, 'Category');
       amountController = TextEditingController();
@@ -95,7 +92,6 @@ class FormProvider with ChangeNotifier {
   // Cập nhật giờ
   void updateTime(TimeOfDay newTime) {
     _currentTime = newTime;
-    // Time sẽ được format khi save hoặc hiển thị
     notifyListeners();
   }
 
@@ -104,19 +100,7 @@ class FormProvider with ChangeNotifier {
     return _currentTime.format(context);
   }
 
-  // Hàm xử lý nhập liệu cho bàn phím tùy chỉnh
-  // Delegate logic phức tạp cho AmountFormatter utility class
-  void insertAmountText(String myText) {
-    AmountFormatter.insertText(amountController, myText);
-    notifyListeners();
-  }
-
-  void backspaceAmount() {
-    AmountFormatter.backspace(amountController);
-    notifyListeners();
-  }
-
-  // Loading state để hiển thị khi đang save
+  // Loading state
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -129,7 +113,7 @@ class FormProvider with ChangeNotifier {
           'Please enter an amount greater than 0';
     }
 
-    // Kiểm tra category đã được chọn chưa
+    // Kiểm tra category
     if (_model.category == null ||
         _model.category == 'Category' ||
         _model.category!.isEmpty) {
@@ -137,7 +121,7 @@ class FormProvider with ChangeNotifier {
           'Please select a category';
     }
 
-    return null; // Valid
+    return null;
   }
 
   /// Format time thành string chuẩn "HH:mm"
@@ -147,54 +131,44 @@ class FormProvider with ChangeNotifier {
     return '$hour:$minute';
   }
 
-  // Hàm lưu dữ liệu - ĐÃ SỬA: async, validation, error handling
+  // Hàm lưu dữ liệu
   Future<void> saveInput(BuildContext context, {bool isNewInput = true}) async {
-    // Validate trước khi save
     final validationError = validateInput(context);
     if (validationError != null) {
-      NotificationService.show(
+       AlertService.show(
         context,
         type: NotificationType.error,
         message: validationError,
       );
-      return; // Dừng lại nếu không hợp lệ
+      return;
     }
 
-    // Hiển thị loading state
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Cập nhật model với dữ liệu mới
       _model.amount = AmountFormatter.parseAmount(amountController.text);
       _model.description = descriptionController.text;
-      _model.time = _formatTimeToString(_currentTime); // Format chuẩn
+      _model.time = _formatTimeToString(_currentTime);
 
       if (isNewInput) {
-        // Logic thêm mới - Sử dụng TransactionProvider
         await _transactionProvider.addTransaction(_model);
-
-        // Clear form sau khi lưu THÀNH CÔNG
         amountController.clear();
         descriptionController.clear();
-        // Reset category to default
         _selectedCategory = categoryItem(Icons.category_outlined, 'Category');
         _model.category = 'Category';
-        // Reset time to now
         _currentTime = TimeOfDay.now();
 
-        NotificationService.show(
+         AlertService.show(
           context,
           type: NotificationType.success,
           message: getTranslated(context, 'Data has been saved') ??
               'Data has been saved',
         );
       } else {
-        // Logic cập nhật - Sử dụng TransactionProvider
         await _transactionProvider.updateTransaction(_model);
-
         Navigator.pop(context);
-        NotificationService.show(
+         AlertService.show(
           context,
           type: NotificationType.success,
           message: getTranslated(context, 'Transaction has been updated') ??
@@ -202,38 +176,36 @@ class FormProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      // Xử lý lỗi khi save
       print('Error saving input: $e');
-      NotificationService.show(
+       AlertService.show(
         context,
         type: NotificationType.error,
         message:
             getTranslated(context, 'Error saving data') ?? 'Error saving data',
       );
     } finally {
-      // Tắt loading state
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Hàm xóa dữ liệu với confirmation alert
+  // Hàm xóa dữ liệu
   Future<void> deleteInput(BuildContext context) async {
-    final confirmed = await NotificationService.show(
+    final confirmed = await  AlertService.show(
       context,
       type: NotificationType.delete,
-      title: 'Delete Transaction',
-      message:
+      title: getTranslated(context, 'Delete Transaction') ?? 'Delete Transaction',
+      message: getTranslated(context, 'Are you sure you want to delete this transaction?') ??
           'Are you sure you want to delete this transaction? This action cannot be undone.',
-      actionText: 'Delete',
-      cancelText: 'Cancel',
+      actionText: getTranslated(context, 'Delete') ?? 'Delete',
+      cancelText: getTranslated(context, 'Cancel') ?? 'Cancel',
     );
 
     if (confirmed == true) {
       try {
         await _transactionProvider.deleteTransaction(_model.id!);
         Navigator.pop(context);
-        NotificationService.show(
+         AlertService.show(
           context,
           type: NotificationType.success,
           message: getTranslated(context, 'Transaction has been deleted') ??
@@ -241,7 +213,7 @@ class FormProvider with ChangeNotifier {
         );
       } catch (e) {
         print('Error deleting input: $e');
-        NotificationService.show(
+         AlertService.show(
           context,
           type: NotificationType.error,
           message: getTranslated(context, 'Error deleting data') ??
@@ -251,14 +223,12 @@ class FormProvider with ChangeNotifier {
     }
   }
 
-  // Rất quan trọng: Giải phóng tài nguyên
   @override
   void dispose() {
     amountController.dispose();
     descriptionController.dispose();
     amountFocusNode.dispose();
     descriptionFocusNode.dispose();
-    // PanelController không có dispose method
     super.dispose();
   }
 }

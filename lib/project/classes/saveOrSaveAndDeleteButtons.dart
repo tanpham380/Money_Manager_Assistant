@@ -7,10 +7,10 @@ import 'package:provider/provider.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
+import '../services/alert_service.dart';
 import 'alert_dialog.dart';
 import 'category_item.dart';
 import 'constants.dart';
-import 'custom_toast.dart';
 
 class SaveButton extends StatelessWidget {
   final VoidCallback? onSave;
@@ -189,7 +189,11 @@ Future<void> deleteCategoryFunction(
           .getAllExpenseItems();
     }
     Navigator.pop(context);
-    customToast(context, 'Category has been deleted');
+    AlertService.show(
+      context,
+      type: NotificationType.success,
+      message: getTranslated(context, 'Category has been deleted') ?? 'Category has been deleted',
+    );
   }
 
   Platform.isIOS

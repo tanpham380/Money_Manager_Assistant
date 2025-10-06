@@ -2,7 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-class NotificationService {
+class  NotificationService {
   // Allow injecting a plugin instance for testing. If null, a default
   // FlutterLocalNotificationsPlugin is created.
   static FlutterLocalNotificationsPlugin _notificationsPlugin =

@@ -207,6 +207,23 @@
   "Settings": "Cài đặt",
   "Light": "Sáng",
   "Dark": "Tối",
-  "System": "Hệ thống"
-
+  "System": "Hệ thống",
+  "Error deleting transaction": "Lỗi xóa giao dịch",
+  "Error duplicating transaction": "Lỗi sao chép giao dịch",
+  "Error saving data": "Lỗi lưu dữ liệu",
+  "No data available": "Không có dữ liệu",
+  "Add new transaction": "Thêm giao dịch mới",
+  "Donut": "Bánh donut",
+  "Bar": "Cột",
+  "Trend": "Xu hướng",
+  "Ok": "Đồng ý",
+  "Delete Transaction": "Xóa giao dịch",
+  "Error occurred": "Đã xảy ra lỗi",
+  "Try again": "Thử lại",
+  "No transactions": "Không có giao dịch",
+  "No transactions on this date": "Không có giao dịch trong ngày này",
+  "Add transaction": "Thêm giao dịch",
+  "Loading calendar": "Đang tải lịch...",
+  "Range selection mode": "Chế độ chọn khoảng"
 }
+

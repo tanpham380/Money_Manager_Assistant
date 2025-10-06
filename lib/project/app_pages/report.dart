@@ -12,13 +12,13 @@ import 'dart:io' show Platform;
 import '../classes/alert_dialog.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
-import '../classes/custom_toast.dart';
 import '../classes/dropdown_box.dart';
 import '../classes/input_model.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
+import '../services/alert_service.dart';
 import 'edit.dart';
 
 var year = todayDT.year;
@@ -187,37 +187,37 @@ class _ReportBodyState extends State<ReportBody> {
                       isLeapYear(year)
                           ? [
                               monthBasedTransaction(
-                                  'Jan',
+                                  getTranslated(context, 'Jan') ?? 'Jan',
                                   startOfThisYear.subtract(Duration(days: 1)),
                                   30),
-                              monthBasedTransaction('Feb', date(30), 59),
-                              monthBasedTransaction('Mar', date(59), 90),
-                              monthBasedTransaction('Apr', date(90), 120),
-                              monthBasedTransaction('May', date(120), 151),
-                              monthBasedTransaction('Jun', date(151), 181),
-                              monthBasedTransaction('Jul', date(181), 212),
-                              monthBasedTransaction('Aug', date(212), 243),
-                              monthBasedTransaction('Sep', date(243), 273),
-                              monthBasedTransaction('Oct', date(273), 303),
-                              monthBasedTransaction('Nov', date(303), 334),
-                              monthBasedTransaction('Dec', date(334), 365),
+                              monthBasedTransaction(getTranslated(context, 'Feb') ?? 'Feb', date(30), 59),
+                              monthBasedTransaction(getTranslated(context, 'Mar') ?? 'Mar', date(59), 90),
+                              monthBasedTransaction(getTranslated(context, 'Apr') ?? 'Apr', date(90), 120),
+                              monthBasedTransaction(getTranslated(context, 'May') ?? 'May', date(120), 151),
+                              monthBasedTransaction(getTranslated(context, 'Jun') ?? 'Jun', date(151), 181),
+                              monthBasedTransaction(getTranslated(context, 'Jul') ?? 'Jul', date(181), 212),
+                              monthBasedTransaction(getTranslated(context, 'Aug') ?? 'Aug', date(212), 243),
+                              monthBasedTransaction(getTranslated(context, 'Sep') ?? 'Sep', date(243), 273),
+                              monthBasedTransaction(getTranslated(context, 'Oct') ?? 'Oct', date(273), 303),
+                              monthBasedTransaction(getTranslated(context, 'Nov') ?? 'Nov', date(303), 334),
+                              monthBasedTransaction(getTranslated(context, 'Dec') ?? 'Dec', date(334), 365),
                             ]
                           : [
                               monthBasedTransaction(
-                                  'Jan',
+                                  getTranslated(context, 'Jan') ?? 'Jan',
                                   startOfThisYear.subtract(Duration(days: 1)),
                                   30),
-                              monthBasedTransaction('Feb', date(30), 58),
-                              monthBasedTransaction('Mar', date(58), 89),
-                              monthBasedTransaction('Apr', date(89), 119),
-                              monthBasedTransaction('May', date(119), 150),
-                              monthBasedTransaction('Jun', date(150), 180),
-                              monthBasedTransaction('Jul', date(180), 211),
-                              monthBasedTransaction('Aug', date(211), 242),
-                              monthBasedTransaction('Sep', date(242), 272),
-                              monthBasedTransaction('Oct', date(272), 302),
-                              monthBasedTransaction('Nov', date(302), 333),
-                              monthBasedTransaction('Dec', date(333), 364),
+                              monthBasedTransaction(getTranslated(context, 'Feb') ?? 'Feb', date(30), 58),
+                              monthBasedTransaction(getTranslated(context, 'Mar') ?? 'Mar', date(58), 89),
+                              monthBasedTransaction(getTranslated(context, 'Apr') ?? 'Apr', date(89), 119),
+                              monthBasedTransaction(getTranslated(context, 'May') ?? 'May', date(119), 150),
+                              monthBasedTransaction(getTranslated(context, 'Jun') ?? 'Jun', date(150), 180),
+                              monthBasedTransaction(getTranslated(context, 'Jul') ?? 'Jul', date(180), 211),
+                              monthBasedTransaction(getTranslated(context, 'Aug') ?? 'Aug', date(211), 242),
+                              monthBasedTransaction(getTranslated(context, 'Sep') ?? 'Sep', date(242), 272),
+                              monthBasedTransaction(getTranslated(context, 'Oct') ?? 'Oct', date(272), 302),
+                              monthBasedTransaction(getTranslated(context, 'Nov') ?? 'Nov', date(302), 333),
+                              monthBasedTransaction(getTranslated(context, 'Dec') ?? 'Dec', date(333), 364),
                             ];
 
                   double maximumMonthAmount =
@@ -479,9 +479,11 @@ class _ReportBodyState extends State<ReportBody> {
                                                                           listen:
                                                                               false)
                                                                       .changeInputModelList();
-                                                                  customToast(
-                                                                      context,
-                                                                      'Transaction has been deleted');
+                                                                  AlertService.show(
+                                                                    context,
+                                                                    type: NotificationType.success,
+                                                                    message: getTranslated(context, 'Transaction has been deleted') ?? 'Transaction has been deleted',
+                                                                  );
                                                                 })
                                                               : await androidDialog(
                                                                   context,
@@ -499,9 +501,11 @@ class _ReportBodyState extends State<ReportBody> {
                                                                           listen:
                                                                               false)
                                                                       .changeInputModelList();
-                                                                  customToast(
-                                                                      context,
-                                                                      'Transaction has been deleted');
+                                                                  AlertService.show(
+                                                                    context,
+                                                                    type: NotificationType.success,
+                                                                    message: getTranslated(context, 'Transaction has been deleted') ?? 'Transaction has been deleted',
+                                                                  );
                                                                 });
                                                         },
                                                         color: red),
@@ -522,8 +526,11 @@ class _ReportBodyState extends State<ReportBody> {
                                                                   context,
                                                                   listen: false)
                                                               .changeInputModelList();
-                                                          customToast(context,
-                                                              'Transaction has been updated');
+                                                          AlertService.show(
+                                                            context,
+                                                            type: NotificationType.success,
+                                                            message: getTranslated(context, 'Transaction has been updated') ?? 'Transaction has been updated',
+                                                          );
                                                         },
                                                         color: Color.fromRGBO(
                                                             255, 183, 121, 1)),

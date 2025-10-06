@@ -26,14 +26,14 @@ class DailyTransactionDetail extends StatelessWidget {
 
   /// Xóa giao dịch với confirmation
   Future<void> _deleteTransaction(BuildContext context, int id) async {
-    final confirmed = await NotificationService.show(
+    final confirmed = await  AlertService.show(
       context,
       type: NotificationType.delete,
-      title: 'Delete Transaction',
-      message:
+      title: getTranslated(context, 'Delete Transaction') ?? 'Delete Transaction',
+      message: getTranslated(context, 'Are you sure you want to delete this transaction?') ??
           'Are you sure you want to delete this transaction? This action cannot be undone.',
-      actionText: 'Delete',
-      cancelText: 'Cancel',
+      actionText: getTranslated(context, 'Delete') ?? 'Delete',
+      cancelText: getTranslated(context, 'Cancel') ?? 'Cancel',
     );
 
     if (confirmed == true) {
@@ -43,7 +43,7 @@ class DailyTransactionDetail extends StatelessWidget {
         await transactionProvider.deleteTransaction(id);
         
         if (context.mounted) {
-          NotificationService.show(
+           AlertService.show(
             context,
             type: NotificationType.success,
             message: getTranslated(context, 'Transaction has been deleted') ??
@@ -53,7 +53,7 @@ class DailyTransactionDetail extends StatelessWidget {
       } catch (e) {
         print('Error deleting transaction: $e');
         if (context.mounted) {
-          NotificationService.show(
+           AlertService.show(
             context,
             type: NotificationType.error,
             message: getTranslated(context, 'Error deleting transaction') ??
@@ -72,7 +72,7 @@ class DailyTransactionDetail extends StatelessWidget {
       await transactionProvider.duplicateTransaction(transaction);
       
       if (context.mounted) {
-        NotificationService.show(
+         AlertService.show(
           context,
           type: NotificationType.success,
           message: getTranslated(context, 'Transaction has been duplicated') ??
@@ -82,7 +82,7 @@ class DailyTransactionDetail extends StatelessWidget {
     } catch (e) {
       print('Error duplicating transaction: $e');
       if (context.mounted) {
-        NotificationService.show(
+         AlertService.show(
           context,
           type: NotificationType.error,
           message: getTranslated(context, 'Error duplicating transaction') ??
@@ -195,7 +195,7 @@ class DailyTransactionDetail extends StatelessWidget {
                       children: [
                         _buildSummaryColumn(
                           context,
-                          label: 'Income',
+                          label: getTranslated(context, 'Income') ?? 'Income',
                           amount: totalIncome,
                           icon: Icons.arrow_downward_rounded,
                         ),
@@ -206,7 +206,7 @@ class DailyTransactionDetail extends StatelessWidget {
                         ),
                         _buildSummaryColumn(
                           context,
-                          label: 'Expense',
+                          label: getTranslated(context, 'Expense') ?? 'Expense',
                           amount: totalExpense,
                           icon: Icons.arrow_upward_rounded,
                         ),
@@ -217,7 +217,7 @@ class DailyTransactionDetail extends StatelessWidget {
                         ),
                         _buildSummaryColumn(
                           context,
-                          label: 'Balance',
+                          label: getTranslated(context, 'Balance') ?? 'Balance',
                           amount: balance,
                           icon: Icons.account_balance_wallet_rounded,
                         ),
@@ -255,7 +255,7 @@ class DailyTransactionDetail extends StatelessWidget {
                               builder: (context) => Edit(
                                 inputModel: transaction,
                                 categoryIcon: CategoryIconHelper.getIconForCategory(
-                                  transaction.category ?? 'Category',
+                                  transaction.category ?? getTranslated(context, 'Category') ?? 'Category',
                                 ),
                               ),
                             ),
@@ -332,34 +332,34 @@ class DailyTransactionDetail extends StatelessWidget {
         date.day == yesterday.day;
   }
 
-  /// Format ngày theo locale của người dùng
+  /// Format ngày theo locale của người dùng - SỬ DỤNG LOCALIZATION
   String _formatDate(BuildContext context, DateTime date) {
     final locale = Localizations.localeOf(context).languageCode;
 
     if (locale == 'vi') {
       // Format tiếng Việt: Thứ Hai, 04 Tháng 10 2025
       final weekdayNames = [
-        'Chủ Nhật',
-        'Thứ Hai',
-        'Thứ Ba',
-        'Thứ Tư',
-        'Thứ Năm',
-        'Thứ Sáu',
-        'Thứ Bảy'
+        getTranslated(context, 'Sunday') ?? 'Chủ Nhật',
+        getTranslated(context, 'Monday') ?? 'Thứ Hai',
+        getTranslated(context, 'Tuesday') ?? 'Thứ Ba',
+        getTranslated(context, 'Wednesday') ?? 'Thứ Tư',
+        getTranslated(context, 'Thursday') ?? 'Thứ Năm',
+        getTranslated(context, 'Friday') ?? 'Thứ Sáu',
+        getTranslated(context, 'Saturday') ?? 'Thứ Bảy'
       ];
       final monthNames = [
-        'Tháng 1',
-        'Tháng 2',
-        'Tháng 3',
-        'Tháng 4',
-        'Tháng 5',
-        'Tháng 6',
-        'Tháng 7',
-        'Tháng 8',
-        'Tháng 9',
-        'Tháng 10',
-        'Tháng 11',
-        'Tháng 12'
+        getTranslated(context, 'January') ?? 'Tháng 1',
+        getTranslated(context, 'February') ?? 'Tháng 2',
+        getTranslated(context, 'March') ?? 'Tháng 3',
+        getTranslated(context, 'April') ?? 'Tháng 4',
+        getTranslated(context, 'May') ?? 'Tháng 5',
+        getTranslated(context, 'June') ?? 'Tháng 6',
+        getTranslated(context, 'July') ?? 'Tháng 7',
+        getTranslated(context, 'August') ?? 'Tháng 8',
+        getTranslated(context, 'September') ?? 'Tháng 9',
+        getTranslated(context, 'October') ?? 'Tháng 10',
+        getTranslated(context, 'November') ?? 'Tháng 11',
+        getTranslated(context, 'December') ?? 'Tháng 12'
       ];
       final weekday = weekdayNames[date.weekday % 7];
       final month = monthNames[date.month - 1];

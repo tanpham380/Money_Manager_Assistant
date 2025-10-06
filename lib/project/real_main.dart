@@ -17,10 +17,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void realMain() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.init();
+  await  NotificationService.init();
 
   // Set up callback để xử lý khi user tap notification
-  NotificationService.onNotificationTap = (String? payload) {
+   NotificationService.onNotificationTap = (String? payload) {
     if (payload == 'add_input') {
       // Navigate đến tab Input (index 0)
       if (navigatorKey.currentContext != null) {
@@ -43,7 +43,7 @@ void realMain() async {
 
   // Reschedule reminder nếu đã được bật
   if (sharedPrefs.isReminderEnabled) {
-    await NotificationService.scheduleDailyReminder(
+    await  NotificationService.scheduleDailyReminder(
       sharedPrefs.reminderHour,
       sharedPrefs.reminderMinute,
     );

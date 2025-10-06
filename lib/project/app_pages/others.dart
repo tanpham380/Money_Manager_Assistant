@@ -11,13 +11,13 @@ import 'dart:io' show Platform;
 
 import '../classes/alert_dialog.dart';
 import '../classes/constants.dart';
-import '../classes/custom_toast.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../database_management/sqflite_services.dart';
 import '../database_management/sync_data.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
 import '../services/notification_service.dart';
+import '../services/alert_service.dart';
 import 'currency.dart';
 import 'select_date_format.dart';
 import 'select_language.dart';
@@ -104,28 +104,41 @@ class _SettingsState extends State<Settings> {
   Future<void> _toggleReminder(bool value) async {
     if (value) {
       // Request permission trước khi bật reminder
-      bool hasPermission = await NotificationService.requestPermission();
+      bool hasPermission = await  NotificationService.requestPermission();
       if (!hasPermission) {
-        customToast(context, 'Notification permission denied');
+        AlertService.show(
+          context,
+          type: NotificationType.error,
+          message: getTranslated(context, 'Notification permission denied') ?? 'Notification permission denied',
+        );
         return;
       }
 
       // Bật reminder
-      await NotificationService.scheduleDailyReminder(
+      await  NotificationService.scheduleDailyReminder(
           _reminderHour, _reminderMinute);
       setState(() {
         _isReminderEnabled = true;
       });
       sharedPrefs.isReminderEnabled = true;
-      customToast(context, 'Daily reminder enabled');
+      AlertService.show(
+        context,
+        type: NotificationType.success,
+        message: getTranslated(context, 'Daily reminder enabled') ?? 'Daily reminder enabled',
+      );
     } else {
       // Tắt reminder
-      await NotificationService.cancelReminder();
+      await  NotificationService.cancelReminder();
       setState(() {
         _isReminderEnabled = false;
       });
       sharedPrefs.isReminderEnabled = false;
-      customToast(context, 'Daily reminder disabled');
+      AlertService.show(
+        context,
+        type: NotificationType.success,
+        message: getTranslated(context, 'Daily reminder disabled') ?? 'Daily reminder disabled',
+      );
+      
     }
   }
 
@@ -161,9 +174,13 @@ class _SettingsState extends State<Settings> {
 
       // Nếu reminder đang bật, reschedule với thời gian mới
       if (_isReminderEnabled) {
-        await NotificationService.scheduleDailyReminder(
+        await  NotificationService.scheduleDailyReminder(
             _reminderHour, _reminderMinute);
-        customToast(context, 'Reminder time updated');
+        AlertService.show(
+          context,
+          type: NotificationType.success,
+          message: getTranslated(context, 'Reminder time updated') ?? 'Reminder time updated',
+        );
       }
     }
   }
@@ -286,7 +303,11 @@ class _SettingsState extends State<Settings> {
                   //         builder: (context) => EditIncomeCategory(null)));
                   void onReset() {
                     sharedPrefs.setItems(setCategoriesToDefault: true);
-                    customToast(context, 'Categories have been reset');
+                    AlertService.show(
+                      context,
+                      type: NotificationType.success,
+                      message: getTranslated(context, 'Categories have been reset') ?? 'Categories have been reset',
+                    );
                   }
 
                   Platform.isIOS
@@ -303,7 +324,11 @@ class _SettingsState extends State<Settings> {
                 } else if (index == 5) {
                   Future onDeletion() async {
                     await DB.deleteAll();
-                    customToast(context, 'All data has been deleted');
+                    AlertService.show(
+                      context,
+                      type: NotificationType.success,
+                      message: getTranslated(context, 'All data has been deleted') ?? 'All data has been deleted',
+                    );
                   }
 
                   Platform.isIOS
@@ -342,7 +367,11 @@ class _SettingsState extends State<Settings> {
                       onConfirmed: (matchedText) {
                         sharedPrefs.passcodeScreenLock = matchedText;
                         Navigator.of(context).pop();
-                        customToast(context, 'Passcode has been changed');
+                        AlertService.show(
+                          context,
+                          type: NotificationType.success,
+                          message: getTranslated(context, 'Passcode has been changed') ?? 'Passcode has been changed',
+                        );
                       });
                 } else if (index == 7) {
                   unawaited(Navigator.push(

@@ -13,7 +13,7 @@ enum NotificationType {
   delete, // Alert style with red accent
 }
 
-class NotificationService {
+class AlertService {
   // Unified styling cho tất cả notifications
   static const _borderRadius = 16.0;
   static final _padding =

@@ -192,5 +192,22 @@
   "September": "September",
   "October": "October",
   "November": "November",
-  "December": "December"
+  "December": "December",
+  "Error deleting transaction": "Error deleting transaction",
+  "Error duplicating transaction": "Error duplicating transaction",
+  "Error saving data": "Error saving data",
+  "No data available": "No data available",
+  "Add new transaction": "Add new transaction",
+  "Donut": "Donut",
+  "Bar": "Bar",
+  "Trend": "Trend",
+  "Ok": "Ok",
+  "Delete Transaction": "Delete Transaction",
+  "Error occurred": "An error occurred",
+  "Try again": "Try again",
+  "No transactions": "No transactions",
+  "No transactions on this date": "No transactions on this date",
+  "Add transaction": "Add transaction",
+  "Loading calendar": "Loading calendar...",
+  "Range selection mode": "Range selection mode"
 }
