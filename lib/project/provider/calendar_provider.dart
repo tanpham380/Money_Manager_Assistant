@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../classes/input_model.dart';
 import 'transaction_provider.dart';
+import 'navigation_provider.dart';
 
 /// Trạng thái của màn hình Calendar
 enum CalendarState {
@@ -16,6 +17,7 @@ class CalendarProvider with ChangeNotifier {
   // ============ THUỘC TÍNH PRIVATE ============
   
   final TransactionProvider _transactionProvider;
+  final NavigationProvider _navigationProvider;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -51,12 +53,14 @@ class CalendarProvider with ChangeNotifier {
   
   // ============ CONSTRUCTOR ============
   
-  CalendarProvider(this._transactionProvider) {
+  CalendarProvider(this._transactionProvider, this._navigationProvider) {
     _selectedDay = _focusedDay;
     _updateSelectedDayEvents();
     
-    // Listen changes từ TransactionProvider
+    // Listen to TransactionProvider changes
     _transactionProvider.addListener(_onTransactionsChanged);
+    // Listen to NavigationProvider changes (for filter updates)
+    _navigationProvider.addListener(_onFilterChanged);
   }
   
   // ============ CLEANUP ============
@@ -64,6 +68,7 @@ class CalendarProvider with ChangeNotifier {
   @override
   void dispose() {
     _transactionProvider.removeListener(_onTransactionsChanged);
+    _navigationProvider.removeListener(_onFilterChanged);
     super.dispose();
   }
   
@@ -71,6 +76,12 @@ class CalendarProvider with ChangeNotifier {
   
   /// Callback khi TransactionProvider có changes
   void _onTransactionsChanged() {
+    _updateSelectedDayEvents();
+    notifyListeners();
+  }
+  
+  /// Callback khi NavigationProvider filter có changes
+  void _onFilterChanged() {
     _updateSelectedDayEvents();
     notifyListeners();
   }
@@ -142,9 +153,30 @@ class CalendarProvider with ChangeNotifier {
   
   // ============ PHƯƠNG THỨC HELPER ============
   
-  /// Lấy danh sách giao dịch cho một ngày cụ thể
+  /// Lấy danh sách giao dịch cho một ngày cụ thể với filter
   List<InputModel> getEventsForDay(DateTime day) {
-    return _transactionProvider.getTransactionsForDate(day);
+    var transactions = _transactionProvider.getTransactionsForDate(day);
+    
+    // Áp dụng filter từ NavigationProvider
+    if (_navigationProvider.hasActiveFilter) {
+      transactions = transactions.where((transaction) {
+        // Filter theo type
+        if (_navigationProvider.filterType != null && 
+            transaction.type != _navigationProvider.filterType) {
+          return false;
+        }
+        
+        // Filter theo category
+        if (_navigationProvider.filterCategory != null && 
+            transaction.category != _navigationProvider.filterCategory) {
+          return false;
+        }
+        
+        return true;
+      }).toList();
+    }
+    
+    return transactions;
   }
   
   /// Cập nhật danh sách giao dịch cho ngày được chọn

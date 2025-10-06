@@ -8,7 +8,6 @@ import '../classes/constants.dart';
 import '../classes/input_model.dart';
 import '../classes/transaction_list_item.dart';
 import '../database_management/shared_preferences_services.dart';
-import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
 import '../services/alert_service.dart';
 import '../utils/category_icon_helper.dart';
@@ -16,49 +15,17 @@ import '../provider/transaction_provider.dart';
 import 'edit.dart';
 
 /// Màn hình hiển thị chi tiết các giao dịch trong một ngày
-class DailyTransactionDetail extends StatefulWidget {
+/// ĐÃ CHUYỂN ĐỔI SANG STATELESS - Single Source of Truth từ TransactionProvider
+class DailyTransactionDetail extends StatelessWidget {
   final DateTime date;
-  final List<InputModel> transactions;
 
   const DailyTransactionDetail({
     Key? key,
     required this.date,
-    required this.transactions,
   }) : super(key: key);
 
-  @override
-  State<DailyTransactionDetail> createState() => _DailyTransactionDetailState();
-}
-
-class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
-  late List<InputModel> _transactions;
-
-  @override
-  void initState() {
-    super.initState();
-    _transactions = List.from(widget.transactions);
-  }
-
-  /// Reload danh sách transactions từ database
-  Future<void> _reloadTransactions() async {
-    final allTransactions = await DB.inputModelList();
-    final dateString = DateFormat('dd/MM/yyyy').format(widget.date);
-
-    setState(() {
-      _transactions =
-          allTransactions.where((t) => t.date == dateString).toList()
-            ..sort((a, b) {
-              // Sort by time if available
-              if (a.time != null && b.time != null) {
-                return b.time!.compareTo(a.time!);
-              }
-              return 0;
-            });
-    });
-  }
-
   /// Xóa giao dịch với confirmation
-  Future<void> _deleteTransaction(int id) async {
+  Future<void> _deleteTransaction(BuildContext context, int id) async {
     final confirmed = await NotificationService.show(
       context,
       type: NotificationType.delete,
@@ -75,7 +42,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
         final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
         await transactionProvider.deleteTransaction(id);
         
-        if (mounted) {
+        if (context.mounted) {
           NotificationService.show(
             context,
             type: NotificationType.success,
@@ -85,7 +52,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
         }
       } catch (e) {
         print('Error deleting transaction: $e');
-        if (mounted) {
+        if (context.mounted) {
           NotificationService.show(
             context,
             type: NotificationType.error,
@@ -98,13 +65,13 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
   }
 
   /// Sao chép giao dịch
-  Future<void> _duplicateTransaction(InputModel transaction) async {
+  Future<void> _duplicateTransaction(BuildContext context, InputModel transaction) async {
     try {
       // Sử dụng TransactionProvider thay vì DB trực tiếp
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
       await transactionProvider.duplicateTransaction(transaction);
       
-      if (mounted) {
+      if (context.mounted) {
         NotificationService.show(
           context,
           type: NotificationType.success,
@@ -114,7 +81,7 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
       }
     } catch (e) {
       print('Error duplicating transaction: $e');
-      if (mounted) {
+      if (context.mounted) {
         NotificationService.show(
           context,
           type: NotificationType.error,
@@ -127,175 +94,189 @@ class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
 
   @override
   Widget build(BuildContext context) {
-    // Tính toán tổng thu nhập và chi phí
-    double totalIncome = 0.0;
-    double totalExpense = 0.0;
+    return Consumer<TransactionProvider>(
+      builder: (context, transactionProvider, child) {
+        // Lấy transactions từ TransactionProvider - SINGLE SOURCE OF TRUTH
+        final dateString = DateFormat('dd/MM/yyyy').format(date);
+        final transactions = transactionProvider.allTransactions
+            .where((t) => t.date == dateString)
+            .toList()
+          ..sort((a, b) {
+            // Sort by time if available (mới nhất trước)
+            if (a.time != null && b.time != null) {
+              return b.time!.compareTo(a.time!);
+            }
+            return 0;
+          });
 
-    for (final transaction in _transactions) {
-      if (transaction.type == 'Income') {
-        totalIncome += transaction.amount ?? 0.0;
-      } else {
-        totalExpense += transaction.amount ?? 0.0;
-      }
-    }
+        // Tính toán tổng thu nhập và chi phí
+        double totalIncome = 0.0;
+        double totalExpense = 0.0;
 
-    final balance = totalIncome - totalExpense;
+        for (final transaction in transactions) {
+          if (transaction.type == 'Income') {
+            totalIncome += transaction.amount ?? 0.0;
+          } else {
+            totalExpense += transaction.amount ?? 0.0;
+          }
+        }
 
-    // Format ngày
-    final isToday = _isToday(widget.date);
-    final isYesterday = _isYesterday(widget.date);
+        final balance = totalIncome - totalExpense;
 
-    String dateLabel;
-    if (isToday) {
-      dateLabel = getTranslated(context, 'Today') ?? 'Today';
-    } else if (isYesterday) {
-      dateLabel = getTranslated(context, 'Yesterday') ?? 'Yesterday';
-    } else {
-      // Format ngày theo locale
-      dateLabel = _formatDate(context, widget.date);
-    }
+        // Format ngày
+        final isToday = _isToday(date);
+        final isYesterday = _isYesterday(date);
 
-    return Scaffold(
-      backgroundColor: blue1,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: BasicAppBar(dateLabel),
-      ),
-      body: Column(
-        children: [
-          // Summary Card
-          Container(
-            margin: EdgeInsets.all(16.w),
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [blue2, blue3],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: blue3.withValues(alpha: 0.3),
-                  blurRadius: 12.r,
-                  offset: Offset(0, 6.h),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Total transactions count
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.receipt_long_rounded,
-                      color: white,
-                      size: 24.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '${_transactions.length} ${getTranslated(context, _transactions.length == 1 ? 'Transaction' : 'Transactions') ?? (_transactions.length == 1 ? 'Transaction' : 'Transactions')}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                        color: white,
-                      ),
-                    ),
-                  ],
-                ),
+        String dateLabel;
+        if (isToday) {
+          dateLabel = getTranslated(context, 'Today') ?? 'Today';
+        } else if (isYesterday) {
+          dateLabel = getTranslated(context, 'Yesterday') ?? 'Yesterday';
+        } else {
+          // Format ngày theo locale
+          dateLabel = _formatDate(context, date);
+        }
 
-                SizedBox(height: 20.h),
-
-                // Income, Expense, Balance summary
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildSummaryColumn(
-                      context,
-                      label: 'Income',
-                      amount: totalIncome,
-                      icon: Icons.arrow_downward_rounded,
-                    ),
-                    Container(
-                      width: 1.w,
-                      height: 50.h,
-                      color: white.withValues(alpha: 0.3),
-                    ),
-                    _buildSummaryColumn(
-                      context,
-                      label: 'Expense',
-                      amount: totalExpense,
-                      icon: Icons.arrow_upward_rounded,
-                    ),
-                    Container(
-                      width: 1.w,
-                      height: 50.h,
-                      color: white.withValues(alpha: 0.3),
-                    ),
-                    _buildSummaryColumn(
-                      context,
-                      label: 'Balance',
-                      amount: balance,
-                      icon: Icons.account_balance_wallet_rounded,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+        return Scaffold(
+          backgroundColor: blue1,
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: BasicAppBar(dateLabel),
           ),
-
-          // Transaction list
-          Expanded(
-            child: Container(
-              color: Colors.grey[50],
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
+          body: Column(
+            children: [
+              // Summary Card
+              Container(
+                margin: EdgeInsets.all(16.w),
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [blue2, blue3],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: blue3.withValues(alpha: 0.3),
+                      blurRadius: 12.r,
+                      offset: Offset(0, 6.h),
+                    ),
+                  ],
                 ),
-                padding: EdgeInsets.only(
-                  top: 8.h,
-                  bottom: 24.h,
-                  left: 4.w,
-                  right: 4.w,
-                ),
-                itemCount: _transactions.length,
-                separatorBuilder: (context, index) => SizedBox(height: 6.h),
-                itemBuilder: (context, index) {
-                  final transaction = _transactions[index];
-
-                  return TransactionListItem(
-                    transaction: transaction,
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Edit(
-                            inputModel: transaction,
-                            categoryIcon: CategoryIconHelper.getIconForCategory(
-                              transaction.category ?? 'Category',
-                            ),
+                child: Column(
+                  children: [
+                    // Total transactions count
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long_rounded,
+                          color: white,
+                          size: 24.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'Transaction' : 'Transactions') ?? (transactions.length == 1 ? 'Transaction' : 'Transactions')}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: white,
                           ),
                         ),
-                      );
-                      // Reload sau khi edit
-                      await _reloadTransactions();
-                    },
-                    onDelete: () async {
-                      // Xóa trực tiếp bằng database
-                      await _deleteTransaction(transaction.id!);
-                    },
-                    onDuplicate: () async {
-                      // Sao chép trực tiếp bằng database
-                      await _duplicateTransaction(transaction);
-                    },
-                  );
-                },
+                      ],
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // Income, Expense, Balance summary
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildSummaryColumn(
+                          context,
+                          label: 'Income',
+                          amount: totalIncome,
+                          icon: Icons.arrow_downward_rounded,
+                        ),
+                        Container(
+                          width: 1.w,
+                          height: 50.h,
+                          color: white.withValues(alpha: 0.3),
+                        ),
+                        _buildSummaryColumn(
+                          context,
+                          label: 'Expense',
+                          amount: totalExpense,
+                          icon: Icons.arrow_upward_rounded,
+                        ),
+                        Container(
+                          width: 1.w,
+                          height: 50.h,
+                          color: white.withValues(alpha: 0.3),
+                        ),
+                        _buildSummaryColumn(
+                          context,
+                          label: 'Balance',
+                          amount: balance,
+                          icon: Icons.account_balance_wallet_rounded,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+
+              // Transaction list
+              Expanded(
+                child: Container(
+                  color: Colors.grey[50],
+                  child: ListView.separated(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    padding: EdgeInsets.only(
+                      top: 8.h,
+                      bottom: 24.h,
+                      left: 4.w,
+                      right: 4.w,
+                    ),
+                    itemCount: transactions.length,
+                    separatorBuilder: (context, index) => SizedBox(height: 6.h),
+                    itemBuilder: (context, index) {
+                      final transaction = transactions[index];
+
+                      return TransactionListItem(
+                        transaction: transaction,
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Edit(
+                                inputModel: transaction,
+                                categoryIcon: CategoryIconHelper.getIconForCategory(
+                                  transaction.category ?? 'Category',
+                                ),
+                              ),
+                            ),
+                          );
+                          // Không cần reload - Consumer tự động cập nhật
+                        },
+                        onDelete: () async {
+                          await _deleteTransaction(context, transaction.id!);
+                        },
+                        onDuplicate: () async {
+                          await _duplicateTransaction(context, transaction);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -5,7 +5,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:icofont_flutter/icofont_flutter.dart';
 import '../classes/input_model.dart';
 import '../classes/constants.dart';
-import '../database_management/sqflite_services.dart';
+import 'transaction_provider.dart';
 
 /// Trạng thái của màn hình phân tích
 enum AnalysisState {
@@ -55,6 +55,7 @@ class TrendData {
 class AnalysisProvider with ChangeNotifier {
   // ============ THUỘC TÍNH PRIVATE ============
   
+  final TransactionProvider _transactionProvider;
   AnalysisState _state = AnalysisState.initial;
   String _selectedDateOption = 'All';
   ChartType _selectedChartType = ChartType.donut;
@@ -101,9 +102,21 @@ class AnalysisProvider with ChangeNotifier {
   
   // ============ PHƯƠNG THỨC PUBLIC ============
   
+  // ============ CONSTRUCTOR ============
+  
   /// Constructor - Tự động fetch data khi khởi tạo
-  AnalysisProvider() {
+  AnalysisProvider(this._transactionProvider) {
+    // Listen to TransactionProvider changes
+    _transactionProvider.addListener(_onTransactionsChanged);
     fetchData();
+  }
+  
+  // ============ CLEANUP ============
+  
+  @override
+  void dispose() {
+    _transactionProvider.removeListener(_onTransactionsChanged);
+    super.dispose();
   }
   
   /// Cập nhật lựa chọn khoảng thời gian và tải lại dữ liệu
@@ -130,15 +143,15 @@ class AnalysisProvider with ChangeNotifier {
     notifyListeners();
   }
   
-  /// Tải và xử lý dữ liệu từ database
+  /// Tải và xử lý dữ liệu từ TransactionProvider
   Future<void> fetchData() async {
     try {
       // Đặt trạng thái loading
       _state = AnalysisState.loading;
       notifyListeners();
       
-      // Lấy tất cả dữ liệu từ DB MỘT LẦN duy nhất
-      final allTransactions = await DB.inputModelList();
+      // Lấy tất cả dữ liệu từ TransactionProvider thay vì DB
+      final allTransactions = _transactionProvider.allTransactions;
       
       // Lọc dữ liệu theo khoảng thời gian đã chọn
       final filteredTransactions = _filterTransactionsByDate(allTransactions);
@@ -167,6 +180,11 @@ class AnalysisProvider with ChangeNotifier {
   }
   
   // ============ PHƯƠNG THỨC PRIVATE ============
+  
+  /// Callback khi TransactionProvider có changes
+  void _onTransactionsChanged() {
+    fetchData();
+  }
   
   /// Lọc giao dịch theo khoảng thời gian đã chọn
   List<InputModel> _filterTransactionsByDate(List<InputModel> transactions) {
@@ -298,7 +316,8 @@ class AnalysisProvider with ChangeNotifier {
   /// Lấy dữ liệu xu hướng theo thời gian
   Future<void> fetchTrendData(String type, int months) async {
     try {
-      final allTransactions = await DB.inputModelList();
+      // Lấy tất cả giao dịch từ TransactionProvider thay vì DB
+      final allTransactions = _transactionProvider.allTransactions;
       
       // Lọc theo loại
       final transactions = allTransactions.where((t) => t.type == type).toList();

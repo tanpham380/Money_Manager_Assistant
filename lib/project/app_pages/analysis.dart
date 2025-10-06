@@ -14,6 +14,7 @@ import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider/analysis_provider.dart';
 import '../provider/navigation_provider.dart';
+import '../provider/transaction_provider.dart';
 
 /// Màn hình phân tích thu chi - Đã được tái cấu trúc hoàn toàn
 class Analysis extends StatelessWidget {
@@ -21,8 +22,16 @@ class Analysis extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AnalysisProvider(),
+    // Use TransactionProvider from ancestor (Home widget)
+    return ChangeNotifierProxyProvider<TransactionProvider, AnalysisProvider>(
+      create: (context) => AnalysisProvider(context.read<TransactionProvider>()),
+      update: (context, transactionProvider, previous) {
+        // Reuse previous AnalysisProvider if it exists
+        if (previous != null) {
+          return previous;
+        }
+        return AnalysisProvider(transactionProvider);
+      },
       child: DefaultTabController(
         initialIndex: 0,
         length: 2,

@@ -11,6 +11,7 @@ import '../classes/input_model.dart';
 import '../localization/methods.dart';
 import '../provider/calendar_provider.dart';
 import '../provider/transaction_provider.dart';
+import '../provider/navigation_provider.dart';
 import 'daily_transaction_detail.dart';
 
 class Calendar extends StatelessWidget {
@@ -18,13 +19,16 @@ class Calendar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use the TransactionProvider from the ancestor (Home widget)
     return ChangeNotifierProxyProvider<TransactionProvider, CalendarProvider>(
-      create: (context) => CalendarProvider(context.read<TransactionProvider>()),
+      create: (context) => CalendarProvider(
+        context.read<TransactionProvider>(),
+        context.read<NavigationProvider>(),
+      ),
       update: (context, transactionProvider, previous) {
         // Reuse previous CalendarProvider if it exists
         if (previous != null) {
           return previous;
         }
-        return CalendarProvider(transactionProvider);
+        return CalendarProvider(transactionProvider, context.read<NavigationProvider>());
       },
       child: Scaffold(
         backgroundColor: blue1,
@@ -265,13 +269,12 @@ class _CalendarContent extends StatelessWidget {
             date: date,
             transactions: transactions,
             onTap: () {
-              // Chuyển sang màn hình chi tiết
+              // Chuyển sang màn hình chi tiết - CHỈ TRUYỀN DATE
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => DailyTransactionDetail(
                     date: date,
-                    transactions: transactions,
                   ),
                 ),
               ).then((_) {
