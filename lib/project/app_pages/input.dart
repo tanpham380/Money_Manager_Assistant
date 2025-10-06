@@ -296,7 +296,9 @@ class AddEditInput extends StatelessWidget {
                           onDelete: () => _showDeleteDialog(context, provider),
                         )
                       : SaveButton(
+                          saveInput: true,
                           onSave: () => provider.saveInput(context, isNewInput: true),
+                          isLoading: provider.isLoading,
                         ),
                 )
               ],
@@ -411,6 +413,8 @@ class CategoryCard extends StatelessWidget {
     return Consumer<FormProvider>(
       builder: (context, provider, child) {
         final categoryItem = provider.selectedCategory;
+        final isDefaultCategory = categoryItem.text == 'Category';
+        
         return GestureDetector(
           onTap: () async {
             CategoryItem? newCategoryItem = await Navigator.push(
@@ -425,35 +429,51 @@ class CategoryCard extends StatelessWidget {
               provider.updateCategory(newCategoryItem);
             }
           },
-          child: Padding(
-            padding: EdgeInsets.only(
-                left: 20.w, right: 20.w, top: 20.h, bottom: 21.h),
-            child: Row(
-              children: [
-                Icon(
-                  iconData(categoryItem),
-                  size: 40.sp,
-                  color: provider.model.type == 'Income' ? green : red,
+          child: Container(
+            decoration: BoxDecoration(
+              // Highlight màu đỏ nhạt nếu chưa chọn category
+              color: isDefaultCategory ? Colors.red.withOpacity(0.05) : Colors.transparent,
+              border: Border(
+                left: BorderSide(
+                  color: isDefaultCategory ? Colors.red : Colors.transparent,
+                  width: 4.w,
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 31.w),
-                    child: Text(
-                      getTranslated(context, categoryItem.text) ??
-                          categoryItem.text,
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
+              ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(
+                  left: 20.w, right: 20.w, top: 20.h, bottom: 21.h),
+              child: Row(
+                children: [
+                  Icon(
+                    iconData(categoryItem),
+                    size: 40.sp,
+                    color: isDefaultCategory 
+                        ? Colors.grey 
+                        : (provider.model.type == 'Income' ? green : red),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 31.w),
+                      child: Text(
+                        getTranslated(context, categoryItem.text) ??
+                            categoryItem.text,
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isDefaultCategory ? Colors.grey : Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios_outlined,
-                  size: 20.sp,
-                ),
-              ],
+                  Icon(
+                    Icons.arrow_forward_ios_outlined,
+                    size: 20.sp,
+                    color: isDefaultCategory ? Colors.red : Colors.grey,
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -554,35 +574,7 @@ class DescriptionCard extends StatelessWidget {
                       },
                     ),
                     
-                    // Done button - TO HỚN, DỄ BẤM HỚN
-                    ElevatedButton.icon(
-                      icon: Icon(Icons.check_circle, size: 24.sp),
-                      label: Text(
-                        getTranslated(context, 'Done') ?? 'Done',
-                        style: TextStyle(
-                          fontSize: 18.sp, 
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorMain,
-                        foregroundColor: Colors.white,
-                        elevation: 3,
-                        shadowColor: colorMain.withOpacity(0.5),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 32.w, 
-                          vertical: 16.h,
-                        ),
-                        minimumSize: Size(140.w, 50.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                      ),
-                      onPressed: () {
-                        provider.descriptionFocusNode.unfocus();
-                      },
-                    ),
+
                   ],
                 ),
               ),

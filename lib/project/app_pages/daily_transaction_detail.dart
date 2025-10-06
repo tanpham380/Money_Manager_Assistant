@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
 import '../classes/custom_toast.dart';
 import '../classes/input_model.dart';
 import '../classes/transaction_list_item.dart';
 import '../database_management/shared_preferences_services.dart';
+import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
-import '../provider/calendar_provider.dart';
 import '../utils/category_icon_helper.dart';
 import 'edit.dart';
 
 /// Màn hình hiển thị chi tiết các giao dịch trong một ngày
-class DailyTransactionDetail extends StatelessWidget {
+class DailyTransactionDetail extends StatefulWidget {
   final DateTime date;
   final List<InputModel> transactions;
 
@@ -26,12 +25,102 @@ class DailyTransactionDetail extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<DailyTransactionDetail> createState() => _DailyTransactionDetailState();
+}
+
+class _DailyTransactionDetailState extends State<DailyTransactionDetail> {
+  late List<InputModel> _transactions;
+
+  @override
+  void initState() {
+    super.initState();
+    _transactions = List.from(widget.transactions);
+  }
+
+  /// Reload danh sách transactions từ database
+  Future<void> _reloadTransactions() async {
+    final allTransactions = await DB.inputModelList();
+    final dateString = DateFormat('dd/MM/yyyy').format(widget.date);
+    
+    setState(() {
+      _transactions = allTransactions
+          .where((t) => t.date == dateString)
+          .toList()
+        ..sort((a, b) {
+          // Sort by time if available
+          if (a.time != null && b.time != null) {
+            return b.time!.compareTo(a.time!);
+          }
+          return 0;
+        });
+    });
+  }
+
+  /// Xóa giao dịch
+  Future<void> _deleteTransaction(int id) async {
+    try {
+      await DB.delete(id);
+      await _reloadTransactions();
+      if (mounted) {
+        customToast(
+          context,
+          getTranslated(context, 'Transaction has been deleted') ??
+              'Transaction has been deleted',
+        );
+      }
+    } catch (e) {
+      print('Error deleting transaction: $e');
+      if (mounted) {
+        customToast(
+          context,
+          getTranslated(context, 'Error deleting transaction') ??
+              'Error deleting transaction',
+        );
+      }
+    }
+  }
+
+  /// Sao chép giao dịch
+  Future<void> _duplicateTransaction(InputModel transaction) async {
+    try {
+      final newTransaction = InputModel(
+        type: transaction.type,
+        amount: transaction.amount,
+        category: transaction.category,
+        description: transaction.description,
+        date: transaction.date,
+        time: transaction.time,
+      );
+      
+      await DB.insert(newTransaction);
+      await _reloadTransactions();
+      
+      if (mounted) {
+        customToast(
+          context,
+          getTranslated(context, 'Transaction has been duplicated') ??
+              'Transaction has been duplicated',
+        );
+      }
+    } catch (e) {
+      print('Error duplicating transaction: $e');
+      if (mounted) {
+        customToast(
+          context,
+          getTranslated(context, 'Error duplicating transaction') ??
+              'Error duplicating transaction',
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Tính toán tổng thu nhập và chi phí
     double totalIncome = 0.0;
     double totalExpense = 0.0;
     
-    for (final transaction in transactions) {
+    for (final transaction in _transactions) {
       if (transaction.type == 'Income') {
         totalIncome += transaction.amount ?? 0.0;
       } else {
@@ -42,8 +131,8 @@ class DailyTransactionDetail extends StatelessWidget {
     final balance = totalIncome - totalExpense;
     
     // Format ngày
-    final isToday = _isToday(date);
-    final isYesterday = _isYesterday(date);
+    final isToday = _isToday(widget.date);
+    final isYesterday = _isYesterday(widget.date);
     
     String dateLabel;
     if (isToday) {
@@ -52,7 +141,7 @@ class DailyTransactionDetail extends StatelessWidget {
       dateLabel = getTranslated(context, 'Yesterday') ?? 'Yesterday';
     } else {
       // Format ngày theo locale
-      dateLabel = _formatDate(context, date);
+      dateLabel = _formatDate(context, widget.date);
     }
 
     return Scaffold(
@@ -95,7 +184,7 @@ class DailyTransactionDetail extends StatelessWidget {
                     ),
                     SizedBox(width: 8.w),
                     Text(
-                      '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'Transaction' : 'Transactions') ?? (transactions.length == 1 ? 'Transaction' : 'Transactions')}',
+                      '${_transactions.length} ${getTranslated(context, _transactions.length == 1 ? 'Transaction' : 'Transactions') ?? (_transactions.length == 1 ? 'Transaction' : 'Transactions')}',
                       style: GoogleFonts.poppins(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w600,
@@ -163,10 +252,10 @@ class DailyTransactionDetail extends StatelessWidget {
                   left: 4.w,
                   right: 4.w,
                 ),
-                itemCount: transactions.length,
+                itemCount: _transactions.length,
                 separatorBuilder: (context, index) => SizedBox(height: 6.h),
                 itemBuilder: (context, index) {
-                  final transaction = transactions[index];
+                  final transaction = _transactions[index];
                   
                   return TransactionListItem(
                     transaction: transaction,
@@ -182,25 +271,16 @@ class DailyTransactionDetail extends StatelessWidget {
                           ),
                         ),
                       );
-                      // Không cần reload vì Calendar sẽ tự reload khi pop back
+                      // Reload sau khi edit
+                      await _reloadTransactions();
                     },
                     onDelete: () async {
-                      final provider = context.read<CalendarProvider>();
-                      await provider.deleteTransaction(transaction.id!);
-                      customToast(
-                        context,
-                        getTranslated(context, 'Transaction has been deleted') ??
-                            'Transaction has been deleted',
-                      );
+                      // Xóa trực tiếp bằng database
+                      await _deleteTransaction(transaction.id!);
                     },
                     onDuplicate: () async {
-                      final provider = context.read<CalendarProvider>();
-                      await provider.duplicateTransaction(transaction);
-                      customToast(
-                        context,
-                        getTranslated(context, 'Transaction has been duplicated') ??
-                            'Transaction has been duplicated',
-                      );
+                      // Sao chép trực tiếp bằng database
+                      await _duplicateTransaction(transaction);
                     },
                   );
                 },

@@ -110,32 +110,91 @@ class FormProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Hàm lưu dữ liệu
-  void saveInput(BuildContext context, {bool isNewInput = true}) {
-    _model.amount = AmountFormatter.parseAmount(amountController.text);
-    _model.description = descriptionController.text;
-    _model.time = _currentTime.format(context); // Format khi save
+  // Loading state để hiển thị khi đang save
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
-    if (isNewInput) {
-      // Logic thêm mới
-      DB.insert(_model);
-      amountController.clear();
-      descriptionController.clear();
-      // Reset category to default
-      _selectedCategory = categoryItem(Icons.category_outlined, 'Category');
-      _model.category = 'Category';
-      // Reset time to now
-      _currentTime = TimeOfDay.now();
-      notifyListeners();
-      customToast(context, getTranslated(context, 'Data has been saved') ?? 'Data has been saved');
-    } else {
-      // Logic cập nhật
-      DB.update(_model);
-      Navigator.pop(context);
+  /// Validate input trước khi save
+  String? validateInput(BuildContext context) {
+    // Kiểm tra amount
+    final amount = AmountFormatter.parseAmount(amountController.text);
+    if (amount <= 0) {
+      return getTranslated(context, 'Please enter an amount greater than 0') ?? 
+             'Please enter an amount greater than 0';
+    }
+    
+    // Kiểm tra category đã được chọn chưa
+    if (_model.category == null || 
+        _model.category == 'Category' || 
+        _model.category!.isEmpty) {
+      return getTranslated(context, 'Please select a category') ?? 
+             'Please select a category';
+    }
+    
+    return null; // Valid
+  }
+
+  /// Format time thành string chuẩn "HH:mm"
+  String _formatTimeToString(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  // Hàm lưu dữ liệu - ĐÃ SỬA: async, validation, error handling
+  Future<void> saveInput(BuildContext context, {bool isNewInput = true}) async {
+    // Validate trước khi save
+    final validationError = validateInput(context);
+    if (validationError != null) {
+      customToast(context, validationError);
+      return; // Dừng lại nếu không hợp lệ
+    }
+
+    // Hiển thị loading state
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // Cập nhật model với dữ liệu mới
+      _model.amount = AmountFormatter.parseAmount(amountController.text);
+      _model.description = descriptionController.text;
+      _model.time = _formatTimeToString(_currentTime); // Format chuẩn
+
+      if (isNewInput) {
+        // Logic thêm mới - AWAIT database operation
+        await DB.insert(_model);
+        
+        // Clear form sau khi lưu THÀNH CÔNG
+        amountController.clear();
+        descriptionController.clear();
+        // Reset category to default
+        _selectedCategory = categoryItem(Icons.category_outlined, 'Category');
+        _model.category = 'Category';
+        // Reset time to now
+        _currentTime = TimeOfDay.now();
+        
+        customToast(context, getTranslated(context, 'Data has been saved') ?? 'Data has been saved');
+      } else {
+        // Logic cập nhật - AWAIT database operation
+        await DB.update(_model);
+        
+        Navigator.pop(context);
+        customToast(
+            context,
+            getTranslated(context, 'Transaction has been updated') ??
+                'Transaction has been updated');
+      }
+    } catch (e) {
+      // Xử lý lỗi khi save
+      print('Error saving input: $e');
       customToast(
-          context,
-          getTranslated(context, 'Transaction has been updated') ??
-              'Transaction has been updated');
+        context, 
+        getTranslated(context, 'Error saving data') ?? 'Error saving data: ${e.toString()}'
+      );
+    } finally {
+      // Tắt loading state
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

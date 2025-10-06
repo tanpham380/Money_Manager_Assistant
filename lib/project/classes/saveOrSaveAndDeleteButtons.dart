@@ -17,19 +17,21 @@ class SaveButton extends StatelessWidget {
   final VoidCallback? onSave;
   final Function? saveCategoryFunc;
   final bool saveInput;
+  final bool isLoading; // Thêm loading state
 
   const SaveButton({
     Key? key,
     this.onSave,
     this.saveCategoryFunc,
     this.saveInput = false,
+    this.isLoading = false, // Default false
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: ElevatedButton.icon(
-        onPressed: () {
+        onPressed: isLoading ? null : () { // Disable khi loading
           if (saveInput && onSave != null) {
             onSave!();
           } else if (saveCategoryFunc != null) {
@@ -47,14 +49,25 @@ class SaveButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(18.0.r),
           ),
         ),
-        label: Text(
-          getTranslated(context, 'Save')!,
-          style: TextStyle(fontSize: 25.sp),
-        ),
-        icon: Icon(
-          Icons.save,
-          size: 25.sp,
-        ),
+        label: isLoading 
+            ? SizedBox(
+                width: 20.w,
+                height: 20.h,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(white),
+                ),
+              )
+            : Text(
+                getTranslated(context, 'Save')!,
+                style: TextStyle(fontSize: 25.sp),
+              ),
+        icon: isLoading 
+            ? SizedBox(width: 25.sp) // Placeholder để giữ spacing
+            : Icon(
+                Icons.save,
+                size: 25.sp,
+              ),
       ),
     );
   }
@@ -127,10 +140,12 @@ class SaveAndDeleteButton extends StatelessWidget {
               getTranslated(context, 'Delete')!,
               style: TextStyle(fontSize: 25.sp),
             )),
+        // SaveButton sẽ nhận isLoading từ FormProvider nếu saveAndDeleteInput = true
         SaveButton(
           saveInput: saveAndDeleteInput,
           onSave: onSave,
           saveCategoryFunc: saveCategory,
+          isLoading: false, // Sẽ được update từ input.dart
         ),
       ],
     );
