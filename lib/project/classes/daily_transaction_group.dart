@@ -21,11 +21,13 @@ typedef NotificationService = AlertService;
 class DailyTransactionGroup extends StatelessWidget {
   final DateTime date;
   final List<InputModel> transactions;
+  final bool initiallyExpanded;
 
   const DailyTransactionGroup({
     Key? key,
     required this.date,
     required this.transactions,
+    this.initiallyExpanded = false,
   }) : super(key: key);
 
   @override
@@ -73,6 +75,7 @@ class DailyTransactionGroup extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
           tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           childrenPadding: EdgeInsets.only(bottom: 12.h),
           leading: Container(

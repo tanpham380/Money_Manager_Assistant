@@ -81,8 +81,10 @@ List<Color> chartPieColors = [
   Color.fromRGBO(225, 123, 66, 1),
 ];
 
-String format(double number) =>
-    NumberFormat('#,###,###,###,###,###.##', sharedPrefs.appCurrency.split('_')[0]).format(number);
+String format(double number) {
+  final formatter = NumberFormat('#,###,###,###,###,###.##', 'en_US');
+  return formatter.format(number);
+}
 
 IconData iconData(CategoryItem item) => IconData(item.iconCodePoint,
     fontPackage: item.iconFontPackage, fontFamily: item.iconFontFamily);

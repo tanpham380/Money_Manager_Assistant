@@ -10,6 +10,9 @@ class NavigationProvider with ChangeNotifier {
   IconData? _filterIcon;
   Color? _filterColor;
   
+  // Special flag for "Others" grouped category
+  bool _isOthersCategory = false;
+  
   // Bộ lọc khoảng thời gian
   DateTime? _filterStartDate;
   DateTime? _filterEndDate;
@@ -20,6 +23,7 @@ class NavigationProvider with ChangeNotifier {
   String? get filterCategory => _filterCategory;
   IconData? get filterIcon => _filterIcon;
   Color? get filterColor => _filterColor;
+  bool get isOthersCategory => _isOthersCategory;
   
   // Getters cho khoảng thời gian
   DateTime? get filterStartDate => _filterStartDate;
@@ -39,6 +43,7 @@ class NavigationProvider with ChangeNotifier {
     Color? color,
     DateTime? startDate,
     DateTime? endDate,
+    bool isOthersGroup = false,
   }) {
     _filterType = type;
     _filterCategory = category;
@@ -46,6 +51,7 @@ class NavigationProvider with ChangeNotifier {
     _filterColor = color;
     _filterStartDate = startDate;
     _filterEndDate = endDate;
+    _isOthersCategory = isOthersGroup;
     _currentTabIndex = 2; // Index của Calendar tab
     notifyListeners();
   }
@@ -58,9 +64,15 @@ class NavigationProvider with ChangeNotifier {
     _filterColor = null;
     _filterStartDate = null;
     _filterEndDate = null;
+    _isOthersCategory = false;
     notifyListeners();
   }
   
   /// Check nếu có filter active
-  bool get hasActiveFilter => _filterCategory != null;
+  /// Có filter khi: có type (và không rỗng) HOẶC có category (và không rỗng)
+  bool get hasActiveFilter {
+    final hasType = _filterType != null && _filterType!.isNotEmpty;
+    final hasCategory = _filterCategory != null && _filterCategory!.isNotEmpty;
+    return hasType || hasCategory;
+  }
 }

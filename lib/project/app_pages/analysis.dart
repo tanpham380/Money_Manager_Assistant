@@ -301,6 +301,9 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
       final navProvider = context.read<NavigationProvider>();
       final dateRange = provider.getDateRange();
       
+      // Check if this is "Others" grouped category
+      final isOthersGroup = summary.category == 'Others';
+      
       navProvider.navigateToCalendarWithFilter(
         type: widget.type,
         category: summary.category,
@@ -308,6 +311,7 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
         color: summary.color,
         startDate: dateRange['start'],
         endDate: dateRange['end'],
+        isOthersGroup: isOthersGroup,
       );
     }
     

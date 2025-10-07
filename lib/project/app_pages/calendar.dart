@@ -59,108 +59,398 @@ class Calendar extends StatelessWidget {
   }
 }
 
-class _CalendarContent extends StatelessWidget {
+class _CalendarContent extends StatefulWidget {
+  @override
+  State<_CalendarContent> createState() => _CalendarContentState();
+}
+
+class _CalendarContentState extends State<_CalendarContent> {
+  bool _isFilterExpanded = false; // Default: collapsed
+  
+  /// Build filter display text based on active filters
+  String _buildFilterDisplayText(BuildContext context, NavigationProvider navProvider) {
+    final hasType = navProvider.filterType != null && navProvider.filterType!.isNotEmpty;
+    final hasCategory = navProvider.filterCategory != null && navProvider.filterCategory!.isNotEmpty;
+    
+    if (navProvider.isOthersCategory) {
+      // "Others" category
+      if (hasType) {
+        return '${getTranslated(context, navProvider.filterType!) ?? navProvider.filterType!} - ${getTranslated(context, 'Others') ?? 'Others'}';
+      } else {
+        return '${getTranslated(context, 'All') ?? 'All'} - ${getTranslated(context, 'Others') ?? 'Others'}';
+      }
+    } else if (hasType && hasCategory) {
+      // Both type and category
+      return '${getTranslated(context, navProvider.filterType!) ?? navProvider.filterType!} - ${getTranslated(context, navProvider.filterCategory!) ?? navProvider.filterCategory!}';
+    } else if (hasCategory) {
+      // Category only (no type = All types)
+      return '${getTranslated(context, 'All') ?? 'All'} - ${getTranslated(context, navProvider.filterCategory!) ?? navProvider.filterCategory!}';
+    } else if (hasType) {
+      // Type only
+      return getTranslated(context, navProvider.filterType!) ?? navProvider.filterType!;
+    }
+    
+    return '';
+  }
+  
   @override
   Widget build(BuildContext context) {
     final navProvider = context.watch<NavigationProvider>();
     
     return Consumer<CalendarProvider>(
       builder: (context, provider, child) {
+        final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+        
         return Column(
           children: [
-            // Hiển thị thanh filter nếu có filter active
-            if (navProvider.hasActiveFilter)
-              _buildFilterStatusBar(context, navProvider),
+            // Unified Filter Section with toggle
+            _buildQuickFilterChips(context, navProvider, transactionProvider),
             
             _buildCalendar(context, provider),
             SizedBox(height: 8.h),
             
             // Danh sách giao dịch
-            _buildTransactionList(context, provider, navProvider, 
-              Provider.of<TransactionProvider>(context, listen: false)),
+            _buildTransactionList(context, provider, navProvider, transactionProvider),
           ],
         );
       },
     );
   }
   
-  /// Widget hiển thị thanh trạng thái filter
-  Widget _buildFilterStatusBar(BuildContext context, NavigationProvider navProvider) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+  /// Widget hiển thị Quick Filter Chips cho Type và Category
+  Widget _buildQuickFilterChips(BuildContext context, NavigationProvider navProvider, TransactionProvider transactionProvider) {
+    // Lấy danh sách categories unique từ transactions
+    final categories = <String>{};
+    for (final tx in transactionProvider.allTransactions) {
+      if (tx.category != null && tx.category!.isNotEmpty) {
+        categories.add(tx.category!);
+      }
+    }
+    final sortedCategories = categories.toList()..sort();
+    
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: (navProvider.filterColor ?? blue3).withValues(alpha: 0.1),
-        border: Border(
-          bottom: BorderSide(
-            color: (navProvider.filterColor ?? blue3).withValues(alpha: 0.3),
-            width: 1.5,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
-        ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Icon của category
+          // Header with toggle button and active filter status
           Container(
-            padding: EdgeInsets.all(6.w),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: (navProvider.filterColor ?? blue3).withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8.r),
+              color: navProvider.hasActiveFilter 
+                  ? (navProvider.filterColor ?? blue3).withValues(alpha: 0.08)
+                  : Colors.transparent,
+              border: navProvider.hasActiveFilter 
+                  ? Border(
+                      bottom: BorderSide(
+                        color: (navProvider.filterColor ?? blue3).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    )
+                  : null,
             ),
-            child: Icon(
-              navProvider.filterIcon ?? Icons.filter_list,
-              color: navProvider.filterColor ?? blue3,
-              size: 20.sp,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          
-          // Thông tin filter
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  getTranslated(context, 'Filtered by') ?? 'Filtered by',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[600],
+                // Filter icon and title
+                Icon(
+                  Icons.filter_alt_outlined, 
+                  size: 18.sp, 
+                  color: navProvider.hasActiveFilter 
+                      ? (navProvider.filterColor ?? blue3)
+                      : Colors.grey[600],
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        getTranslated(context, 'Filters') ?? 'Filters',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      // Show active filter info
+                      if (navProvider.hasActiveFilter) ...[
+                        SizedBox(height: 2.h),
+                        Text(
+                          _buildFilterDisplayText(context, navProvider),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: navProvider.filterColor ?? blue3,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  '${getTranslated(context, navProvider.filterType ?? '')} - ${getTranslated(context, navProvider.filterCategory ?? '')}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: navProvider.filterColor ?? blue3,
-                    fontSize: 15.sp,
+                
+                // Clear filter button (if active)
+                if (navProvider.hasActiveFilter) ...[
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => navProvider.clearFilter(),
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: Container(
+                        padding: EdgeInsets.all(6.w),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18.sp,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  SizedBox(width: 4.w),
+                ],
+                
+                // Toggle expand/collapse button
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _isFilterExpanded = !_isFilterExpanded;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: Container(
+                      padding: EdgeInsets.all(6.w),
+                      child: AnimatedRotation(
+                        turns: _isFilterExpanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22.sp,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
           
-          // Nút clear filter
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                navProvider.clearFilter();
-              },
-              borderRadius: BorderRadius.circular(20.r),
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 22.sp,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ),
+          // Animated filter chips section
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: _isFilterExpanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 8.h),
+                      
+                      // Type Filters Row
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        child: Row(
+                          children: [
+                            Icon(Icons.compare_arrows, size: 14.sp, color: Colors.grey[600]),
+                            SizedBox(width: 6.w),
+                            Text(
+                              getTranslated(context, 'Type') ?? 'Type',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            FilterChip(
+                              label: Text(getTranslated(context, 'All') ?? 'All'),
+                              labelStyle: TextStyle(fontSize: 11.sp),
+                              selected: navProvider.filterType == null,
+                              onSelected: (_) {
+                                navProvider.clearFilter();
+                              },
+                              selectedColor: blue3.withValues(alpha: 0.2),
+                              checkmarkColor: blue3,
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            SizedBox(width: 6.w),
+                            FilterChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.arrow_downward, size: 11.sp, color: navProvider.filterType == 'Income' ? green : null),
+                                  SizedBox(width: 4.w),
+                                  Text(getTranslated(context, 'Income') ?? 'Income'),
+                                ],
+                              ),
+                              labelStyle: TextStyle(fontSize: 11.sp),
+                              selected: navProvider.filterType == 'Income',
+                              onSelected: (selected) {
+                                if (selected) {
+                                  navProvider.navigateToCalendarWithFilter(
+                                    type: 'Income',
+                                    category: navProvider.filterCategory ?? '',
+                                    icon: navProvider.filterIcon,
+                                    color: green,
+                                  );
+                                } else {
+                                  navProvider.clearFilter();
+                                }
+                              },
+                              selectedColor: green.withValues(alpha: 0.2),
+                              checkmarkColor: green,
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            SizedBox(width: 6.w),
+                            FilterChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.arrow_upward, size: 11.sp, color: navProvider.filterType == 'Expense' ? red : null),
+                                  SizedBox(width: 4.w),
+                                  Text(getTranslated(context, 'Expense') ?? 'Expense'),
+                                ],
+                              ),
+                              labelStyle: TextStyle(fontSize: 11.sp),
+                              selected: navProvider.filterType == 'Expense',
+                              onSelected: (selected) {
+                                if (selected) {
+                                  navProvider.navigateToCalendarWithFilter(
+                                    type: 'Expense',
+                                    category: navProvider.filterCategory ?? '',
+                                    icon: navProvider.filterIcon,
+                                    color: red,
+                                  );
+                                } else {
+                                  navProvider.clearFilter();
+                                }
+                              },
+                              selectedColor: red.withValues(alpha: 0.2),
+                              checkmarkColor: red,
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      SizedBox(height: 8.h),
+                      
+                      // Category Filters Row (Scrollable)
+                      if (sortedCategories.isNotEmpty) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          child: Row(
+                            children: [
+                              Icon(Icons.category_outlined, size: 14.sp, color: Colors.grey[600]),
+                              SizedBox(width: 6.w),
+                              Text(
+                                getTranslated(context, 'Category') ?? 'Category',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        SizedBox(
+                          height: 36.h,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.symmetric(horizontal: 12.w),
+                            itemCount: sortedCategories.length,
+                            itemBuilder: (context, index) {
+                              final category = sortedCategories[index];
+                              final isSelected = navProvider.filterCategory == category;
+                              final categoryColor = _getCategoryColor(category, index);
+                              
+                              return Padding(
+                                padding: EdgeInsets.only(right: 6.w),
+                                child: FilterChip(
+                                  label: Text(
+                                    getTranslated(context, category) ?? category,
+                                    style: TextStyle(fontSize: 11.sp),
+                                  ),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      // Nếu chọn category: giữ nguyên type filter hiện tại (có thể là null = "All")
+                                      navProvider.navigateToCalendarWithFilter(
+                                        type: navProvider.filterType ?? '', // Empty string means no type filter
+                                        category: category,
+                                        icon: Icons.category,
+                                        color: categoryColor,
+                                      );
+                                    } else {
+                                      // If deselecting, clear only category filter, keep type filter
+                                      if (navProvider.filterType != null && navProvider.filterType!.isNotEmpty) {
+                                        navProvider.navigateToCalendarWithFilter(
+                                          type: navProvider.filterType!,
+                                          category: '',
+                                          icon: navProvider.filterIcon,
+                                          color: navProvider.filterColor,
+                                        );
+                                      } else {
+                                        navProvider.clearFilter();
+                                      }
+                                    }
+                                  },
+                                  selectedColor: categoryColor.withValues(alpha: 0.2),
+                                  checkmarkColor: categoryColor,
+                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 0),
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                      
+                      SizedBox(height: 8.h),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
     );
+  }
+  
+  /// Helper để lấy màu cho category
+  Color _getCategoryColor(String category, int index) {
+    // Sử dụng màu từ constants.dart hoặc generate based on index
+    final colors = [
+      Color(0xFF2196F3), // Blue
+      Color(0xFF4CAF50), // Green
+      Color(0xFFF44336), // Red
+      Color(0xFFFF9800), // Orange
+      Color(0xFF9C27B0), // Purple
+      Color(0xFF00BCD4), // Cyan
+      Color(0xFFFFEB3B), // Yellow
+      Color(0xFF795548), // Brown
+    ];
+    return colors[index % colors.length];
   }
   
   Widget _buildCalendar(BuildContext context, CalendarProvider provider) {
@@ -311,7 +601,7 @@ class _CalendarContent extends StatelessWidget {
     DateTime startDate,
     DateTime endDate,
   ) {
-    final filtered = transactions.where((tx) {
+    return transactions.where((tx) {
       if (tx.date == null) return false;
       try {
         final txDate = DateFormatUtils.parseInternalDate(tx.date!);
@@ -322,16 +612,9 @@ class _CalendarContent extends StatelessWidget {
         // So sánh: startDate <= txDate <= endDate (inclusive both ends)
         return !normalizedTxDate.isBefore(normalizedStart) && !normalizedTxDate.isAfter(normalizedEnd);
       } catch (e) {
-        print('Error parsing date ${tx.date}: $e');
         return false;
       }
     }).toList();
-    
-    print('🔍 Filter range: $startDate to $endDate');
-    print('📊 Total transactions: ${transactions.length}');
-    print('✅ Filtered transactions: ${filtered.length}');
-    
-    return filtered;
   }
   
   /// Nhóm giao dịch theo ngày (sắp xếp từ mới đến cũ)
@@ -343,27 +626,41 @@ class _CalendarContent extends StatelessWidget {
     final Map<DateTime, List<InputModel>> grouped = {};
     final allTransactions = <InputModel>[];
     
-    // CASE 1: Nếu có ngày được chọn cụ thể, chỉ hiển thị transactions của ngày đó
-    if (provider.selectedDay != null) {
+    // Lấy base transactions
+    var baseTransactions = transactionProvider.allTransactions;
+    
+    // Áp dụng filter type và category nếu có
+    if (navProvider.hasActiveFilter) {
+      baseTransactions = baseTransactions.where((tx) {
+        // Filter by type - Only filter if type is not empty
+        if (navProvider.filterType != null && 
+            navProvider.filterType!.isNotEmpty && 
+            tx.type != navProvider.filterType) {
+          return false;
+        }
+        
+        // Filter by category - Special handling for "Others"
+        if (navProvider.filterCategory != null && 
+            navProvider.filterCategory!.isNotEmpty && 
+            !navProvider.isOthersCategory) {
+          if (tx.category != navProvider.filterCategory) {
+            return false;
+          }
+        }
+        // If it's "Others" category, we show ALL transactions (filtered by type only)
+        // This is because "Others" is a grouping of small categories, not a real category
+        
+        return true;
+      }).toList();
+    }
+    
+    // CASE 1: Nếu có ngày được chọn cụ thể VÀ KHÔNG CÓ FILTER
+    // → Chỉ hiển thị transactions của ngày đó
+    if (provider.selectedDay != null && !navProvider.hasActiveFilter) {
       allTransactions.addAll(provider.getEventsForDay(provider.selectedDay!));
     } 
-    // CASE 2 & 3: Filter theo calendar format hoặc filter từ Analysis
+    // CASE 2 & 3: Hiển thị theo calendar format hoặc date range từ filter
     else {
-      // Lấy base transactions (có áp dụng filter type/category nếu có)
-      var baseTransactions = transactionProvider.allTransactions;
-      
-      // Áp dụng filter type và category nếu có
-      if (navProvider.hasActiveFilter) {
-        baseTransactions = baseTransactions.where((tx) {
-          if (navProvider.filterType != null && tx.type != navProvider.filterType) {
-            return false;
-          }
-          if (navProvider.filterCategory != null && tx.category != navProvider.filterCategory) {
-            return false;
-          }
-          return true;
-        }).toList();
-      }
       
       // CASE 2: Nếu có filter date range từ Analysis screen
       if (navProvider.filterStartDate != null || navProvider.filterEndDate != null) {
@@ -472,9 +769,12 @@ class _CalendarContent extends StatelessWidget {
         itemCount: groupedTransactions.length,
         itemBuilder: (context, index) {
           final entry = groupedTransactions[index];
+          // Auto-expand first group (today or most recent)
+          final isFirstGroup = index == 0;
           return DailyTransactionGroup(
             date: entry.key,
             transactions: entry.value,
+            initiallyExpanded: isFirstGroup,
           );
         },
       ),
