@@ -39,18 +39,7 @@ class _DemoLocalizationsDelegate
   bool isSupported(Locale locale) {
     return [
       'en',
-      // 'ar',
-      'de',
-      'es',
-      'fr',
-      'hi',
-      'ja',
-      'ko',
-      'pt',
-      'ru',
-      'tr',
       'vi',
-      'zh'
     ].contains(locale.languageCode);
   }
 

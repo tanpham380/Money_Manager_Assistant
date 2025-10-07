@@ -45,17 +45,23 @@ class _AddInputState extends State<AddInput> {
           child: Scaffold(
               backgroundColor: blue1,
               appBar: InExAppBar(true),
-              body: TabBarView(
-                children: [
-                  AddEditInput(
-                    type: 'Expense',
-                    formKey: _formKey2,
-                  ),
-                  AddEditInput(
-                    type: 'Income',
-                    formKey: _formKey1,
-                  )
-                ],
+              body: Consumer<TransactionProvider>(
+                builder: (context, transactionProvider, child) {
+                  return TabBarView(
+                    children: [
+                      AddEditInput(
+                        type: 'Expense',
+                        formKey: _formKey2,
+                        transactionProvider: transactionProvider,
+                      ),
+                      AddEditInput(
+                        type: 'Income',
+                        formKey: _formKey1,
+                        transactionProvider: transactionProvider,
+                      )
+                    ],
+                  );
+                },
               ))),
     );
   }
@@ -68,11 +74,13 @@ class AddEditInput extends StatelessWidget {
   final InputModel? inputModel;
   final String? type;
   final IconData? categoryIcon;
+  final TransactionProvider transactionProvider;
   const AddEditInput({
     required this.formKey,
     this.inputModel,
     this.type,
     this.categoryIcon,
+    required this.transactionProvider,
     Key? key,
   }) : super(key: key);
 
@@ -84,7 +92,7 @@ class AddEditInput extends StatelessWidget {
         input: inputModel,
         type: type,
         categoryIcon: categoryIcon,
-        transactionProvider: context.read<TransactionProvider>(),
+        transactionProvider: transactionProvider,
       ),
       child: Consumer<FormProvider>(
         builder: (context, provider, child) {
@@ -97,29 +105,7 @@ class AddEditInput extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               children: [
                 // CARD DUY NHẤT - Merge tất cả các trường vào một Card
-                Card(
-                  elevation: 4.0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0.r),
-                  ),
-                  child: Column(
-                    children: [
-                      // Amount Field
-                      const AmountCard(),
-                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
-                      // Category Field
-                      const CategoryCard(),
-                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
-                      // Description Field
-                      const DescriptionCard(),
-                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
-                      // Date & Time Field
-                      const DateCard(),
-                    ],
-                  ),
-                ),
-
-                // Smart Suggestions
+                                // Smart Suggestions
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.0.h),
                   child: Consumer<FormProvider>(
@@ -262,6 +248,29 @@ class AddEditInput extends StatelessWidget {
                   ),
                 ),
 
+                Card(
+                  elevation: 4.0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0.r),
+                  ),
+                  child: Column(
+                    children: [
+                      // Amount Field
+                      const AmountCard(),
+                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
+                      // Category Field
+                      const CategoryCard(),
+                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
+                      // Description Field
+                      const DescriptionCard(),
+                      Divider(height: 1, indent: 16.w, endIndent: 16.w),
+                      // Date & Time Field
+                      const DateCard(),
+                    ],
+                  ),
+                ),
+
+
                 // Save/Delete Buttons
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 70.h),
@@ -321,13 +330,14 @@ class AmountCard extends StatelessWidget {
                 controller: amountController,
                 // SỬ DỤNG BÀN PHÍM NATIVE
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                textInputAction: TextInputAction.next,
+                textInputAction: TextInputAction.done,
                 showCursor: true,
                 maxLines: 1,
                 autofocus: false,
                 onFieldSubmitted: (_) {
-                  // Chuyển sang trường Description
-                  provider.descriptionFocusNode.requestFocus();
+                  // Thực hiện lưu trực tiếp khi nhấn Done trên bàn phím
+                  final isNew = context.read<FormProvider>().model.id == null;
+                  context.read<FormProvider>().saveInput(context, isNewInput: isNew);
                 },
                 // Chỉ cho phép nhập số và dấu chấm
                 inputFormatters: [
@@ -491,9 +501,7 @@ class DescriptionCard extends StatelessWidget {
                           Icons.clear,
                           size: 20.sp,
                         ),
-                        onPressed: () {
-                          descriptionController.clear();
-                        })
+                        onPressed: descriptionController.clear)
                     : const SizedBox(),
                 icon: Padding(
                   padding: EdgeInsets.only(right: 15.w),

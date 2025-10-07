@@ -209,12 +209,14 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
               child: _buildChartToggle(provider),
             ),
             
-            // Chart Area - Mở rộng chiếm toàn bộ không gian còn lại
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: _buildChart(provider, summaries),
+            // Chart Area - Flexible để vừa với không gian còn lại
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5, // 50% chiều cao màn hình
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: _buildChart(provider, summaries),
+                ),
               ),
             ),
           ],
@@ -283,146 +285,7 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
     );
   }
 
-  /// Hiển thị dialog chi tiết category
-  void _showCategoryDetailsDialog(
-    BuildContext context, 
-    CategorySummary summary, 
-    String type, 
-    AnalysisProvider provider
-  ) {
-    final totalAmount = type == 'Income' ? provider.totalIncome : provider.totalExpense;
-    final percentage = totalAmount > 0 ? (summary.totalAmount / totalAmount * 100) : 0;
-    
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          title: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: summary.color.withValues(alpha: 0.2),
-                child: Icon(
-                  summary.icon,
-                  color: summary.color,
-                  size: 24.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  getTranslated(dialogContext, summary.category) ?? summary.category,
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 16.h),
-              _buildDetailRow(
-                dialogContext,
-                getTranslated(dialogContext, 'Total Amount') ?? 'Total Amount',
-                '${format(summary.totalAmount)} $currency',
-                fontWeight: FontWeight.bold,
-                color: summary.color,
-              ),
-              SizedBox(height: 8.h),
-              _buildDetailRow(
-                dialogContext,
-                getTranslated(dialogContext, 'Percentage') ?? 'Percentage',
-                '${percentage.toStringAsFixed(1)}%',
-              ),
-              SizedBox(height: 8.h),
-              _buildDetailRow(
-                dialogContext,
-                getTranslated(dialogContext, 'Category') ?? 'Category',
-                getTranslated(dialogContext, summary.category) ?? summary.category,
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                getTranslated(dialogContext, 'Description') ?? 'Description',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                getTranslated(dialogContext, 'This category represents ${percentage.toStringAsFixed(1)}% of your total ${type.toLowerCase()} for the selected period.') ?? 
-                'This category represents ${percentage.toStringAsFixed(1)}% of your total ${type.toLowerCase()} for the selected period.',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey[600],
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                // Chuyển sang Calendar với filter để xem chi tiết transactions
-                final navProvider = context.read<NavigationProvider>();
-                navProvider.navigateToCalendarWithFilter(
-                  type: type,
-                  category: summary.category,
-                  icon: summary.icon,
-                  color: summary.color,
-                );
-              },
-              child: Text(
-                getTranslated(dialogContext, 'View Transactions') ?? 'View Transactions',
-                style: TextStyle(fontSize: 16.sp),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                getTranslated(dialogContext, 'Close') ?? 'Close',
-                style: TextStyle(fontSize: 16.sp),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
-  /// Helper method để build detail row
-  Widget _buildDetailRow(BuildContext context, String label, String value, {
-    FontWeight fontWeight = FontWeight.normal,
-    Color? color,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: Colors.grey[600],
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: fontWeight,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
 
   /// Xây dựng biểu đồ dựa trên loại được chọn
   Widget _buildChart(AnalysisProvider provider, List<CategorySummary> summaries) {
@@ -434,8 +297,18 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
       // Cập nhật selection trong provider để làm nổi bật
       provider.updateSelectedIndex(index);
       
-      // Hiển thị dialog chi tiết category thay vì chuyển trang
-      _showCategoryDetailsDialog(context, summary, widget.type, provider);
+      // Điều hướng sang Calendar với filter chi tiết
+      final navProvider = context.read<NavigationProvider>();
+      final dateRange = provider.getDateRange();
+      
+      navProvider.navigateToCalendarWithFilter(
+        type: widget.type,
+        category: summary.category,
+        icon: summary.icon,
+        color: summary.color,
+        startDate: dateRange['start'],
+        endDate: dateRange['end'],
+      );
     }
     
     switch (provider.selectedChartType) {

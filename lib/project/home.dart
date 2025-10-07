@@ -8,7 +8,6 @@ import 'localization/methods.dart';
 import 'app_pages/calendar.dart';
 import 'app_pages/others.dart';
 import 'provider/navigation_provider.dart';
-import 'provider/transaction_provider.dart'; // Import TransactionProvider
 
 class Home extends StatefulWidget {
   @override
@@ -51,43 +50,40 @@ class _HomeState extends State<Home> {
       _bottomNavigationBarItem(Icons.account_circle, 'Other'),
     ];
 
-    // Provide TransactionProvider at Home level so all pages share the same instance
-    return ChangeNotifierProvider(
-      create: (_) => TransactionProvider(),
-      child: Consumer<NavigationProvider>(
-        builder: (context, navProvider, child) {
-          return Scaffold(
-              bottomNavigationBar: Container(
-                decoration: const BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: BottomNavigationBar(
-                  iconSize: scale(27),
-                  selectedFontSize: scale(16),
-                  unselectedFontSize: scale(14),
-                  backgroundColor: blue1,
-                  selectedItemColor: const Color.fromARGB(255, 255, 136, 0),
-                  unselectedItemColor: Colors.black87,
-                  type: BottomNavigationBarType.fixed,
-                  items: bottomItems,
-                  currentIndex: navProvider.currentTabIndex,
-                  onTap: (int index) {
-                    navProvider.changeTab(index);
-                  },
-                ),
+        // Provide TransactionProvider at Home level so all pages share the same instance
+    return Consumer<NavigationProvider>(
+      builder: (context, navProvider, child) {
+        return Scaffold(
+            bottomNavigationBar: Container(
+              decoration: const BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-              body: IndexedStack(
-                index: navProvider.currentTabIndex,
-                children: _pages,
-              ));
-        },
-      ),
+              child: BottomNavigationBar(
+                iconSize: scale(27),
+                selectedFontSize: scale(16),
+                unselectedFontSize: scale(14),
+                backgroundColor: blue1,
+                selectedItemColor: const Color.fromARGB(255, 255, 136, 0),
+                unselectedItemColor: Colors.black87,
+                type: BottomNavigationBarType.fixed,
+                items: bottomItems,
+                currentIndex: navProvider.currentTabIndex,
+                onTap: (int index) {
+                  navProvider.changeTab(index);
+                },
+              ),
+            ),
+            body: IndexedStack(
+              index: navProvider.currentTabIndex,
+              children: _pages,
+            ));
+      },
     );
   }
 }

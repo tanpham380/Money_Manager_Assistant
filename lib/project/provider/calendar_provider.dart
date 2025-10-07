@@ -18,7 +18,7 @@ class CalendarProvider with ChangeNotifier {
   
   final TransactionProvider _transactionProvider;
   final NavigationProvider _navigationProvider;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  CalendarFormat _calendarFormat = CalendarFormat.week; // Đổi mặc định từ month thành week
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   DateTime? _rangeStart;
@@ -54,7 +54,15 @@ class CalendarProvider with ChangeNotifier {
   // ============ CONSTRUCTOR ============
   
   CalendarProvider(this._transactionProvider, this._navigationProvider) {
-    _selectedDay = _focusedDay;
+    // Nếu có filter với khoảng thời gian, focus vào ngày bắt đầu
+    if (_navigationProvider.filterStartDate != null) {
+      _focusedDay = _navigationProvider.filterStartDate!;
+      _selectedDay = _navigationProvider.filterStartDate!;
+    } else {
+      // Không chọn ngày mặc định, chỉ focus vào ngày hiện tại
+      _selectedDay = null; // Không chọn ngày nào mặc định
+    }
+    
     _updateSelectedDayEvents();
     
     // Listen to TransactionProvider changes
@@ -155,9 +163,36 @@ class CalendarProvider with ChangeNotifier {
   
   /// Lấy danh sách giao dịch cho một ngày cụ thể với filter
   List<InputModel> getEventsForDay(DateTime day) {
+    // Kiểm tra nếu ngày nằm ngoài khoảng thời gian filter
+    if (_navigationProvider.filterStartDate != null) {
+      final normalizedFilterStart = DateTime(
+        _navigationProvider.filterStartDate!.year,
+        _navigationProvider.filterStartDate!.month,
+        _navigationProvider.filterStartDate!.day,
+      );
+      final normalizedDay = DateTime(day.year, day.month, day.day);
+      
+      if (normalizedDay.isBefore(normalizedFilterStart)) {
+        return [];
+      }
+    }
+    
+    if (_navigationProvider.filterEndDate != null) {
+      final normalizedFilterEnd = DateTime(
+        _navigationProvider.filterEndDate!.year,
+        _navigationProvider.filterEndDate!.month,
+        _navigationProvider.filterEndDate!.day,
+      );
+      final normalizedDay = DateTime(day.year, day.month, day.day);
+      
+      if (normalizedDay.isAfter(normalizedFilterEnd)) {
+        return [];
+      }
+    }
+    
     var transactions = _transactionProvider.getTransactionsForDate(day);
     
-    // Áp dụng filter từ NavigationProvider
+    // Áp dụng filter theo type và category từ NavigationProvider
     if (_navigationProvider.hasActiveFilter) {
       transactions = transactions.where((transaction) {
         // Filter theo type

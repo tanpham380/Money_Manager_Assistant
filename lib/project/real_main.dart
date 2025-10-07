@@ -10,6 +10,7 @@ import 'database_management/shared_preferences_services.dart';
 import 'database_management/sqflite_services.dart';
 import 'localization/app_localization.dart';
 import 'provider/navigation_provider.dart';
+import 'provider/transaction_provider.dart';
 import 'home.dart';
 
 // Global key để navigate từ bất cứ đâu
@@ -58,8 +59,11 @@ void realMain() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => NavigationProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+      ],
       child: MyApp(),
     ),
   );

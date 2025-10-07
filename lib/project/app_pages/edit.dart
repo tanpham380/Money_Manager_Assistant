@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
 import '../classes/input_model.dart';
 import '../localization/methods.dart';
+import '../provider/transaction_provider.dart';
 import 'input.dart';
 
 class Edit extends StatelessWidget {
@@ -28,10 +30,15 @@ class Edit extends StatelessWidget {
             currentFocus.unfocus();
           }
         },
-        child: AddEditInput(
-          formKey: _formKey3,
-          inputModel: inputModel,
-          categoryIcon: categoryIcon,
+        child: Consumer<TransactionProvider>(
+          builder: (context, transactionProvider, child) {
+            return AddEditInput(
+              formKey: _formKey3,
+              inputModel: inputModel,
+              categoryIcon: categoryIcon,
+              transactionProvider: transactionProvider,
+            );
+          },
         ),
       ),
     );

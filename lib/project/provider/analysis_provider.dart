@@ -100,6 +100,43 @@ class AnalysisProvider with ChangeNotifier {
     return null;
   }
   
+  /// Lấy khoảng thời gian dưới dạng DateTime từ selectedDateOption
+  Map<String, DateTime?> getDateRange() {
+    final now = DateTime.now();
+    
+    switch (_selectedDateOption) {
+      case 'Today':
+        return {
+          'start': DateTime(now.year, now.month, now.day),
+          'end': DateTime(now.year, now.month, now.day, 23, 59, 59),
+        };
+        
+      case 'This week':
+        final start = startOfThisWeek;
+        final end = start.add(Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        return {'start': start, 'end': end};
+        
+      case 'This month':
+        final start = startOfThisMonth;
+        final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+        return {'start': start, 'end': end};
+        
+      case 'This quarter':
+        final start = startOfThisQuarter;
+        final end = DateTime(start.year, start.month + 3, 0, 23, 59, 59);
+        return {'start': start, 'end': end};
+        
+      case 'This year':
+        final start = startOfThisYear;
+        final end = DateTime(now.year, 12, 31, 23, 59, 59);
+        return {'start': start, 'end': end};
+        
+      case 'All':
+      default:
+        return {'start': null, 'end': null}; // Không giới hạn thời gian
+    }
+  }
+  
   // ============ PHƯƠNG THỨC PUBLIC ============
   
   // ============ CONSTRUCTOR ============

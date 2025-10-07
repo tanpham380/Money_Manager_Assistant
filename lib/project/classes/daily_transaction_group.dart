@@ -60,11 +60,15 @@ class DailyTransactionGroup extends StatelessWidget {
     }
 
     // SỬ DỤNG EXPANSIONTILE - Cho phép mở rộng để xem transactions
-    return Card(
+    return Container(
       margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      elevation: 2.0,
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
