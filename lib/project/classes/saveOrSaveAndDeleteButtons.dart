@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
  import '../utils/responsive_extensions.dart';
 
@@ -8,7 +7,6 @@ import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
 import '../services/alert_service.dart';
-import 'alert_dialog.dart';
 import 'category_item.dart';
 import 'constants.dart';
 
@@ -192,19 +190,20 @@ Future<void> deleteCategoryFunction(
     AlertService.show(
       context,
       type: NotificationType.success,
-      message: getTranslated(context, 'Category has been deleted') ?? 'Category has been deleted',
+      message: 'Category has been deleted',
     );
   }
 
-  Platform.isIOS
-      ? await iosDialog(
-          context,
-          'Are you sure you want to delete this category?',
-          'Delete',
-          onDeletion)
-      : await androidDialog(
-          context,
-          'Are you sure you want to delete this category?',
-          'Delete',
-          onDeletion);
+  final confirmed = await AlertService.show(
+    context,
+    type: NotificationType.delete,
+    title: 'Delete Category',
+    message: 'Are you sure you want to delete this category?',
+    actionText: 'Delete',
+    cancelText: 'Cancel',
+  );
+  
+  if (confirmed == true) {
+    onDeletion();
+  }
 }

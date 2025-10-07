@@ -21,6 +21,9 @@ void realMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   await  NotificationService.init();
   
+  // Initialize SharedPreferences FIRST (required for date migration)
+  await sharedPrefs.sharePrefsInit();
+  
   // Initialize database
   await DB.init();
   
@@ -43,7 +46,6 @@ void realMain() async {
       }
     }
   };
-  await sharedPrefs.sharePrefsInit();
   await _checkStoragePermission();
   sharedPrefs.setItems(setCategoriesToDefault: false);
   sharedPrefs.getCurrency();

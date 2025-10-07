@@ -7,9 +7,7 @@ import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'dart:io' show Platform;
 
-import '../classes/alert_dialog.dart';
 import '../classes/constants.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../database_management/sqflite_services.dart';
@@ -297,51 +295,41 @@ class _SettingsState extends State<Settings> {
                           MaterialPageRoute(builder: (context) => FormatDate()))
                       .then((value) => setState(() {})));
                 } else if (index == 4) {
-                  // Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //         builder: (context) => EditIncomeCategory(null)));
-                  void onReset() {
+                  final confirmed = await AlertService.show(
+                    context,
+                    type: NotificationType.delete,
+                    title: 'Reset Categories',
+                    message: 'This action cannot be undone. Are you sure you want to reset all categories?',
+                    actionText: 'Reset',
+                    cancelText: 'Cancel',
+                  );
+                  
+                  if (confirmed == true) {
                     sharedPrefs.setItems(setCategoriesToDefault: true);
                     AlertService.show(
                       context,
                       type: NotificationType.success,
-                      message: getTranslated(context, 'Categories have been reset') ?? 'Categories have been reset',
+                      message: 'Categories have been reset',
                     );
                   }
-
-                  Platform.isIOS
-                      ? await iosDialog(
-                          context,
-                          'This action cannot be undone. Are you sure you want to reset all categories?',
-                          'Reset',
-                          onReset)
-                      : await androidDialog(
-                          context,
-                          'This action cannot be undone. Are you sure you want to reset all categories?',
-                          'reset',
-                          onReset);
                 } else if (index == 5) {
-                  Future onDeletion() async {
+                  final confirmed = await AlertService.show(
+                    context,
+                    type: NotificationType.delete,
+                    title: 'Delete All Data',
+                    message: 'Deleted data can not be recovered. Are you sure you want to delete all data?',
+                    actionText: 'Delete',
+                    cancelText: 'Cancel',
+                  );
+                  
+                  if (confirmed == true) {
                     await DB.deleteAll();
                     AlertService.show(
                       context,
                       type: NotificationType.success,
-                      message: getTranslated(context, 'All data has been deleted') ?? 'All data has been deleted',
+                      message: 'All data has been deleted',
                     );
                   }
-
-                  Platform.isIOS
-                      ? await iosDialog(
-                          context,
-                          'Deleted data can not be recovered. Are you sure you want to delete all data?',
-                          'Delete',
-                          onDeletion)
-                      : await androidDialog(
-                          context,
-                          'Deleted data can not be recovered. Are you sure you want to delete all data?',
-                          'Delete',
-                          onDeletion);
                 } else if (index == 6) {
                   final controller = InputController();
                   await screenLockCreate(
@@ -358,19 +346,13 @@ class _SettingsState extends State<Settings> {
                       inputController: controller,
                       customizedButtonChild: Icon(Icons.lock_reset),
                       customizedButtonTap: controller.unsetConfirmed,
-                      // footer: TextButton(
-                      //         onPressed: () {
-                      //            controller.unsetConfirmed();
-                      //         },
-                      //         child: const Text('Reset input', style: TextStyle(color: Colors.blue),),
-                      //       ),
                       onConfirmed: (matchedText) {
                         sharedPrefs.passcodeScreenLock = matchedText;
                         Navigator.of(context).pop();
                         AlertService.show(
                           context,
                           type: NotificationType.success,
-                          message: getTranslated(context, 'Passcode has been changed') ?? 'Passcode has been changed',
+                          message: 'Passcode has been changed',
                         );
                       });
                 } else if (index == 7) {

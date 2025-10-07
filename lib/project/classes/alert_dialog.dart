@@ -5,6 +5,20 @@ import 'package:responsive_scaler/responsive_scaler.dart';
 
 import '../localization/methods.dart';
 
+/// @deprecated Use AlertService.show() instead
+/// This file is kept for backward compatibility only
+/// New code should use:
+/// ```dart
+/// AlertService.show(
+///   context,
+///   type: NotificationType.delete,
+///   title: 'Your Title',
+///   message: 'Your Message',
+///   actionText: 'Confirm',
+///   cancelText: 'Cancel',
+/// );
+/// ```
+
 Future<void> iosDialog(BuildContext context, String content, String action,
         Function onAction) =>
     showCupertinoDialog(

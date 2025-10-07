@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../classes/input_model.dart';
 import '../classes/category_item.dart';
 import '../classes/constants.dart';
-import '../database_management/shared_preferences_services.dart';
 import '../services/alert_service.dart';
 import '../localization/methods.dart';
 import '../utils/amount_formatter.dart';
+import '../utils/date_format_utils.dart';
 import 'transaction_provider.dart';
 
 class FormProvider with ChangeNotifier {
@@ -55,7 +54,7 @@ class FormProvider with ChangeNotifier {
       _currentTime = TimeOfDay.now();
       _model = InputModel(
         type: type,
-        date: DateFormat(sharedPrefs.dateFormat).format(now),
+        date: DateFormatUtils.formatInternalDate(now),
         time: null,
       );
       _selectedCategory = categoryItem(Icons.category_outlined, 'Category');
@@ -87,7 +86,7 @@ class FormProvider with ChangeNotifier {
   // Cập nhật ngày
   // ALWAYS store in ISO format (yyyy-MM-dd) for consistency
   void updateDate(DateTime newDate) {
-    _model.date = DateFormat('yyyy-MM-dd').format(newDate);
+    _model.date = DateFormatUtils.formatInternalDate(newDate);
     notifyListeners();
   }
 

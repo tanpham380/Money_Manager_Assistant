@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_material_pickers/helpers/show_date_picker.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/Provider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
@@ -563,7 +562,7 @@ class DateCard extends StatelessWidget {
                     ),
                     Text(
                       DateFormatUtils.formatUserDate(
-                        DateFormat('yyyy-MM-dd').parse(provider.model.date!)
+                        DateFormatUtils.parseInternalDate(provider.model.date!)
                       ),
                       style: GoogleFonts.aBeeZee(
                         fontSize: 21.5.sp,
