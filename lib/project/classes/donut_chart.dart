@@ -237,6 +237,7 @@ class DonutChartAnalysis extends StatelessWidget {
   
   /// Legend hiển thị danh sách các category với % và số tiền - COMPACT
   Widget _buildCategoryLegend(BuildContext context, double totalAmount) {
+    final provider = context.watch<AnalysisProvider>();
     return Container(
       margin: EdgeInsets.fromLTRB(scale(12), 0, scale(12), scale(8)),
       child: ListView.builder(
@@ -246,6 +247,7 @@ class DonutChartAnalysis extends StatelessWidget {
         itemBuilder: (context, index) {
           final summary = summaries[index];
           final percentage = summary.totalAmount / totalAmount * 100;
+          final isSelected = provider.selectedIndex == index;
           
           return Material(
             color: Colors.white,
@@ -264,7 +266,11 @@ class DonutChartAnalysis extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(scale(8)),
-                  border: Border.all(color: Colors.grey[200]!, width: 1),
+                  border: Border.all(
+                    color: isSelected ? summary.color : Colors.grey[200]!, 
+                    width: isSelected ? 2 : 1,
+                  ),
+                  color: isSelected ? summary.color.withValues(alpha: 0.05) : Colors.white,
                 ),
                 child: Row(
                   children: [

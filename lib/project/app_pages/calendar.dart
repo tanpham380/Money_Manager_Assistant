@@ -295,7 +295,7 @@ class _CalendarContentState extends State<_CalendarContent> {
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.arrow_downward, size: 11.sp, color: navProvider.filterType == 'Income' ? green : null),
+                                  Icon(Icons.arrow_downward, size: 11.sp, color: navProvider.filterType == 'Income' ? blue3 : null),
                                   SizedBox(width: 4.w),
                                   Text(getTranslated(context, 'Income') ?? 'Income'),
                                 ],
@@ -308,14 +308,14 @@ class _CalendarContentState extends State<_CalendarContent> {
                                     type: 'Income',
                                     category: navProvider.filterCategory ?? '',
                                     icon: navProvider.filterIcon,
-                                    color: green,
+                                    color: blue3, // Đổi từ green thành blue3
                                   );
                                 } else {
                                   navProvider.clearFilter();
                                 }
                               },
-                              selectedColor: green.withValues(alpha: 0.2),
-                              checkmarkColor: green,
+                              selectedColor: blue3.withValues(alpha: 0.2), // Đổi từ green thành blue3
+                              checkmarkColor: blue3, // Đổi từ green thành blue3
                               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -324,7 +324,7 @@ class _CalendarContentState extends State<_CalendarContent> {
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.arrow_upward, size: 11.sp, color: navProvider.filterType == 'Expense' ? red : null),
+                                  Icon(Icons.arrow_upward, size: 11.sp, color: navProvider.filterType == 'Expense' ? blue2 : null), // Đổi từ red thành blue2
                                   SizedBox(width: 4.w),
                                   Text(getTranslated(context, 'Expense') ?? 'Expense'),
                                 ],
@@ -337,14 +337,14 @@ class _CalendarContentState extends State<_CalendarContent> {
                                     type: 'Expense',
                                     category: navProvider.filterCategory ?? '',
                                     icon: navProvider.filterIcon,
-                                    color: red,
+                                    color: blue2, // Đổi từ red thành blue2
                                   );
                                 } else {
                                   navProvider.clearFilter();
                                 }
                               },
-                              selectedColor: red.withValues(alpha: 0.2),
-                              checkmarkColor: red,
+                              selectedColor: blue2.withValues(alpha: 0.2), // Đổi từ red thành blue2
+                              checkmarkColor: blue2, // Đổi từ red thành blue2
                               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
