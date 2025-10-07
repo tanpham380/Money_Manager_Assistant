@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
 
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
@@ -13,6 +12,7 @@ import '../localization/methods.dart';
 import '../provider/calendar_provider.dart';
 import '../provider/transaction_provider.dart';
 import '../provider/navigation_provider.dart';
+import '../utils/date_format_utils.dart';
 
 class Calendar extends StatelessWidget {
   @override
@@ -275,6 +275,65 @@ class _CalendarContent extends StatelessWidget {
     );
   }
   
+  /// Tính toán khoảng thời gian dựa trên calendar format và focusedDay
+  Map<String, DateTime> _calculateDateRange(CalendarProvider provider) {
+    final focusedDay = provider.focusedDay;
+    DateTime startDate, endDate;
+    
+    switch (provider.calendarFormat) {
+      case CalendarFormat.week:
+        // Tuần hiện tại: từ thứ 2 đến chủ nhật
+        final startOfWeek = focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
+        startDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+        endDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day + 6);
+        break;
+        
+      case CalendarFormat.twoWeeks:
+        // 2 tuần: từ thứ 2 tuần trước đến chủ nhật tuần hiện tại
+        final startOfCurrentWeek = focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
+        startDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day - 7);
+        endDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day + 6);
+        break;
+        
+      case CalendarFormat.month:
+        // Tháng hiện tại: từ ngày 1 đến cuối tháng
+        startDate = DateTime(focusedDay.year, focusedDay.month, 1);
+        endDate = DateTime(focusedDay.year, focusedDay.month + 1, 0);
+        break;
+    }
+    
+    return {'start': startDate, 'end': endDate};
+  }
+  
+  /// Filter transactions theo khoảng thời gian
+  List<InputModel> _filterTransactionsByDateRange(
+    List<InputModel> transactions,
+    DateTime startDate,
+    DateTime endDate,
+  ) {
+    final filtered = transactions.where((tx) {
+      if (tx.date == null) return false;
+      try {
+        final txDate = DateFormatUtils.parseInternalDate(tx.date!);
+        final normalizedTxDate = DateTime(txDate.year, txDate.month, txDate.day);
+        final normalizedStart = DateTime(startDate.year, startDate.month, startDate.day);
+        final normalizedEnd = DateTime(endDate.year, endDate.month, endDate.day);
+        
+        // So sánh: startDate <= txDate <= endDate (inclusive both ends)
+        return !normalizedTxDate.isBefore(normalizedStart) && !normalizedTxDate.isAfter(normalizedEnd);
+      } catch (e) {
+        print('Error parsing date ${tx.date}: $e');
+        return false;
+      }
+    }).toList();
+    
+    print('🔍 Filter range: $startDate to $endDate');
+    print('📊 Total transactions: ${transactions.length}');
+    print('✅ Filtered transactions: ${filtered.length}');
+    
+    return filtered;
+  }
+  
   /// Nhóm giao dịch theo ngày (sắp xếp từ mới đến cũ)
   List<MapEntry<DateTime, List<InputModel>>> _groupTransactionsByDate(
     CalendarProvider provider,
@@ -282,110 +341,45 @@ class _CalendarContent extends StatelessWidget {
     TransactionProvider transactionProvider,
   ) {
     final Map<DateTime, List<InputModel>> grouped = {};
-    
-    // Lấy tất cả giao dịch từ selectedDay hoặc focusedMonth
     final allTransactions = <InputModel>[];
     
-    // Nếu có ngày được chọn, chỉ hiển thị transactions của ngày đó
+    // CASE 1: Nếu có ngày được chọn cụ thể, chỉ hiển thị transactions của ngày đó
     if (provider.selectedDay != null) {
       allTransactions.addAll(provider.getEventsForDay(provider.selectedDay!));
-    } else {
-      // Nếu không có ngày được chọn, lấy transactions theo filter thời gian
-      final baseTransactions = navProvider.hasActiveFilter 
-        ? transactionProvider.allTransactions.where((tx) {
-            if (navProvider.filterType != null && tx.type != navProvider.filterType) {
-              return false;
-            }
-            if (navProvider.filterCategory != null && tx.category != navProvider.filterCategory) {
-              return false;
-            }
-            return true;
-          }).toList()
-        : transactionProvider.allTransactions;
+    } 
+    // CASE 2 & 3: Filter theo calendar format hoặc filter từ Analysis
+    else {
+      // Lấy base transactions (có áp dụng filter type/category nếu có)
+      var baseTransactions = transactionProvider.allTransactions;
       
-      // Filter theo khoảng thời gian từ NavigationProvider (nếu có)
-      List<InputModel> timeFilteredTransactions = baseTransactions;
-      if (navProvider.filterStartDate != null || navProvider.filterEndDate != null) {
-        timeFilteredTransactions = baseTransactions.where((tx) {
-          if (tx.date == null) return false;
-          try {
-            // Parse from ISO format (yyyy-MM-dd)
-            final txDate = DateFormat('yyyy-MM-dd').parse(tx.date!);
-            final normalizedTxDate = DateTime(txDate.year, txDate.month, txDate.day);
-            
-            if (navProvider.filterStartDate != null) {
-              final startDate = DateTime(
-                navProvider.filterStartDate!.year,
-                navProvider.filterStartDate!.month,
-                navProvider.filterStartDate!.day,
-              );
-              if (normalizedTxDate.isBefore(startDate)) return false;
-            }
-            
-            if (navProvider.filterEndDate != null) {
-              final endDate = DateTime(
-                navProvider.filterEndDate!.year,
-                navProvider.filterEndDate!.month,
-                navProvider.filterEndDate!.day,
-              );
-              if (normalizedTxDate.isAfter(endDate)) return false;
-            }
-            
-            return true;
-          } catch (e) {
+      // Áp dụng filter type và category nếu có
+      if (navProvider.hasActiveFilter) {
+        baseTransactions = baseTransactions.where((tx) {
+          if (navProvider.filterType != null && tx.type != navProvider.filterType) {
             return false;
           }
+          if (navProvider.filterCategory != null && tx.category != navProvider.filterCategory) {
+            return false;
+          }
+          return true;
         }).toList();
-      } else {
-        // Nếu không có filter thời gian từ NavigationProvider, filter theo calendar format
-        switch (provider.calendarFormat) {
-          case CalendarFormat.month:
-            // Hiển thị transactions trong tháng hiện tại
-            timeFilteredTransactions = baseTransactions.where((tx) {
-              if (tx.date == null) return false;
-              try {
-                // Parse from ISO format (yyyy-MM-dd)
-                final txDate = DateFormat('yyyy-MM-dd').parse(tx.date!);
-                return txDate.year == provider.focusedDay.year && 
-                       txDate.month == provider.focusedDay.month;
-              } catch (e) {
-                return false;
-              }
-            }).toList();
-            break;
-            
-          case CalendarFormat.twoWeeks:
-          case CalendarFormat.week:
-            // Tính ngày bắt đầu tuần (thứ 2) của tuần chứa focusedDay
-            final startOfCurrentWeek = provider.focusedDay.subtract(Duration(days: provider.focusedDay.weekday - 1));
-            
-            DateTime startDate, endDate;
-            if (provider.calendarFormat == CalendarFormat.week) {
-              // Tuần hiện tại: từ thứ 2 đến chủ nhật
-              startDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day);
-              endDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day + 6, 23, 59, 59);
-            } else {
-              // 2 tuần: từ thứ 2 tuần trước đến chủ nhật tuần hiện tại
-              startDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day - 7);
-              endDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day + 6, 23, 59, 59);
-            }
-            
-            timeFilteredTransactions = baseTransactions.where((tx) {
-              if (tx.date == null) return false;
-              try {
-                // Parse from ISO format (yyyy-MM-dd)
-                final txDate = DateFormat('yyyy-MM-dd').parse(tx.date!);
-                final normalizedTxDate = DateTime(txDate.year, txDate.month, txDate.day);
-                return !normalizedTxDate.isBefore(startDate) && !normalizedTxDate.isAfter(endDate);
-              } catch (e) {
-                return false;
-              }
-            }).toList();
-            break;
-        }
       }
       
-      allTransactions.addAll(timeFilteredTransactions);
+      // CASE 2: Nếu có filter date range từ Analysis screen
+      if (navProvider.filterStartDate != null || navProvider.filterEndDate != null) {
+        final startDate = navProvider.filterStartDate ?? DateTime(1990, 1, 1);
+        final endDate = navProvider.filterEndDate ?? DateTime(2100, 12, 31);
+        allTransactions.addAll(_filterTransactionsByDateRange(baseTransactions, startDate, endDate));
+      } 
+      // CASE 3: Filter theo calendar format (Week/2Weeks/Month)
+      else {
+        final dateRange = _calculateDateRange(provider);
+        allTransactions.addAll(_filterTransactionsByDateRange(
+          baseTransactions, 
+          dateRange['start']!, 
+          dateRange['end']!,
+        ));
+      }
     }
     
     // Nhóm theo ngày
@@ -394,7 +388,7 @@ class _CalendarContent extends StatelessWidget {
       
       try {
         // Parse from ISO format (yyyy-MM-dd)
-        final date = DateFormat('yyyy-MM-dd').parse(transaction.date!);
+        final date = DateFormatUtils.parseInternalDate(transaction.date!);
         final normalizedDate = DateTime(date.year, date.month, date.day);
         
         if (!grouped.containsKey(normalizedDate)) {

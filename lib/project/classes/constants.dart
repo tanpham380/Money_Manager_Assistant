@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../database_management/shared_preferences_services.dart';
+import '../utils/date_format_utils.dart';
 import 'category_item.dart';
 import 'input_model.dart';
 
@@ -181,7 +182,7 @@ List<InputModel> filterData(
           .map((data) {
             // Parse from ISO format (yyyy-MM-dd)
             DateTime dateSelectedDT =
-                DateFormat('yyyy-MM-dd').parse(data.date!);
+                DateFormatUtils.parseInternalDate(data.date!);
 
             if (selectedDate == 'Today') {
               if (dateSelectedDT.isAfter(todayDT.subtract(Duration(days: 1))) &&

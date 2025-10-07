@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/constants.dart';
@@ -16,6 +15,7 @@ import '../localization/methods.dart';
 import '../provider.dart';
 import '../services/notification_service.dart';
 import '../services/alert_service.dart';
+import '../utils/date_format_utils.dart';
 import 'currency.dart';
 import 'select_date_format.dart';
 import 'select_language.dart';
@@ -210,7 +210,7 @@ class _SettingsState extends State<Settings> {
     List<String> settingsList = [
       getTranslated(context, 'Language') ?? 'Language',
       getTranslated(context, 'Currency') ?? 'Currency',
-      '${getTranslated(context, 'Date format') ?? 'Date format'} (${DateFormat(sharedPrefs.dateFormat).format(now)})',
+      '${getTranslated(context, 'Date format') ?? 'Date format'} (${DateFormatUtils.formatUserDate(now)})',
       'Daily Reminder',
       getTranslated(context, 'Reset All Categories') ?? 'Reset All Categories',
       getTranslated(context, 'Delete All Data') ?? 'Delete All Data',

@@ -18,7 +18,11 @@ import '../provider/transaction_provider.dart';
 import '../utils/date_format_utils.dart';
 import 'expense_category.dart';
 import 'income_category.dart';
-import 'package:day_night_time_picker/day_night_time_picker.dart';class AddInput extends StatefulWidget {
+import 'package:day_night_time_picker/day_night_time_picker.dart';
+import '../utils/amount_formatter.dart';
+import 'dart:async';
+
+class AddInput extends StatefulWidget {
   @override
   _AddInputState createState() => _AddInputState();
 }
@@ -301,8 +305,51 @@ class AddEditInput extends StatelessWidget {
   }
 }
 
-class AmountCard extends StatelessWidget {
+class AmountCard extends StatefulWidget {
   const AmountCard({Key? key}) : super(key: key);
+
+  @override
+  State<AmountCard> createState() => _AmountCardState();
+}
+
+class _AmountCardState extends State<AmountCard> {
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onAmountChanged(String value, TextEditingController controller) {
+    // Cancel previous debounce timer
+    _debounce?.cancel();
+    
+    // Don't format if empty or currently typing
+    if (value.isEmpty) return;
+    
+    // Debounce formatting để improve UX (wait 300ms after user stops typing)
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      // Remove existing commas for parsing
+      final numericValue = value.replaceAll(',', '');
+      if (numericValue.isEmpty) return;
+      
+      try {
+        final number = double.parse(numericValue);
+        final formatted = AmountFormatter.format(number);
+        
+        // Only update if different to avoid cursor jump
+        if (formatted != value) {
+          controller.value = TextEditingValue(
+            text: formatted,
+            selection: TextSelection.collapsed(offset: formatted.length),
+          );
+        }
+      } catch (e) {
+        // Ignore invalid input
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -331,14 +378,21 @@ class AmountCard extends StatelessWidget {
                 showCursor: true,
                 maxLines: 1,
                 autofocus: false,
+                onChanged: (value) => _onAmountChanged(value, amountController),
                 onFieldSubmitted: (_) {
+                  // Format immediately before saving
+                  _debounce?.cancel();
+                  _onAmountChanged(amountController.text, amountController);
+                  
                   // Thực hiện lưu trực tiếp khi nhấn Done trên bàn phím
-                  final isNew = context.read<FormProvider>().model.id == null;
-                  context.read<FormProvider>().saveInput(context, isNewInput: isNew);
+                  Future.delayed(const Duration(milliseconds: 350), () {
+                    final isNew = context.read<FormProvider>().model.id == null;
+                    context.read<FormProvider>().saveInput(context, isNewInput: isNew);
+                  });
                 },
-                // Chỉ cho phép nhập số và dấu chấm
+                // Chỉ cho phép nhập số
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                  FilteringTextInputFormatter.digitsOnly,
                 ],
                 cursorColor: colorMain,
                 style: GoogleFonts.aBeeZee(

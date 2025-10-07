@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:money_assistant/project/localization/methods.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../classes/input_model.dart';
+import '../utils/date_format_utils.dart';
 import 'sqflite_services.dart';
 
 class ImportExportScreen extends StatefulWidget {
@@ -150,7 +150,7 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
                     int.parse(parts[1]), // month
                     int.parse(parts[0]), // day
                   );
-                  dateValue = DateFormat('yyyy-MM-dd').format(date);
+                  dateValue = DateFormatUtils.formatInternalDate(date);
                 } catch (e) {
                   // If fails, try MM/dd/yyyy
                   final date = DateTime(
@@ -158,7 +158,7 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
                     int.parse(parts[0]), // month
                     int.parse(parts[1]), // day
                   );
-                  dateValue = DateFormat('yyyy-MM-dd').format(date);
+                  dateValue = DateFormatUtils.formatInternalDate(date);
                 }
               }
             } catch (e) {

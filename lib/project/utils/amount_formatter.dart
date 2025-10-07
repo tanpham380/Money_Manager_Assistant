@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../database_management/shared_preferences_services.dart';
-
 /// Utility class để xử lý logic format số tiền phức tạp
 /// Tách biệt logic xử lý chuỗi khỏi state management
 class AmountFormatter {
   /// Format số với dấu phẩy ngăn cách hàng nghìn
-  static String format(double value) =>
-      NumberFormat('#,###,###,###,###,###.##', sharedPrefs.appCurrency.split('_')[0]).format(value);
+  /// ALWAYS use comma (,) as thousand separator regardless of locale
+  static String format(double value) {
+    final formatter = NumberFormat('#,###,###,###,###,###.##', 'en_US');
+    return formatter.format(value);
+  }
   /// Chèn text vào controller tại vị trí cursor
   /// Xử lý các quy tắc:
   /// - Giới hạn độ dài tối đa 13 ký tự
