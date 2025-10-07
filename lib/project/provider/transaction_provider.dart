@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../classes/input_model.dart';
 import '../database_management/sqflite_services.dart';
+import '../utils/date_format_utils.dart';
 
 /// Global Provider quản lý tất cả transactions
 /// Tự động refresh khi có thay đổi trong database
@@ -101,7 +102,7 @@ class TransactionProvider with ChangeNotifier {
 
   /// Lấy transactions theo ngày
   List<InputModel> getTransactionsForDate(DateTime date) {
-    final dateString = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    final dateString = DateFormatUtils.formatInternalDate(date);
     return _allTransactions.where((t) => t.date == dateString).toList();
   }
 
@@ -110,12 +111,8 @@ class TransactionProvider with ChangeNotifier {
     return _allTransactions.where((t) {
       if (t.date == null) return false;
       try {
-        final parts = t.date!.split('/');
-        final transactionDate = DateTime(
-          int.parse(parts[2]), // year
-          int.parse(parts[1]), // month
-          int.parse(parts[0]), // day
-        );
+        // Parse from ISO format (yyyy-MM-dd)
+        final transactionDate = DateFormatUtils.parseInternalDate(t.date!);
         return transactionDate.year == month.year && transactionDate.month == month.month;
       } catch (e) {
         return false;

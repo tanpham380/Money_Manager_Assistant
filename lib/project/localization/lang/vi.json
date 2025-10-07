@@ -224,6 +224,11 @@
   "No transactions on this date": "Không có giao dịch trong ngày này",
   "Add transaction": "Thêm giao dịch",
   "Loading calendar": "Đang tải lịch...",
-  "Range selection mode": "Chế độ chọn khoảng"
+  "Range selection mode": "Chế độ chọn khoảng",
+  "Daily Reminder": "Nhắc nhở hàng ngày",
+  "Notification permission denied": "Quyền thông báo bị từ chối",
+  "Daily reminder enabled": "Nhắc nhở hàng ngày đã được bật",
+  "Daily reminder disabled": "Nhắc nhở hàng ngày đã được tắt",
+  "Reminder time updated": "Thời gian nhắc nhở đã được cập nhật"
 }
 

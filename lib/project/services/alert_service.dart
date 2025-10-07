@@ -19,6 +19,19 @@ class AlertService {
   static final _padding =
       EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h);
 
+  /// Show alert or toast notification
+  /// 
+  /// IMPORTANT: Pass RAW localization keys, NOT pre-translated strings
+  /// AlertService will handle translation internally
+  /// 
+  /// Example:
+  /// ```dart
+  /// AlertService.show(
+  ///   context,
+  ///   type: NotificationType.success,
+  ///   message: 'Data has been saved',  // ← Raw key, not translated
+  /// );
+  /// ```
   static dynamic show(
     BuildContext context, {
     required NotificationType type,

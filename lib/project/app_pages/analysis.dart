@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/app_bar.dart';
@@ -15,6 +14,7 @@ import '../localization/methods.dart';
 import '../provider/analysis_provider.dart';
 import '../provider/navigation_provider.dart';
 import '../provider/transaction_provider.dart';
+import '../utils/date_format_utils.dart';
 
 /// Màn hình phân tích thu chi - Đã được tái cấu trúc hoàn toàn
 class Analysis extends StatelessWidget {
@@ -378,7 +378,7 @@ class DateDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String today = DateFormat(sharedPrefs.dateFormat).format(todayDT);
+    final String today = DateFormatUtils.formatUserDate(todayDT);
     String since = getTranslated(context, 'Since') ?? 'Since';
     TextStyle style =
         GoogleFonts.aBeeZee(fontSize: 20.sp, fontWeight: FontWeight.bold);
@@ -386,19 +386,19 @@ class DateDisplay extends StatelessWidget {
     final Map<String, Widget> dateMap = {
       'Today': Text(today, style: style),
       'This week': Text(
-        '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisWeek)}',
+        '$since ${DateFormatUtils.formatUserDate(startOfThisWeek)}',
         style: style,
       ),
       'This month': Text(
-        '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisMonth)}',
+        '$since ${DateFormatUtils.formatUserDate(startOfThisMonth)}',
         style: style,
       ),
       'This quarter': Text(
-        '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisQuarter)}',
+        '$since ${DateFormatUtils.formatUserDate(startOfThisQuarter)}',
         style: style,
       ),
       'This year': Text(
-        '$since ${DateFormat(sharedPrefs.dateFormat).format(startOfThisYear)}',
+        '$since ${DateFormatUtils.formatUserDate(startOfThisYear)}',
         style: style,
       ),
       'All': Text(getTranslated(context, 'All') ?? 'All', style: style),

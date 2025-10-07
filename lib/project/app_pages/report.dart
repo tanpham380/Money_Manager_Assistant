@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'dart:io' show Platform;
 
 /// Chart import
 
-import '../classes/alert_dialog.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
 import '../classes/dropdown_box.dart';
@@ -19,6 +16,7 @@ import '../database_management/sqflite_services.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
 import '../services/alert_service.dart';
+import '../utils/date_format_utils.dart';
 import 'edit.dart';
 
 var year = todayDT.year;
@@ -147,7 +145,7 @@ class _ReportBodyState extends State<ReportBody> {
                   List<InputModel> transactionsYearly = transactions
                           .map((data) {
                             DateTime dateSelectedDT =
-                                DateFormat('dd/MM/yyyy').parse(data.date!);
+                                DateFormatUtils.parseUserDate(data.date!);
 
                             if (dateSelectedDT.isAfter(startOfThisYear
                                     .subtract(Duration(days: 1))) &&
@@ -171,7 +169,7 @@ class _ReportBodyState extends State<ReportBody> {
                     double monthAmount = 0;
                     for (InputModel transaction in transactionsYearly) {
                       DateTime dateSelectedDT =
-                          DateFormat('dd/MM/yyyy').parse(transaction.date!);
+                          DateFormatUtils.parseUserDate(transaction.date!);
 
                       if (dateSelectedDT.isAfter(date) &&
                           dateSelectedDT.isBefore(
@@ -462,51 +460,32 @@ class _ReportBodyState extends State<ReportBody> {
                                                         onTap:
                                                             (CompletionHandler
                                                                 handler) async {
-                                                          Platform.isIOS
-                                                              ? await iosDialog(
-                                                                  context,
-                                                                  'Are you sure you want to delete this transaction?',
-                                                                  'Delete',
-                                                                  () async {
-                                                                  await DB.delete(
-                                                                      selectedTransactions[
-                                                                              index]
-                                                                          .id!);
-                                                                  await handler(
-                                                                      true);
-                                                                  Provider.of<InputModelList>(
-                                                                          context,
-                                                                          listen:
-                                                                              false)
-                                                                      .changeInputModelList();
-                                                                  AlertService.show(
+                                                          final confirmed = await AlertService.show(
+                                                            context,
+                                                            type: NotificationType.delete,
+                                                            title: 'Delete Transaction',
+                                                            message: 'Are you sure you want to delete this transaction?',
+                                                            actionText: 'Delete',
+                                                            cancelText: 'Cancel',
+                                                          );
+                                                          
+                                                          if (confirmed == true) {
+                                                            await DB.delete(
+                                                                selectedTransactions[
+                                                                        index]
+                                                                    .id!);
+                                                            await handler(true);
+                                                            Provider.of<InputModelList>(
                                                                     context,
-                                                                    type: NotificationType.success,
-                                                                    message: getTranslated(context, 'Transaction has been deleted') ?? 'Transaction has been deleted',
-                                                                  );
-                                                                })
-                                                              : await androidDialog(
-                                                                  context,
-                                                                  'Are you sure you want to delete this transaction?',
-                                                                  'Delete',
-                                                                  () async {
-                                                                  await DB.delete(
-                                                                      selectedTransactions[
-                                                                              index]
-                                                                          .id!);
-                                                                  await handler(
-                                                                      true);
-                                                                  Provider.of<InputModelList>(
-                                                                          context,
-                                                                          listen:
-                                                                              false)
-                                                                      .changeInputModelList();
-                                                                  AlertService.show(
-                                                                    context,
-                                                                    type: NotificationType.success,
-                                                                    message: getTranslated(context, 'Transaction has been deleted') ?? 'Transaction has been deleted',
-                                                                  );
-                                                                });
+                                                                    listen:
+                                                                        false)
+                                                                .changeInputModelList();
+                                                            AlertService.show(
+                                                              context,
+                                                              type: NotificationType.success,
+                                                              message: 'Transaction has been deleted',
+                                                            );
+                                                          }
                                                         },
                                                         color: red),
                                                     SwipeAction(
@@ -529,7 +508,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                           AlertService.show(
                                                             context,
                                                             type: NotificationType.success,
-                                                            message: getTranslated(context, 'Transaction has been updated') ?? 'Transaction has been updated',
+                                                            message: 'Transaction has been updated',
                                                           );
                                                         },
                                                         color: Color.fromRGBO(
@@ -551,13 +530,7 @@ class _ReportBodyState extends State<ReportBody> {
                                                             text: TextSpan(
                                                               children: [
                                                                 TextSpan(
-                                                                  text: DateFormat(
-                                                                          sharedPrefs
-                                                                              .dateFormat)
-                                                                      .format(DateFormat(
-                                                                              'dd/MM/yyyy')
-                                                                          .parse(
-                                                                              selectedTransactions[index].date!)),
+                                                                  text: DateFormatUtils.formatUserDate(DateFormatUtils.parseInternalDate(selectedTransactions[index].date!)),
                                                                   style:
                                                                       TextStyle(
                                                                     fontSize:

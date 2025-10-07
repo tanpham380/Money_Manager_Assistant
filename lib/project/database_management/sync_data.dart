@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:money_assistant/project/localization/methods.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -132,13 +133,47 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
         if (values.length < 7) continue; // Skip invalid lines
         // Tạo một đối tượng InputModel từ dòng dữ liệu
         try {
+          // IMPORTANT: Ensure date is in ISO format (yyyy-MM-dd)
+          // Import may have old format, need to convert
+          String dateValue = values[5];
+          // Check if date needs conversion (contains '/')
+          if (dateValue.contains('/')) {
+            // Try parsing with user format and convert to ISO
+            try {
+              final parts = dateValue.split('/');
+              if (parts.length == 3) {
+                // Assume dd/MM/yyyy or MM/dd/yyyy
+                // Try dd/MM/yyyy first
+                try {
+                  final date = DateTime(
+                    int.parse(parts[2]), // year
+                    int.parse(parts[1]), // month
+                    int.parse(parts[0]), // day
+                  );
+                  dateValue = DateFormat('yyyy-MM-dd').format(date);
+                } catch (e) {
+                  // If fails, try MM/dd/yyyy
+                  final date = DateTime(
+                    int.parse(parts[2]), // year
+                    int.parse(parts[0]), // month
+                    int.parse(parts[1]), // day
+                  );
+                  dateValue = DateFormat('yyyy-MM-dd').format(date);
+                }
+              }
+            } catch (e) {
+              // Skip if date conversion fails
+              continue;
+            }
+          }
+          
           InputModel model = InputModel(
             id: int.parse(values[0]),
             type: values[1],
             amount: double.parse(values[2]),
             category: values[3],
             description: values[4],
-            date: values[5],
+            date: dateValue,
             time: values[6],
           );
           // Chèn đối tượng vào cơ sở dữ liệu SQLite

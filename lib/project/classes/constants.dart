@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../database_management/shared_preferences_services.dart';
 import 'category_item.dart';
@@ -80,7 +81,7 @@ List<Color> chartPieColors = [
 ];
 
 String format(double number) =>
-    NumberFormat('#,###,###,###,###,###.##', 'en_US').format(number);
+    NumberFormat('#,###,###,###,###,###.##', sharedPrefs.appCurrency.split('_')[0]).format(number);
 
 IconData iconData(CategoryItem item) => IconData(item.iconCodePoint,
     fontPackage: item.iconFontPackage, fontFamily: item.iconFontFamily);
@@ -146,8 +147,8 @@ List<CategoryItem> createItemList({
 
 //for analysis, report
 
-final DateTime now = DateTime.now(),
-    todayDT = DateTime(now.year, now.month, now.day),
+final DateTime now = tz.TZDateTime.now(tz.local),
+    todayDT = DateTime(tz.TZDateTime.now(tz.local).year, tz.TZDateTime.now(tz.local).month, tz.TZDateTime.now(tz.local).day),
     startOfThisWeek = todayDT.subtract(Duration(days: todayDT.weekday - 1)),
     startOfThisMonth = DateTime(todayDT.year, todayDT.month, 1),
     startOfThisYear = DateTime(todayDT.year, 1, 1),
@@ -178,8 +179,9 @@ List<InputModel> filterData(
   // filter data based on user's selected day
   return data
           .map((data) {
+            // Parse from ISO format (yyyy-MM-dd)
             DateTime dateSelectedDT =
-                DateFormat('dd/MM/yyyy').parse(data.date!);
+                DateFormat('yyyy-MM-dd').parse(data.date!);
 
             if (selectedDate == 'Today') {
               if (dateSelectedDT.isAfter(todayDT.subtract(Duration(days: 1))) &&

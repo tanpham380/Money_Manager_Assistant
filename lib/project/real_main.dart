@@ -11,6 +11,7 @@ import 'database_management/sqflite_services.dart';
 import 'localization/app_localization.dart';
 import 'provider/navigation_provider.dart';
 import 'provider/transaction_provider.dart';
+import 'utils/date_migration.dart';
 import 'home.dart';
 
 // Global key để navigate từ bất cứ đâu
@@ -19,6 +20,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void realMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   await  NotificationService.init();
+  
+  // Initialize database
+  await DB.init();
+  
+  // Run date migration if needed (convert old dd/MM/yyyy to yyyy-MM-dd)
+  // This will safely migrate existing data to ISO format
+  await DateMigration.migrateDates();
 
   // Set up callback để xử lý khi user tap notification
    NotificationService.onNotificationTap = (String? payload) {
@@ -36,7 +44,6 @@ void realMain() async {
     }
   };
   await sharedPrefs.sharePrefsInit();
-  await DB.init(); // Initialize database early
   await _checkStoragePermission();
   sharedPrefs.setItems(setCategoriesToDefault: false);
   sharedPrefs.getCurrency();

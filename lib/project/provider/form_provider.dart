@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../classes/input_model.dart';
 import '../classes/category_item.dart';
 import '../classes/constants.dart';
+import '../database_management/shared_preferences_services.dart';
 import '../services/alert_service.dart';
 import '../localization/methods.dart';
 import '../utils/amount_formatter.dart';
@@ -54,7 +55,7 @@ class FormProvider with ChangeNotifier {
       _currentTime = TimeOfDay.now();
       _model = InputModel(
         type: type,
-        date: DateFormat('dd/MM/yyyy').format(now),
+        date: DateFormat(sharedPrefs.dateFormat).format(now),
         time: null,
       );
       _selectedCategory = categoryItem(Icons.category_outlined, 'Category');
@@ -84,8 +85,9 @@ class FormProvider with ChangeNotifier {
   }
 
   // Cập nhật ngày
+  // ALWAYS store in ISO format (yyyy-MM-dd) for consistency
   void updateDate(DateTime newDate) {
-    _model.date = DateFormat('dd/MM/yyyy').format(newDate);
+    _model.date = DateFormat('yyyy-MM-dd').format(newDate);
     notifyListeners();
   }
 
@@ -171,8 +173,7 @@ class FormProvider with ChangeNotifier {
          AlertService.show(
           context,
           type: NotificationType.success,
-          message: getTranslated(context, 'Transaction has been updated') ??
-              'Transaction has been updated',
+          message: 'Transaction has been updated',
         );
       }
     } catch (e) {
@@ -180,8 +181,7 @@ class FormProvider with ChangeNotifier {
        AlertService.show(
         context,
         type: NotificationType.error,
-        message:
-            getTranslated(context, 'Error saving data') ?? 'Error saving data',
+        message: 'Error saving data',
       );
     } finally {
       _isLoading = false;
@@ -194,11 +194,10 @@ class FormProvider with ChangeNotifier {
     final confirmed = await  AlertService.show(
       context,
       type: NotificationType.delete,
-      title: getTranslated(context, 'Delete Transaction') ?? 'Delete Transaction',
-      message: getTranslated(context, 'Are you sure you want to delete this transaction?') ??
-          'Are you sure you want to delete this transaction? This action cannot be undone.',
-      actionText: getTranslated(context, 'Delete') ?? 'Delete',
-      cancelText: getTranslated(context, 'Cancel') ?? 'Cancel',
+      title: 'Delete Transaction',
+      message: 'Are you sure you want to delete this transaction?',
+      actionText: 'Delete',
+      cancelText: 'Cancel',
     );
 
     if (confirmed == true) {
@@ -208,16 +207,14 @@ class FormProvider with ChangeNotifier {
          AlertService.show(
           context,
           type: NotificationType.success,
-          message: getTranslated(context, 'Transaction has been deleted') ??
-              'Transaction has been deleted',
+          message: 'Transaction has been deleted',
         );
       } catch (e) {
         print('Error deleting input: $e');
          AlertService.show(
           context,
           type: NotificationType.error,
-          message: getTranslated(context, 'Error deleting data') ??
-              'Error deleting data',
+          message: 'Error deleting data',
         );
       }
     }

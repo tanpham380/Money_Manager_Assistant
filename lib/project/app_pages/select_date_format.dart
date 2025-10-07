@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/constants.dart';
 import '../localization/methods.dart';
 import '../provider.dart';
+import '../utils/date_format_utils.dart';
 
 class FormatDate extends StatelessWidget {
   const FormatDate({Key? key}) : super(key: key);
@@ -61,7 +61,7 @@ class FormatDate extends StatelessWidget {
                                     child: Row(
                                       children: [
                                         Text(
-                                          '${DateFormat(dateFormats[index]).format(now)}',
+                                          '${DateFormatUtils.formatWithSpecificFormat(dateFormats[index], now)}',
                                           style: TextStyle(
                                             fontSize: 19.sp,
                                           ),

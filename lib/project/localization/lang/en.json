@@ -209,5 +209,10 @@
   "No transactions on this date": "No transactions on this date",
   "Add transaction": "Add transaction",
   "Loading calendar": "Loading calendar...",
-  "Range selection mode": "Range selection mode"
+  "Range selection mode": "Range selection mode",
+  "Daily Reminder": "Daily Reminder",
+  "Notification permission denied": "Notification permission denied",
+  "Daily reminder enabled": "Daily reminder enabled",
+  "Daily reminder disabled": "Daily reminder disabled",
+  "Reminder time updated": "Reminder time updated"
 }

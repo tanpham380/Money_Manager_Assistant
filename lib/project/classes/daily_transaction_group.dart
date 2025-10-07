@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:money_assistant/project/utils/category_icon_helper.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../classes/constants.dart';
 import '../classes/input_model.dart';
 import '../classes/transaction_list_item.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
-import '../utils/category_icon_helper.dart';
+import '../utils/date_format_utils.dart';
 import '../provider/transaction_provider.dart';
 import '../app_pages/edit.dart';
 import '../services/alert_service.dart' show AlertService, NotificationType;
@@ -230,11 +230,10 @@ class DailyTransactionGroup extends StatelessWidget {
     final confirmed = await NotificationService.show(
       context,
       type: NotificationType.delete,
-      title: getTranslated(context, 'Delete Transaction') ?? 'Delete Transaction',
-      message: getTranslated(context, 'Are you sure you want to delete this transaction?') ??
-          'Are you sure you want to delete this transaction?',
-      actionText: getTranslated(context, 'Delete') ?? 'Delete',
-      cancelText: getTranslated(context, 'Cancel') ?? 'Cancel',
+      title: 'Delete Transaction',
+      message: 'Are you sure you want to delete this transaction?',
+      actionText: 'Delete',
+      cancelText: 'Cancel',
     );
 
     if (confirmed == true) {
@@ -246,8 +245,7 @@ class DailyTransactionGroup extends StatelessWidget {
           NotificationService.show(
             context,
             type: NotificationType.success,
-            message: getTranslated(context, 'Transaction has been deleted') ??
-                'Transaction has been deleted',
+            message: 'Transaction has been deleted',
           );
         }
       } catch (e) {
@@ -255,8 +253,7 @@ class DailyTransactionGroup extends StatelessWidget {
           NotificationService.show(
             context,
             type: NotificationType.error,
-            message: getTranslated(context, 'Error deleting transaction') ??
-                'Error deleting transaction',
+            message: 'Error deleting transaction',
           );
         }
       }
@@ -273,8 +270,7 @@ class DailyTransactionGroup extends StatelessWidget {
         NotificationService.show(
           context,
           type: NotificationType.success,
-          message: getTranslated(context, 'Transaction has been duplicated') ??
-              'Transaction has been duplicated',
+          message: 'Transaction has been duplicated',
         );
       }
     } catch (e) {
@@ -282,8 +278,7 @@ class DailyTransactionGroup extends StatelessWidget {
         NotificationService.show(
           context,
           type: NotificationType.error,
-          message: getTranslated(context, 'Error duplicating transaction') ??
-              'Error duplicating transaction',
+          message: 'Error duplicating transaction',
         );
       }
     }
@@ -306,18 +301,13 @@ class DailyTransactionGroup extends StatelessWidget {
   /// Format ngày theo locale của người dùng
   String _formatDate(BuildContext context, DateTime date) {
     final locale = Localizations.localeOf(context).languageCode;
-    
+
     if (locale == 'vi') {
-      // Format tiếng Việt: Thứ Hai, 04/10/2025
-      final weekdayNames = [
-        'Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư',
-        'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'
-      ];
-      final weekday = weekdayNames[date.weekday % 7];
-      return '$weekday, ${DateFormat('dd/MM/yyyy').format(date)}';
+      // Sử dụng localization cho tiếng Việt
+      return DateFormatUtils.formatLocalizedWeekdayWithUserDate(context, date);
     } else {
-      // Format English: Monday, October 04, 2025
-      return DateFormat('EEEE, MMMM dd, yyyy').format(date);
+      // Sử dụng localization cho tiếng Anh
+      return DateFormatUtils.formatFullWeekday(date);
     }
   }
 }

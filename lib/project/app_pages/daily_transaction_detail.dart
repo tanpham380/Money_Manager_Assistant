@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
  import '../utils/responsive_extensions.dart';
+import '../utils/date_format_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
@@ -29,11 +29,10 @@ class DailyTransactionDetail extends StatelessWidget {
     final confirmed = await  AlertService.show(
       context,
       type: NotificationType.delete,
-      title: getTranslated(context, 'Delete Transaction') ?? 'Delete Transaction',
-      message: getTranslated(context, 'Are you sure you want to delete this transaction?') ??
-          'Are you sure you want to delete this transaction? This action cannot be undone.',
-      actionText: getTranslated(context, 'Delete') ?? 'Delete',
-      cancelText: getTranslated(context, 'Cancel') ?? 'Cancel',
+      title: 'Delete Transaction',  // Raw key
+      message: 'Are you sure you want to delete this transaction?',  // Raw key
+      actionText: 'Delete',  // Raw key
+      cancelText: 'Cancel',  // Raw key
     );
 
     if (confirmed == true) {
@@ -46,8 +45,7 @@ class DailyTransactionDetail extends StatelessWidget {
            AlertService.show(
             context,
             type: NotificationType.success,
-            message: getTranslated(context, 'Transaction has been deleted') ??
-                'Transaction has been deleted',
+            message: 'Transaction has been deleted',  // Raw key
           );
         }
       } catch (e) {
@@ -56,8 +54,7 @@ class DailyTransactionDetail extends StatelessWidget {
            AlertService.show(
             context,
             type: NotificationType.error,
-            message: getTranslated(context, 'Error deleting transaction') ??
-                'Error deleting transaction',
+            message: 'Error deleting transaction',  // Raw key
           );
         }
       }
@@ -75,8 +72,7 @@ class DailyTransactionDetail extends StatelessWidget {
          AlertService.show(
           context,
           type: NotificationType.success,
-          message: getTranslated(context, 'Transaction has been duplicated') ??
-              'Transaction has been duplicated',
+          message: 'Transaction has been duplicated',  // Raw key
         );
       }
     } catch (e) {
@@ -85,8 +81,7 @@ class DailyTransactionDetail extends StatelessWidget {
          AlertService.show(
           context,
           type: NotificationType.error,
-          message: getTranslated(context, 'Error duplicating transaction') ??
-              'Error duplicating transaction',
+          message: 'Error duplicating transaction',  // Raw key
         );
       }
     }
@@ -97,7 +92,7 @@ class DailyTransactionDetail extends StatelessWidget {
     return Consumer<TransactionProvider>(
       builder: (context, transactionProvider, child) {
         // Lấy transactions từ TransactionProvider - SINGLE SOURCE OF TRUTH
-        final dateString = DateFormat('dd/MM/yyyy').format(date);
+        final dateString = DateFormatUtils.formatInternalDate(date);
         final transactions = transactionProvider.allTransactions
             .where((t) => t.date == dateString)
             .toList()
@@ -334,39 +329,6 @@ class DailyTransactionDetail extends StatelessWidget {
 
   /// Format ngày theo locale của người dùng - SỬ DỤNG LOCALIZATION
   String _formatDate(BuildContext context, DateTime date) {
-    final locale = Localizations.localeOf(context).languageCode;
-
-    if (locale == 'vi') {
-      // Format tiếng Việt: Thứ Hai, 04 Tháng 10 2025
-      final weekdayNames = [
-        getTranslated(context, 'Sunday') ?? 'Chủ Nhật',
-        getTranslated(context, 'Monday') ?? 'Thứ Hai',
-        getTranslated(context, 'Tuesday') ?? 'Thứ Ba',
-        getTranslated(context, 'Wednesday') ?? 'Thứ Tư',
-        getTranslated(context, 'Thursday') ?? 'Thứ Năm',
-        getTranslated(context, 'Friday') ?? 'Thứ Sáu',
-        getTranslated(context, 'Saturday') ?? 'Thứ Bảy'
-      ];
-      final monthNames = [
-        getTranslated(context, 'January') ?? 'Tháng 1',
-        getTranslated(context, 'February') ?? 'Tháng 2',
-        getTranslated(context, 'March') ?? 'Tháng 3',
-        getTranslated(context, 'April') ?? 'Tháng 4',
-        getTranslated(context, 'May') ?? 'Tháng 5',
-        getTranslated(context, 'June') ?? 'Tháng 6',
-        getTranslated(context, 'July') ?? 'Tháng 7',
-        getTranslated(context, 'August') ?? 'Tháng 8',
-        getTranslated(context, 'September') ?? 'Tháng 9',
-        getTranslated(context, 'October') ?? 'Tháng 10',
-        getTranslated(context, 'November') ?? 'Tháng 11',
-        getTranslated(context, 'December') ?? 'Tháng 12'
-      ];
-      final weekday = weekdayNames[date.weekday % 7];
-      final month = monthNames[date.month - 1];
-      return '$weekday, ${date.day} $month ${date.year}';
-    } else {
-      // Format English: Monday, October 04, 2025
-      return DateFormat('EEEE, MMMM dd, yyyy').format(date);
-    }
+    return DateFormatUtils.formatLocalizedFullDate(context, date);
   }
 }

@@ -309,7 +309,8 @@ class _CalendarContent extends StatelessWidget {
         timeFilteredTransactions = baseTransactions.where((tx) {
           if (tx.date == null) return false;
           try {
-            final txDate = DateFormat('dd/MM/yyyy').parse(tx.date!);
+            // Parse from ISO format (yyyy-MM-dd)
+            final txDate = DateFormat('yyyy-MM-dd').parse(tx.date!);
             final normalizedTxDate = DateTime(txDate.year, txDate.month, txDate.day);
             
             if (navProvider.filterStartDate != null) {
@@ -343,7 +344,8 @@ class _CalendarContent extends StatelessWidget {
             timeFilteredTransactions = baseTransactions.where((tx) {
               if (tx.date == null) return false;
               try {
-                final txDate = DateFormat('dd/MM/yyyy').parse(tx.date!);
+                // Parse from ISO format (yyyy-MM-dd)
+                final txDate = DateFormat('yyyy-MM-dd').parse(tx.date!);
                 return txDate.year == provider.focusedDay.year && 
                        txDate.month == provider.focusedDay.month;
               } catch (e) {
@@ -371,7 +373,8 @@ class _CalendarContent extends StatelessWidget {
             timeFilteredTransactions = baseTransactions.where((tx) {
               if (tx.date == null) return false;
               try {
-                final txDate = DateFormat('dd/MM/yyyy').parse(tx.date!);
+                // Parse from ISO format (yyyy-MM-dd)
+                final txDate = DateFormat('yyyy-MM-dd').parse(tx.date!);
                 final normalizedTxDate = DateTime(txDate.year, txDate.month, txDate.day);
                 return !normalizedTxDate.isBefore(startDate) && !normalizedTxDate.isAfter(endDate);
               } catch (e) {
@@ -390,7 +393,8 @@ class _CalendarContent extends StatelessWidget {
       if (transaction.date == null) continue;
       
       try {
-        final date = DateFormat('dd/MM/yyyy').parse(transaction.date!);
+        // Parse from ISO format (yyyy-MM-dd)
+        final date = DateFormat('yyyy-MM-dd').parse(transaction.date!);
         final normalizedDate = DateTime(date.year, date.month, date.day);
         
         if (!grouped.containsKey(normalizedDate)) {

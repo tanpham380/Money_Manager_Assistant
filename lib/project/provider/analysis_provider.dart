@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
 import '../classes/input_model.dart';
 import '../classes/constants.dart';
 import 'transaction_provider.dart';
+import '../utils/date_format_utils.dart';
 
 /// Trạng thái của màn hình phân tích
 enum AnalysisState {
@@ -233,8 +233,9 @@ class AnalysisProvider with ChangeNotifier {
       if (transaction.date == null) return false;
       
       try {
+        // Parse from ISO format (yyyy-MM-dd)
         final DateTime transactionDate = 
-            DateFormat('dd/MM/yyyy').parse(transaction.date!);
+            DateFormatUtils.parseInternalDate(transaction.date!);
         
         switch (_selectedDateOption) {
           case 'Today':
@@ -366,7 +367,7 @@ class AnalysisProvider with ChangeNotifier {
       // Khởi tạo tất cả các tháng với giá trị 0
       for (int i = months - 1; i >= 0; i--) {
         final monthDate = DateTime(now.year, now.month - i, 1);
-        final monthKey = DateFormat('yyyy-MM').format(monthDate);
+        final monthKey = DateFormatUtils.formatMonthKey(monthDate);
         monthlyData[monthKey] = 0.0;
       }
       
@@ -375,13 +376,14 @@ class AnalysisProvider with ChangeNotifier {
         if (transaction.date == null) continue;
         
         try {
-          final date = DateFormat('dd/MM/yyyy').parse(transaction.date!);
+          // Parse from ISO format (yyyy-MM-dd)
+          final date = DateFormatUtils.parseInternalDate(transaction.date!);
           
           // Chỉ lấy dữ liệu trong X tháng gần nhất
           final monthsAgo = DateTime(now.year, now.month - months, 1);
           if (date.isBefore(monthsAgo)) continue;
           
-          final monthKey = DateFormat('yyyy-MM').format(date);
+          final monthKey = DateFormatUtils.formatMonthKey(date);
           if (monthlyData.containsKey(monthKey)) {
             monthlyData[monthKey] = monthlyData[monthKey]! + (transaction.amount ?? 0.0);
           }
@@ -392,11 +394,11 @@ class AnalysisProvider with ChangeNotifier {
       
       // Chuyển đổi thành TrendData với tất cả các tháng
       _trendData = monthlyData.entries.map((entry) {
-        final date = DateFormat('yyyy-MM').parse(entry.key);
+        final date = DateFormatUtils.parseMonthKey(entry.key);
         return TrendData(
           month: date,
           totalAmount: entry.value,
-          label: DateFormat('MMM yyyy').format(date),
+          label: DateFormatUtils.formatShortMonth(date),
         );
       }).toList()
         ..sort((a, b) => a.month.compareTo(b.month));

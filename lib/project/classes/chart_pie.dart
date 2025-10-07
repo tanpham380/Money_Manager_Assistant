@@ -55,7 +55,7 @@ class ChartPie extends StatelessWidget {
             onPointTap: (ChartPointDetails details) {
               if (haveRecords) {
                 final formattedAmount = NumberFormat.currency(
-                        locale: sharedPrefs.getLocale().toString())
+                        locale: sharedPrefs.appCurrency)
                     .format((details.dataPoints![details.pointIndex!].y! *
                             totalAmount) /
                         100);

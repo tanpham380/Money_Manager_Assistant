@@ -5,7 +5,7 @@ import 'package:flutter_material_pickers/helpers/show_date_picker.dart';
  import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/Provider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
 import '../classes/app_bar.dart';
@@ -13,15 +13,13 @@ import '../classes/category_item.dart';
 import '../classes/constants.dart';
 import '../classes/input_model.dart';
 import '../classes/saveOrSaveAndDeleteButtons.dart';
-import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider/form_provider.dart';
 import '../provider/transaction_provider.dart';
+import '../utils/date_format_utils.dart';
 import 'expense_category.dart';
 import 'income_category.dart';
-import 'package:day_night_time_picker/day_night_time_picker.dart';
-
-class AddInput extends StatefulWidget {
+import 'package:day_night_time_picker/day_night_time_picker.dart';class AddInput extends StatefulWidget {
   @override
   _AddInputState createState() => _AddInputState();
 }
@@ -546,7 +544,7 @@ class DateCard extends StatelessWidget {
                     firstDate: DateTime(1990, 1, 1),
                     lastDate: DateTime(2100, 12, 31),
                     selectedDate:
-                        DateFormat('dd/MM/yyyy').parse(provider.model.date!),
+                        DateFormatUtils.parseInternalDate(provider.model.date!),
                     onChanged: (value) {
                       provider.updateDate(value);
                     },
@@ -564,8 +562,9 @@ class DateCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      DateFormat(sharedPrefs.dateFormat).format(
-                          DateFormat('dd/MM/yyyy').parse(provider.model.date!)),
+                      DateFormatUtils.formatUserDate(
+                        DateFormat('yyyy-MM-dd').parse(provider.model.date!)
+                      ),
                       style: GoogleFonts.aBeeZee(
                         fontSize: 21.5.sp,
                       ),

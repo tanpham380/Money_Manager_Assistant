@@ -8,6 +8,7 @@ import '../classes/constants.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../provider/analysis_provider.dart';
+import '../utils/date_format_utils.dart';
 
 /// Biểu đồ cột (Bar Chart) hiển thị chi tiêu/thu nhập theo danh mục
 class BarChartAnalysis extends StatelessWidget {
@@ -319,7 +320,7 @@ class TrendChartAnalysis extends StatelessWidget {
       // Axes
       primaryXAxis: DateTimeAxis(
         labelStyle: TextStyle(fontSize: scale(11)),
-        dateFormat: DateFormat('MMM yy'),
+        dateFormat: DateFormatUtils.chartMonthFormat,
         intervalType: DateTimeIntervalType.months,
         majorGridLines: const MajorGridLines(width: 0.5),
       ),
