@@ -216,6 +216,7 @@
   "Add new transaction": "Thêm giao dịch mới",
   "Donut": "Bánh donut",
   "Bar": "Cột",
+  "Trend": "Xu hướng",
   "Sankey": "Sơ đồ Sankey",
   "Ok": "Đồng ý",
   "Delete Transaction": "Xóa giao dịch",
@@ -241,6 +242,15 @@
   "Income Sources": "Nguồn thu nhập",
   "Expense Categories": "Hạng mục chi tiêu",
   "Money Flow": "Dòng tiền",
-  "more": "thêm"
+  "more": "thêm",
+  "more income sources": "nguồn thu nhập khác",
+  "more expense categories": "hạng mục chi tiêu khác",
+  "Money Flow Analysis": "Phân tích dòng tiền",
+
+  "Surplus": "Thặng dư",
+  "Deficit": "Thâm hụt",
+  "No sankey data available": "Không có dữ liệu dòng tiền",
+  "Add transactions to see flow analysis": "Thêm giao dịch để xem phân tích",
+  "Cash Flow Balance": "Cân đối dòng tiền"
 }
 

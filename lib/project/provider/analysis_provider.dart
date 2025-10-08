@@ -18,7 +18,7 @@ enum AnalysisState {
 
 /// Loại biểu đồ hiển thị
 enum ChartType {
-  bar, // Biểu đồ cột
+  // bar, // Biểu đồ cột
   line, // Biểu đồ đường (trend)
   sankey // Sơ đồ Sankey
 }
@@ -33,23 +33,6 @@ class CategorySummary {
   CategorySummary({
     required this.category,
     required this.totalAmount,
-    required this.icon,
-    required this.color,
-  });
-}
-
-/// Class chứa dữ liệu kết hợp Thu và Chi cho Tornado Chart
-class CombinedCategorySummary {
-  final String category;
-  final double income;
-  final double expense;
-  final IconData icon;
-  final Color color;
-
-  CombinedCategorySummary({
-    required this.category,
-    required this.income,
-    required this.expense,
     required this.icon,
     required this.color,
   });
@@ -104,14 +87,13 @@ class AnalysisProvider with ChangeNotifier {
   AnalysisState _state = AnalysisState.initial;
   String _selectedDateOption = 'All';
   String _selectedType = 'Expense'; // Mặc định là Expense
-  ChartType _selectedChartType = ChartType.bar; // Mặc định là Bar (Tornado Chart)
+  ChartType _selectedChartType = ChartType.sankey; // Mặc định là Sankey thay vì Bar
 
   // Dữ liệu đã được tính toán
   double _totalIncome = 0.0;
   double _totalExpense = 0.0;
   List<CategorySummary> _expenseSummaries = [];
   List<CategorySummary> _incomeSummaries = [];
-  List<CombinedCategorySummary> _combinedSummaries = [];
   List<TrendData> _trendData = [];
   List<TrendData> _incomeTrendData = [];
   List<TrendData> _expenseTrendData = [];
@@ -140,7 +122,6 @@ class AnalysisProvider with ChangeNotifier {
   double get total => _totalIncome + _totalExpense;
   List<CategorySummary> get expenseSummaries => _expenseSummaries;
   List<CategorySummary> get incomeSummaries => _incomeSummaries;
-  List<CombinedCategorySummary> get combinedSummaries => _combinedSummaries;
   List<TrendData> get trendData => _trendData;
   List<TrendData> get incomeTrendData => _incomeTrendData;
   List<TrendData> get expenseTrendData => _expenseTrendData;
@@ -373,54 +354,6 @@ class AnalysisProvider with ChangeNotifier {
     // Chuyển đổi maps thành lists với màu sắc
     _expenseSummaries = _mapToSummaryList(expenseMap, 'Expense');
     _incomeSummaries = _mapToSummaryList(incomeMap, 'Income');
-
-    // Tạo dữ liệu kết hợp cho Tornado Chart
-    _generateCombinedData(incomeMap, expenseMap);
-  }
-
-  /// Tạo dữ liệu kết hợp Thu và Chi cho Tornado Chart
-  void _generateCombinedData(
-    Map<String, double> incomeMap,
-    Map<String, double> expenseMap,
-  ) {
-    // Lấy tất cả các danh mục từ cả Thu và Chi
-    final Set<String> allCategories = {...incomeMap.keys, ...expenseMap.keys};
-
-    if (allCategories.isEmpty) {
-      _combinedSummaries = [];
-      return;
-    }
-
-    // Tạo map để lưu dữ liệu kết hợp
-    final Map<String, CombinedCategorySummary> combinedMap = {};
-
-    for (final category in allCategories) {
-      final incomeAmount = incomeMap[category] ?? 0.0;
-      final expenseAmount = expenseMap[category] ?? 0.0;
-
-      // Chỉ thêm nếu có ít nhất một trong hai có giá trị
-      if (incomeAmount > 0 || expenseAmount > 0) {
-        final icon = _getIconForCategory(category);
-        final colorIndex = combinedMap.length;
-        final color = chartPieColors[colorIndex % chartPieColors.length];
-
-        combinedMap[category] = CombinedCategorySummary(
-          category: category,
-          income: incomeAmount,
-          expense: expenseAmount,
-          icon: icon,
-          color: color,
-        );
-      }
-    }
-
-    // Chuyển thành list và sắp xếp theo tổng số tiền (income + expense) giảm dần
-    _combinedSummaries = combinedMap.values.toList()
-      ..sort((a, b) {
-        final totalA = a.income + a.expense;
-        final totalB = b.income + b.expense;
-        return totalB.compareTo(totalA);
-      });
   }
 
   /// Chuyển đổi Map thành List CategorySummary với màu sắc và icon
@@ -561,7 +494,6 @@ class AnalysisProvider with ChangeNotifier {
     _totalExpense = 0.0;
     _expenseSummaries = [];
     _incomeSummaries = [];
-    _combinedSummaries = [];
     _trendData = [];
     _incomeTrendData = [];
     _expenseTrendData = [];

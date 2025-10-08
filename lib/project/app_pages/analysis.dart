@@ -4,11 +4,10 @@
   import 'package:google_fonts/google_fonts.dart';
   import 'package:provider/provider.dart';
 
-  import '../classes/bar_chart.dart';
+  import '../classes/bar_chart.dart'; // Keep for TrendChartAnalysis (line charts)
   import '../classes/constants.dart';
   import '../classes/dropdown_box.dart';
   import '../classes/sankey_chart.dart';
-  import '../classes/tornado_chart.dart';
   import '../database_management/shared_preferences_services.dart';
   import '../localization/methods.dart';
   import '../provider/analysis_provider.dart';
@@ -39,7 +38,7 @@
           appBar: AppBar(
             backgroundColor: blue2,
             title: Text(
-              'Analysis',
+              getTranslated(context, 'Analysis') ?? 'Analysis',
               style: TextStyle(fontSize: 21.sp, color: Colors.white),
             ),
           ),
@@ -190,15 +189,15 @@
         margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
         child: CupertinoSegmentedControl<ChartType>(
           children: {
-            ChartType.bar: Padding(
+ChartType.sankey: Padding(
               padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.bar_chart, size: 18.sp),
+                  Icon(Icons.account_tree, size: 18.sp),
                   SizedBox(width: 4.w),
                   Text(
-                    getTranslated(context, 'Bar') ?? 'Bar',
+                    getTranslated(context, 'Sankey') ?? 'Sankey',
                     style: TextStyle(fontSize: 13.sp),
                   ),
                 ],
@@ -218,20 +217,7 @@
                 ],
               ),
             ),
-            ChartType.sankey: Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.account_tree, size: 18.sp),
-                  SizedBox(width: 4.w),
-                  Text(
-                    getTranslated(context, 'Sankey') ?? 'Sankey',
-                    style: TextStyle(fontSize: 13.sp),
-                  ),
-                ],
-              ),
-            ),
+            
           },
           groupValue: provider.selectedChartType,
           onValueChanged: (ChartType value) {
@@ -305,10 +291,11 @@
         Function(int, {bool forceNavigate, required String type})
             handleSelection) {
       switch (provider.selectedChartType) {
-        case ChartType.bar:
+
+        case ChartType.sankey:
           return Container(
-            key: const ValueKey('bar'),
-            child: _buildTornadoBarChart(provider),
+            key: const ValueKey('sankey'),
+            child: _buildCombinedSankeyChart(provider),
           );
 
         case ChartType.line:
@@ -317,17 +304,8 @@
             child: _buildCombinedTrendChart(provider),
           );
 
-        case ChartType.sankey:
-          return Container(
-            key: const ValueKey('sankey'),
-            child: _buildCombinedSankeyChart(provider),
-          );
-      }
-    }
 
-    /// Biểu đồ Tornado Chart - Hiển thị Thu và Chi trong cùng một biểu đồ
-    Widget _buildTornadoBarChart(AnalysisProvider provider) {
-      return const TornadoChartAnalysis();
+      }
     }
 
     /// Biểu đồ Trend tổng hợp - Combined Income & Expense in one chart
@@ -502,197 +480,6 @@
     }
   }
 
-  /// Tab view cho từng loại (Income/Expense) với chart toggle
-  class AnalysisTabView extends StatefulWidget {
-    final String type;
-
-    const AnalysisTabView({
-      Key? key,
-      required this.type,
-    }) : super(key: key);
-
-    @override
-    State<AnalysisTabView> createState() => _AnalysisTabViewState();
-  }
-
-  class _AnalysisTabViewState extends State<AnalysisTabView> {
-    @override
-    void initState() {
-      super.initState();
-      // Fetch trend data khi khởi tạo
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<AnalysisProvider>().fetchTrendData(widget.type, 6);
-      });
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      return Consumer<AnalysisProvider>(
-        builder: (context, provider, child) {
-          final summaries = widget.type == 'Income'
-              ? provider.incomeSummaries
-              : provider.expenseSummaries;
-          final typeValue = widget.type == 'Income'
-              ? provider.totalIncome
-              : provider.totalExpense;
-
-          return Column(
-            children: [
-              // Money Frame - Compact hơn
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: 8.w, vertical: 4.h), // Thu nhỏ padding
-                child: ShowMoneyFrame(
-                  type: widget.type,
-                  typeValue: typeValue,
-                  balance: provider.balance,
-                  total: provider.total,
-                ),
-              ),
-
-              // Chart Type Toggle - Compact hơn
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.w), // Thu nhỏ padding
-                child: _buildChartToggle(provider),
-              ),
-
-              // Chart Area - Flexible để fit màn hình
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 8.w, vertical: 4.h), // Thu nhỏ padding
-                  child: _buildChart(provider, summaries),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    }
-
-    /// Widget toggle chọn loại biểu đồ
-    Widget _buildChartToggle(AnalysisProvider provider) {
-      return Container(
-        margin: EdgeInsets.symmetric(
-            horizontal: 12.w, vertical: 4.h), // Thu nhỏ margin
-        child: CupertinoSegmentedControl<ChartType>(
-          children: {
-            ChartType.bar: Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.bar_chart, size: 18.sp),
-                  SizedBox(width: 4.w),
-                  Text(
-                    getTranslated(context, 'Bar') ?? 'Bar',
-                    style: TextStyle(fontSize: 14.sp),
-                  ),
-                ],
-              ),
-            ),
-            ChartType.line: Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.show_chart, size: 18.sp),
-                  SizedBox(width: 4.w),
-                  Text(
-                    getTranslated(context, 'Trend') ?? 'Trend',
-                    style: TextStyle(fontSize: 14.sp),
-                  ),
-                ],
-              ),
-            ),
-          },
-          groupValue: provider.selectedChartType,
-          onValueChanged: (ChartType value) {
-            provider.updateChartType(value);
-            if (value == ChartType.line) {
-              provider.fetchTrendData(widget.type, 6);
-            }
-          },
-        ),
-      );
-    }
-
-    /// Xây dựng biểu đồ dựa trên loại được chọn
-    Widget _buildChart(
-        AnalysisProvider provider, List<CategorySummary> summaries) {
-      // Callback hiển thị chi tiết khi người dùng tap vào biểu đồ
-      void handleSelection(int index, {bool forceNavigate = false}) {
-        if (index < 0 || index >= summaries.length) return;
-
-        final summary = summaries[index];
-
-        // Nếu force navigate (từ nút View), luôn navigate
-        if (forceNavigate) {
-          // Cập nhật selection trong provider để làm nổi bật
-          provider.updateSelectedIndex(index);
-
-          // Điều hướng sang Calendar với filter chi tiết
-          final navProvider = context.read<NavigationProvider>();
-          final dateRange = provider.getDateRange();
-
-          // Check if this is "Others" grouped category
-          final isOthersGroup = summary.category == 'Others';
-
-          navProvider.navigateToCalendarWithFilter(
-            type: widget.type,
-            category: summary.category,
-            icon: summary.icon,
-            color: summary.color,
-            startDate: dateRange['start'],
-            endDate: dateRange['end'],
-            isOthersGroup: isOthersGroup,
-          );
-          return;
-        }
-
-        // Từ biểu đồ: luôn select và navigate (không unselect từ biểu đồ)
-        provider.updateSelectedIndex(index);
-
-        // Điều hướng sang Calendar với filter chi tiết
-        final navProvider = context.read<NavigationProvider>();
-        final dateRange = provider.getDateRange();
-
-        // Check if this is "Others" grouped category
-        final isOthersGroup = summary.category == 'Others';
-
-        navProvider.navigateToCalendarWithFilter(
-          type: widget.type,
-          category: summary.category,
-          icon: summary.icon,
-          color: summary.color,
-          startDate: dateRange['start'],
-          endDate: dateRange['end'],
-          isOthersGroup: isOthersGroup,
-        );
-      }
-
-      switch (provider.selectedChartType) {
-        case ChartType.bar:
-          return BarChartAnalysis(
-            type: widget.type,
-            summaries: summaries,
-            onSelection: handleSelection,
-          );
-          
-        case ChartType.line:
-          return const TrendChartAnalysis();
-          
-        default:
-          // AnalysisTabView only supports bar and line charts
-          return BarChartAnalysis(
-            type: widget.type,
-            summaries: summaries,
-            onSelection: handleSelection,
-          );
-      }
-    }
-  }
-
   /// Widget hiển thị ngày và dropdown chọn khoảng thời gian
   class ShowDate extends StatelessWidget {
     final String selectedDate;
@@ -864,79 +651,6 @@
               Divider(height: 12.h), // Thu nhỏ divider từ 16.h xuống 12.h
               rowFrame(getTranslated(context, 'Balance') ?? 'Balance', balance,
                   valueColor: balanceColor),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  /// Widget hiển thị thông tin chi tiết từng category - Đã nâng cấp
-  class CategoryDetails extends StatelessWidget {
-    final CategorySummary summary;
-    final String type;
-    final VoidCallback? onTap;
-    final bool isSelected;
-
-    const CategoryDetails({
-      Key? key,
-      required this.summary,
-      required this.type,
-      this.onTap,
-      this.isSelected = false,
-    }) : super(key: key);
-
-    @override
-    Widget build(BuildContext context) {
-      return Card(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-        elevation: isSelected ? 8 : 2,
-        color: isSelected ? summary.color.withValues(alpha: 0.1) : null,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          side: isSelected
-              ? BorderSide(color: summary.color, width: 2)
-              : BorderSide.none,
-        ),
-        child: ListTile(
-          onTap: onTap,
-          leading: CircleAvatar(
-            backgroundColor: summary.color.withValues(alpha: 0.2),
-            child: Icon(
-              summary.icon,
-              color: summary.color,
-              size: 24.sp,
-            ),
-          ),
-          title: Text(
-            getTranslated(context, summary.category) ?? summary.category,
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${format(summary.totalAmount)} $currency',
-                    style: GoogleFonts.aBeeZee(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? summary.color : null,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16.sp,
-                color: isSelected ? summary.color : Colors.grey,
-              ),
             ],
           ),
         ),
