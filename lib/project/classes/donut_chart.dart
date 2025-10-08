@@ -42,7 +42,7 @@ class DonutChartAnalysis extends StatelessWidget {
               type: type,
               amount: 1,
               category: '',
-              color: const Color.fromRGBO(0, 220, 252, 1),
+              color: Theme.of(context).colorScheme.primary, // Use primary color
             )
           ];
 
@@ -72,7 +72,7 @@ class DonutChartAnalysis extends StatelessWidget {
         DoughnutSeries<InputModel, String>(
           selectionBehavior: SelectionBehavior(
             enable: hasData,
-            selectedColor: Colors.blue,
+            selectedColor: Theme.of(context).colorScheme.primary, // Use primary color
             unselectedOpacity: 0.5,
           ),
           
@@ -181,7 +181,7 @@ class DonutChartAnalysis extends StatelessWidget {
                   style: TextStyle(
                     fontSize: scale(13),
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
+                    color: Theme.of(context).colorScheme.onSurface, // Use onSurface
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -214,7 +214,7 @@ class DonutChartAnalysis extends StatelessWidget {
                     Icon(
                       Icons.calendar_today,
                       size: scale(16),
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface, // Use surface for contrast
                     ),
                     SizedBox(width: scale(6)),
                     Text(
@@ -222,7 +222,7 @@ class DonutChartAnalysis extends StatelessWidget {
                       style: TextStyle(
                         fontSize: scale(13),
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface, // Use surface for contrast
                       ),
                     ),
                   ],
@@ -250,7 +250,7 @@ class DonutChartAnalysis extends StatelessWidget {
           final isSelected = provider.selectedIndex == index;
           
           return Material(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface, // Use surface
             borderRadius: BorderRadius.circular(scale(8)),
             child: InkWell(
               onTap: () {
@@ -267,10 +267,10 @@ class DonutChartAnalysis extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(scale(8)),
                   border: Border.all(
-                    color: isSelected ? summary.color : Colors.grey[200]!, 
+                    color: isSelected ? summary.color : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), // Use onSurface with alpha 
                     width: isSelected ? 2 : 1,
                   ),
-                  color: isSelected ? summary.color.withValues(alpha: 0.05) : Colors.white,
+                  color: isSelected ? summary.color.withValues(alpha: 0.05) : Theme.of(context).colorScheme.surface, // Use surface
                 ),
                 child: Row(
                   children: [
@@ -364,8 +364,8 @@ class DonutChartAnalysis extends StatelessWidget {
     return PhysicalModel(
       shape: BoxShape.circle,
       elevation: 8,
-      shadowColor: Colors.black26,
-      color: const Color.fromRGBO(245, 245, 245, 1),
+      shadowColor: Theme.of(context).colorScheme.shadow, // Use shadow color
+      color: Theme.of(context).colorScheme.surface, // Use surface
       child: Container(
         padding: EdgeInsets.all(scale(16)),
         child: hasData
@@ -401,7 +401,7 @@ class DonutChartAnalysis extends StatelessWidget {
               style: TextStyle(
                 fontSize: scale(11),
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface, // Use onSurface
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -425,7 +425,7 @@ class DonutChartAnalysis extends StatelessWidget {
               '${((selectedSummary.totalAmount / totalAmount) * 100).toStringAsFixed(1)}%',
               style: TextStyle(
                 fontSize: scale(10),
-                color: Colors.black54,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), // Use onSurface with alpha
               ),
             ),
           ],
@@ -487,7 +487,7 @@ class DonutChartAnalysis extends StatelessWidget {
         getTranslated(context, 'There is no data') ?? 'Không có dữ liệu',
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: const Color.fromRGBO(0, 0, 0, 0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), // Use onSurface with alpha
           fontSize: scale(15),
           fontStyle: FontStyle.italic,
         ),

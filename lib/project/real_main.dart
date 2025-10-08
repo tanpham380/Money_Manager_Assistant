@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_scaler/responsive_scaler.dart';
 import 'classes/lockscreen.dart';
+import 'classes/constants.dart'; // Thêm import constants.dart
 import 'database_management/shared_preferences_services.dart';
 import 'database_management/sqflite_services.dart';
 import 'localization/app_localization.dart';
@@ -131,7 +132,7 @@ class _MyAppState extends State<MyApp> {
             displaySmall: TextStyle(
               fontFamily: 'OpenSans',
               fontSize: 45.0,
-              color: Colors.deepOrangeAccent,
+              color: blue3, // Thay Colors.deepOrangeAccent bằng blue3
             ),
             labelLarge: TextStyle(
               fontFamily: 'OpenSans',
@@ -139,10 +140,29 @@ class _MyAppState extends State<MyApp> {
             titleMedium: TextStyle(fontFamily: 'NotoSans'),
             bodyMedium: TextStyle(fontFamily: 'NotoSans'),
           ),
-          colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo)
-              .copyWith(secondary: Colors.orange),
-          textSelectionTheme:
-              TextSelectionThemeData(cursorColor: Colors.amberAccent),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: blue3, // Sử dụng blue3 làm seed color
+            primary: blue3,
+            secondary: green, // Secondary cho Income
+            error: red, // Error cho Expense
+            surface: blue1,
+          ),
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: blue3, // Thay Colors.amberAccent bằng blue3
+          ),
+          // Thêm các theme khác để thống nhất
+          primaryColor: blue3,
+          scaffoldBackgroundColor: blue1,
+          appBarTheme: AppBarTheme(
+            backgroundColor: blue3,
+            foregroundColor: Colors.white,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: blue3,
+              foregroundColor: Colors.white,
+            ),
+          ),
         ),
         builder: (context, widget) {
           // Apply ResponsiveScaler

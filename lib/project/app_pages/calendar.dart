@@ -132,7 +132,7 @@ class _CalendarContentState extends State<_CalendarContent> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: blue1,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),

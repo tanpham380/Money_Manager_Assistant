@@ -55,10 +55,10 @@ class _HomeState extends State<Home> {
       builder: (context, navProvider, child) {
         return Scaffold(
             bottomNavigationBar: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: Theme.of(context).colorScheme.shadow, // Use shadow color
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
@@ -69,8 +69,8 @@ class _HomeState extends State<Home> {
                 selectedFontSize: scale(16),
                 unselectedFontSize: scale(14),
                 backgroundColor: blue1,
-                selectedItemColor: const Color.fromARGB(255, 255, 136, 0),
-                unselectedItemColor: Colors.black87,
+                selectedItemColor: Theme.of(context).colorScheme.primary, // Use primary color
+                unselectedItemColor: Theme.of(context).colorScheme.onSurface, // Use onSurface
                 type: BottomNavigationBarType.fixed,
                 items: bottomItems,
                 currentIndex: navProvider.currentTabIndex,
