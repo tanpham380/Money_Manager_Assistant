@@ -93,6 +93,31 @@ IconData iconData(CategoryItem item) => IconData(item.iconCodePoint,
 CategoryItem categoryItem(IconData icon, String name) =>
     CategoryItem(icon.codePoint, icon.fontPackage, icon.fontFamily, name, '');
 
+/// Chuyển đổi từ CategorySummary sang CategoryItem
+CategoryItem categorySummaryToItem(String categoryName, IconData icon) =>
+    CategoryItem(icon.codePoint, icon.fontPackage, icon.fontFamily, categoryName, '');
+
+/// Lấy CategoryItem từ category name
+CategoryItem? getCategoryItem(String categoryName) {
+  // Tìm trong expense items
+  for (var expenseList in sharedPrefs.getAllExpenseItemsLists()) {
+    for (var item in expenseList) {
+      if (item.text == categoryName) {
+        return item;
+      }
+    }
+  }
+  
+  // Tìm trong income items
+  for (var item in incomeItems) {
+    if (item.text == categoryName) {
+      return item;
+    }
+  }
+  
+  return null;
+}
+
 Widget? connectionUI(AsyncSnapshot<List<InputModel>> snapshot) {
   if (snapshot.connectionState == ConnectionState.none) {
     return Center(

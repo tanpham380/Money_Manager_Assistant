@@ -12,7 +12,6 @@
   import '../localization/methods.dart';
   import '../provider/analysis_provider.dart';
   import '../provider/navigation_provider.dart';
-
   import '../provider/transaction_provider.dart';
   import '../utils/date_format_utils.dart';
 
@@ -22,12 +21,10 @@
 
     @override
     Widget build(BuildContext context) {
-      // Use TransactionProvider from ancestor (Home widget)
+      // Đơn giản hóa - chỉ cần AnalysisProvider
       return ChangeNotifierProxyProvider<TransactionProvider, AnalysisProvider>(
-        create: (context) =>
-            AnalysisProvider(context.read<TransactionProvider>()),
+        create: (context) => AnalysisProvider(context.read<TransactionProvider>()),
         update: (context, transactionProvider, previous) {
-          // Reuse previous AnalysisProvider if it exists
           if (previous != null) {
             return previous;
           }
@@ -281,12 +278,13 @@ ChartType.sankey: Padding(
             ),
           );
         },
-        child: _buildChartByType(provider, handleSelection),
+        child: _buildChartByType(context, provider, handleSelection),
       );
     }
 
     /// Helper để build chart theo type với unique key
     Widget _buildChartByType(
+        BuildContext context,
         AnalysisProvider provider,
         Function(int, {bool forceNavigate, required String type})
             handleSelection) {
@@ -295,7 +293,7 @@ ChartType.sankey: Padding(
         case ChartType.sankey:
           return Container(
             key: const ValueKey('sankey'),
-            child: _buildCombinedSankeyChart(provider),
+            child: _buildCombinedSankeyChart(context, provider),
           );
 
         case ChartType.line:
@@ -317,14 +315,30 @@ ChartType.sankey: Padding(
         return _buildEmptyChartState();
       }
 
-      // FIX 1: Chỉ cần trả về MỘT widget TrendChartAnalysis duy nhất
-      // Widget này đã được thiết kế để vẽ cả hai đường Income và Expense
       return const TrendChartAnalysis();
     }
 
-    /// Sankey Diagram tổng hợp - Hiển thị dòng chảy tiền với visual flow
-    Widget _buildCombinedSankeyChart(AnalysisProvider provider) {
-      return const SankeyChartAnalysis();
+    Widget _buildCombinedSankeyChart(BuildContext context, AnalysisProvider provider) {
+      return SankeyChartAnalysis(
+        onCategoryTap: (category, type) {
+          // Tap → Focus mode
+          provider.setFocus(category, type);
+        },
+        onCategoryLongPress: (category, type) {
+          // Long press → Navigation to Calendar
+          final navProvider = context.read<NavigationProvider>();
+          final dateRange = provider.getDateRange();
+          
+          navProvider.navigateToCalendarWithFilter(
+            type: type,
+            category: category,
+            icon: Icons.category,
+            color: type == 'Income' ? Colors.green : Colors.red,
+            startDate: dateRange['start'],
+            endDate: dateRange['end'],
+          );
+        },
+      );
     }
 
     /// Empty state cho charts

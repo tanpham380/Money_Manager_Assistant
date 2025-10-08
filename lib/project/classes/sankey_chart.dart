@@ -5,54 +5,154 @@ import '../localization/methods.dart';
 import '../utils/responsive_extensions.dart';
 import '../classes/constants.dart'; // Import for format() function
 import '../database_management/shared_preferences_services.dart'; // Import for currency
+import '../widgets/comparison_indicator.dart';
+import '../widgets/sankey_painter.dart';
 
-class SankeyChartAnalysis extends StatelessWidget {
-  const SankeyChartAnalysis({Key? key}) : super(key: key);
+/// Class đại diện cho mục "Số dư" trong cột phân bổ
+class BalanceItem {
+  final String category;
+  final IconData icon;
+  final double totalAmount;
+
+  BalanceItem({
+    required this.category,
+    required this.icon,
+    required this.totalAmount,
+  });
+}
+
+class SankeyChartAnalysis extends StatefulWidget {
+  final Function(String category, String type)? onCategoryTap;
+  final Function(String category, String type)? onCategoryLongPress;
+  
+  const SankeyChartAnalysis({
+    Key? key, 
+    this.onCategoryTap,
+    this.onCategoryLongPress,
+  }) : super(key: key);
+
+  @override
+  State<SankeyChartAnalysis> createState() => _SankeyChartAnalysisState();
+}
+
+class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
+  // GlobalKey tracking cho các category items
+  final Map<String, GlobalKey> _incomeKeys = {};
+  final Map<String, GlobalKey> _expenseKeys = {};
+  final Map<String, Offset> _itemPositions = {};
+  final GlobalKey _painterKey = GlobalKey(); // Key cho CustomPaint
+
+
+  /// Lấy hoặc tạo GlobalKey cho income category
+  GlobalKey _getIncomeKey(String category) {
+    return _incomeKeys.putIfAbsent(category, () => GlobalKey());
+  }
+
+  /// Lấy hoặc tạo GlobalKey cho expense category
+  GlobalKey _getExpenseKey(String category) {
+    return _expenseKeys.putIfAbsent(category, () => GlobalKey());
+  }
+
+  /// Cập nhật vị trí của các category items
+void _updateItemPositions() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Tìm RenderBox của painter
+    final painterRenderBox = _painterKey.currentContext?.findRenderObject() as RenderBox?;
+    if (painterRenderBox == null) return;
+
+    _itemPositions.clear();
+
+    // Cập nhật vị trí income items
+    for (var entry in _incomeKeys.entries) {
+      final renderBox = entry.value.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        final globalPosition = renderBox.localToGlobal(Offset.zero);
+        // Chuyển đổi global position sang local của painter
+        final localPosition = painterRenderBox.globalToLocal(globalPosition);
+        final size = renderBox.size;
+
+        _itemPositions['income_${entry.key}'] = Offset(
+          localPosition.dx + size.width, // Cạnh phải của mục income
+          localPosition.dy + size.height / 2, // Trung tâm theo chiều dọc
+        );
+      }
+    }
+
+    // Cập nhật vị trí expense items (tương tự)
+    for (var entry in _expenseKeys.entries) {
+      final renderBox = entry.value.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        final globalPosition = renderBox.localToGlobal(Offset.zero);
+        // Chuyển đổi global position sang local của painter
+        final localPosition = painterRenderBox.globalToLocal(globalPosition);
+        final size = renderBox.size;
+        
+        _itemPositions['expense_${entry.key}'] = Offset(
+          localPosition.dx, // Cạnh trái của mục expense
+          localPosition.dy + size.height / 2, // Trung tâm theo chiều dọc
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {}); // Kích hoạt vẽ lại với positions mới
+    }
+  });
+}
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AnalysisProvider>();
-    final hasNodes = provider.sankeyNodes.isNotEmpty;
-    final hasLinks = provider.sankeyLinks.isNotEmpty;
+    final hasIncome = provider.incomeSummaries.isNotEmpty;
+    final hasExpense = provider.expenseSummaries.isNotEmpty;
 
-    if (!hasNodes || !hasLinks) {
+    if (!hasIncome && !hasExpense) {
       return _buildEmptyChartState(context);
     }
+
+    // Clear và rebuild keys khi categories thay đổi
+    final currentIncomeCategories = provider.incomeSummaries.map((s) => s.category).toSet();
+    final currentExpenseCategories = provider.expenseSummaries.map((s) => s.category).toSet();
+    
+    // Remove keys cho categories không còn tồn tại
+    _incomeKeys.removeWhere((key, value) => !currentIncomeCategories.contains(key));
+    _expenseKeys.removeWhere((key, value) => !currentExpenseCategories.contains(key));
+
+    // Cập nhật vị trí các items sau khi build
+    _updateItemPositions();
 
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.all(16.w),
-        child: Column(
-          children: [
-            // Sankey Flow Visualization - 3 columns layout
-            _buildEnhancedSankeyLayout(context, provider),
-            SizedBox(height: 24.h),
-          ],
-        ),
+        child: _buildMoneyFlowLayout(context, provider),
       ),
     );
   }
 
-  /// Build enhanced Sankey layout - 3 columns visual representation  
-  Widget _buildEnhancedSankeyLayout(BuildContext context, AnalysisProvider provider) {
+  /// Layout trực quan hóa dòng tiền (2 cột)
+  Widget _buildMoneyFlowLayout(BuildContext context, AnalysisProvider provider) {
+    // Tính toán số dư
+    final balance = provider.totalIncome - provider.totalExpense;
+
+    // Tạo một danh sách các "đích đến" của dòng tiền
+    final List<dynamic> destinations = [
+      ...provider.expenseSummaries,
+      // Thêm "Số dư" như một hạng mục nếu có số dư dương
+      if (balance > 0)
+        _createBalanceItem(context, balance),
+    ];
+    // Sắp xếp các hạng mục chi theo số tiền giảm dần
+    destinations.sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.green.withValues(alpha: 0.05),
-            Colors.blue.withValues(alpha: 0.05),
-            Colors.red.withValues(alpha: 0.05),
-          ],
-        ),
+        color: Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
-          // Title
           Text(
             getTranslated(context, 'Money Flow Analysis') ?? 'Money Flow Analysis',
             style: TextStyle(
@@ -62,386 +162,316 @@ class SankeyChartAnalysis extends StatelessWidget {
             ),
           ),
           SizedBox(height: 24.h),
-
-          // Main Flow Layout - 3 columns
-          _buildMainFlowSection(context, provider),
-          
-          SizedBox(height: 20.h),
-          
-          // Summary section
-          _buildFlowSummary(context, provider),
+          // Layout chính với categories và flows
+          _buildMainLayout(context, provider, destinations),
         ],
       ),
     );
   }
 
-  /// Build main flow section (3 columns)
-  Widget _buildMainFlowSection(BuildContext context, AnalysisProvider provider) {
+  /// Layout chính với hai cột categories
+  Widget _buildMainLayout(BuildContext context, AnalysisProvider provider, List<dynamic> destinations) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Column 1: Income Sources
+        // Cột 1: Nguồn thu
         Expanded(
-          flex: 2,
-          child: _buildIncomeColumn(context, provider),
-        ),
-
-        // Arrow 1: Income to Total
-        SizedBox(
-          width: 40.w,
-          child: Column(
-            children: [
-              SizedBox(height: 60.h),
-              Icon(
-                Icons.arrow_forward,
-                color: Colors.green,
-                size: 24.sp,
-              ),
-            ],
+          flex: 3,
+          child: _buildColumn(
+            context,
+            title: getTranslated(context, 'Income Sources') ?? 'Income Sources',
+            summaries: provider.incomeSummaries,
+            totalAmount: provider.totalIncome,
+            themeColor: Colors.green,
+            categoryType: 'Income',
           ),
         ),
 
-        // Column 2: Total Income/Expense
+        // Dòng chảy ở giữa - Sankey Flows
         Expanded(
-          flex: 2,
-          child: _buildTotalColumn(context, provider),
+          flex: 1,
+          child: _buildSankeyFlowLayer(context, provider),
         ),
 
-        // Arrow 2: Total to Expense  
-        SizedBox(
-          width: 40.w,
-          child: Column(
-            children: [
-              SizedBox(height: 60.h),
-              Icon(
-                Icons.arrow_forward,
-                color: Colors.red,
-                size: 24.sp,
-              ),
-            ],
-          ),
-        ),
-
-        // Column 3: Expense Categories
+        // Cột 2: Phân bổ (Chi tiêu + Số dư)
         Expanded(
-          flex: 2,
-          child: _buildExpenseColumn(context, provider),
-        ),
-      ],
-    );
-  }
-
-  /// Build income column (left)
-  Widget _buildIncomeColumn(BuildContext context, AnalysisProvider provider) {
-    return Column(
-      children: [
-        // Header
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-          decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Text(
-            getTranslated(context, 'Income Sources') ?? 'Income Sources',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.green[700],
-            ),
-          ),
-        ),
-        SizedBox(height: 12.h),
-
-        // Income categories
-        ...provider.incomeSummaries.take(5).map((summary) => 
-          _buildCategoryItem(
-            context, 
-            summary, 
-            Colors.green, 
-            provider.totalIncome
-          )
-        ),
-
-        // Show more indicator
-        if (provider.incomeSummaries.length > 5)
-          _buildMoreText(
-            context, 
-            provider.incomeSummaries.length - 5,
-            'more income sources'
-          ),
-      ],
-    );
-  }
-
-  /// Build total column (center)
-  Widget _buildTotalColumn(BuildContext context, AnalysisProvider provider) {
-    return Column(
-      children: [
-        // Total Income
-        Container(
-          margin: EdgeInsets.only(bottom: 12.h),
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Text(
-                getTranslated(context, 'Total Income') ?? 'Total Income',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.green[700],
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                _formatAmount(provider.totalIncome),
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Flow indicator - vertical gradient line
-        Container(
-          height: 40.h,
-          width: 4.w,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.green.withValues(alpha: 0.7), 
-                Colors.red.withValues(alpha: 0.7)
-              ],
-            ),
-            borderRadius: BorderRadius.circular(2.r),
-          ),
-        ),
-
-        // Total Expense
-        Container(
-          margin: EdgeInsets.only(top: 12.h),
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Text(
-                getTranslated(context, 'Total Expense') ?? 'Total Expense',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red[700],
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                _formatAmount(provider.totalExpense),
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red[600],
-                ),
-              ),
-            ],
+          flex: 3,
+          child: _buildColumn(
+            context,
+            title: getTranslated(context, 'Allocation') ?? 'Allocation',
+            summaries: destinations,
+            totalAmount: provider.totalIncome, // Tổng phân bổ bằng tổng thu
+            themeColor: Colors.blue, // Dùng màu trung tính
+            isDestination: true,
+            categoryType: 'Expense',
           ),
         ),
       ],
     );
   }
 
-  /// Build expense column (right)
-  Widget _buildExpenseColumn(BuildContext context, AnalysisProvider provider) {
-    return Column(
-      children: [
-        // Header
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-          decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Text(
-            getTranslated(context, 'Expense Categories') ?? 'Expense Categories',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.red[700],
-            ),
+  /// Layer chứa Sankey flows (CustomPainter)
+  Widget _buildSankeyFlowLayer(BuildContext context, AnalysisProvider provider) {
+    // Kiểm tra có dữ liệu flows không
+    final visibleFlows = provider.sankeyFlows.where((flow) => flow.isVisible).toList();
+    if (visibleFlows.isEmpty) {
+      return Container(
+        child: Center(
+          child: Icon(
+            Icons.arrow_forward_ios,
+            color: Colors.grey[200],
+            size: 16,
           ),
         ),
-        SizedBox(height: 12.h),
+      );
+    }
 
-        // Expense categories
-        ...provider.expenseSummaries.take(5).map((summary) => 
-          _buildCategoryItem(
-            context, 
-            summary, 
-            Colors.red, 
-            provider.totalExpense
-          )
-        ),
-
-        // Show more indicator
-        if (provider.expenseSummaries.length > 5)
-          _buildMoreText(
-            context, 
-            provider.expenseSummaries.length - 5,
-            'more expense categories'
-          ),
-      ],
-    );
-  }
-
-  /// Build category item with percentage bar
-  Widget _buildCategoryItem(
-    BuildContext context, 
-    dynamic summary,  // CategorySummary
-    Color themeColor, 
-    double totalAmount
-  ) {
-    final percentage = totalAmount > 0 ? (summary.totalAmount / totalAmount) : 0.0;
-    
-    return Container(
-      margin: EdgeInsets.only(bottom: 6.h),
-      padding: EdgeInsets.all(8.w),
-      decoration: BoxDecoration(
-        color: themeColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(6.r),
-        border: Border.all(color: themeColor.withValues(alpha: 0.2)),
+    // Hiển thị flows khi có dữ liệu hợp lý
+    return CustomPaint(
+      key: _painterKey,
+      painter: SankeyPainter(
+        flows: provider.sankeyFlows,
+        incomeCategories: provider.incomeSummaries,
+        expenseCategories: provider.expenseSummaries,
+        itemPositions: _itemPositions, // Truyền position data
+        onCategoryTap: (category) {
+          provider.setFocusedCategory(category);
+        },
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(summary.icon, size: 16.sp, color: themeColor),
-              SizedBox(width: 6.w),
-              Expanded(
-                child: Text(
-                  getTranslated(context, summary.category) ?? summary.category,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w500,
-                    color: themeColor.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
-            ],
+    );
+  }
+
+  /// Tạo item "Số dư" giả lập
+  dynamic _createBalanceItem(BuildContext context, double balance) {
+    return BalanceItem(
+      category: getTranslated(context, 'Balance') ?? 'Savings',
+      icon: Icons.savings_outlined,
+      totalAmount: balance,
+    );
+  }
+
+  /// Widget chung để xây dựng một cột (Nguồn thu hoặc Phân bổ)
+  Widget _buildColumn(
+    BuildContext context, {
+    required String title,
+    required List<dynamic> summaries,
+    required double totalAmount,
+    required Color themeColor,
+    bool isDestination = false,
+    String categoryType = '',
+  }) {
+    return Column(
+      children: [
+        // Header
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+          decoration: BoxDecoration(
+            color: themeColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8.r),
           ),
-          SizedBox(height: 4.h),
-          
-          // Amount
-          Text(
-            _formatAmount(summary.totalAmount),
+          child: Text(
+            title,
             style: TextStyle(
-              fontSize: 10.sp,
-              color: themeColor.withValues(alpha: 0.7),
+              fontSize: 14.sp,
               fontWeight: FontWeight.w600,
+              color: themeColor.withValues(alpha: 0.8),
             ),
           ),
-          SizedBox(height: 4.h),
-          
-          // Percentage bar
-          if (percentage > 0) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: themeColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2.r),
+        ),
+        SizedBox(height: 12.h),
+
+        // Danh sách các hạng mục
+        if (summaries.isEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 20.h),
+            child: Text(
+              getTranslated(context, 'No data') ?? 'No data',
+              style: TextStyle(color: Colors.grey[500], fontSize: 12.sp),
+            ),
+          )
+        else
+          ...summaries.map((summary) {
+            // Xác định màu sắc cho từng item trong cột Phân Bổ
+            Color itemColor = themeColor;
+            if (isDestination) {
+              // Nếu là hạng mục "Số dư" thì màu xanh, còn lại là màu đỏ
+              final balanceLabel = getTranslated(context, 'Balance') ?? 'Savings';
+              itemColor = (summary.category == balanceLabel) ? Colors.green : Colors.red;
+            }
+
+            return _buildCategoryItem(
+              context,
+              summary,
+              itemColor,
+              totalAmount,
+            );
+          }),
+      ],
+    );
+  }
+
+  /// Widget cho từng hạng mục
+  Widget _buildCategoryItem(
+    BuildContext context,
+    dynamic summary,
+    Color themeColor,
+    double totalAmount,
+  ) {
+    final provider = context.watch<AnalysisProvider>();
+    final percentage = totalAmount > 0 ? (summary.totalAmount / totalAmount) : 0.0;
+
+    // Xác định type dựa trên themeColor hoặc category
+    String type = '';
+    final balanceLabel = getTranslated(context, 'Balance') ?? 'Savings';
+    final isBalanceItem = summary.category == balanceLabel;
+    
+    if (!isBalanceItem) {
+      if (themeColor == Colors.green) {
+        type = 'Income';
+      } else if (themeColor == Colors.red) {
+        type = 'Expense';
+      }
+    }
+
+    // Kiểm tra focus mode - highlight cả categories có flow liên quan
+    final isFocused = provider.focusedCategory == summary.category && 
+                     provider.focusedType == type;
+    final hasAnyFocus = provider.focusedCategory != null;
+    
+    // Kiểm tra xem category này có liên quan đến focused category không
+    bool isRelated = false;
+    if (hasAnyFocus && !isFocused) {
+      // Tìm flows liên quan
+      for (final flow in provider.sankeyFlows) {
+        if ((flow.fromCategory == provider.focusedCategory && flow.toCategory == summary.category) ||
+            (flow.toCategory == provider.focusedCategory && flow.fromCategory == summary.category)) {
+          isRelated = true;
+          break;
+        }
+      }
+    }
+    
+    final shouldDim = hasAnyFocus && !isFocused && !isRelated;
+
+    // Lấy GlobalKey cho category để track position
+    GlobalKey? categoryKey;
+    if (!isBalanceItem) {
+      if (type == 'Income') {
+        categoryKey = _getIncomeKey(summary.category);
+      } else if (type == 'Expense') {
+        categoryKey = _getExpenseKey(summary.category);
+      }
+    }
+
+    return GestureDetector(
+      key: categoryKey, // Sử dụng GlobalKey để track position
+      onTap: (!isBalanceItem && widget.onCategoryTap != null) ? () {
+        widget.onCategoryTap!(summary.category, type);
+      } : null,
+      onLongPress: (!isBalanceItem && widget.onCategoryLongPress != null) ? () {
+        widget.onCategoryLongPress!(summary.category, type);
+      } : null,
+      child: AnimatedOpacity(
+        duration: Duration(milliseconds: 250),
+        opacity: shouldDim ? 0.3 : 1.0,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 6.h),
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: isFocused 
+                ? themeColor.withValues(alpha: 0.15)
+                : themeColor.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(6.r),
+            border: Border.all(
+              color: isFocused 
+                  ? themeColor.withValues(alpha: 0.4)
+                  : themeColor.withValues(alpha: 0.2),
+              width: isFocused ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(summary.icon, size: 16.sp, color: themeColor),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      getTranslated(context, summary.category) ?? summary.category,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: isFocused ? FontWeight.w700 : FontWeight.w500,
+                        color: themeColor.withValues(alpha: 0.8),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: percentage.clamp(0.0, 1.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: themeColor.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(2.r),
-                        ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              // Hiển thị amount và comparison indicator
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _formatAmount(summary.totalAmount),
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: themeColor.withValues(alpha: 0.7),
+                        fontWeight: isFocused ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
                   ),
+                  // Time comparison indicator
+                  if (!isBalanceItem && provider.categoryComparisons.containsKey(summary.category))
+                    ComparisonIndicator(
+                      comparison: provider.categoryComparisons[summary.category]!,
+                    ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              // Thanh %
+              if (percentage > 0)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: themeColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(2.r),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: percentage.clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isFocused 
+                                  ? themeColor.withValues(alpha: 0.8)
+                                  : themeColor.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(2.r),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      '${(percentage * 100).toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 9.sp,
+                        color: themeColor.withValues(alpha: 0.6),
+                        fontWeight: isFocused ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 6.w),
-                Text(
-                  '${(percentage * 100).toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontSize: 9.sp,
-                    color: themeColor.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Build flow summary
-  Widget _buildFlowSummary(BuildContext context, AnalysisProvider provider) {
-    final balance = provider.totalIncome - provider.totalExpense;
-    final isPositive = balance >= 0;
-    
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: isPositive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(
-          color: isPositive ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            getTranslated(context, 'Cash Flow Balance') ?? 'Cash Flow Balance',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
-            ),
+            ],
           ),
-          SizedBox(height: 8.h),
-          Text(
-            _formatAmount(balance.abs()),
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: isPositive ? Colors.green[700] : Colors.red[700],
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            isPositive 
-              ? (getTranslated(context, 'Surplus') ?? 'Surplus')
-              : (getTranslated(context, 'Deficit') ?? 'Deficit'),
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: isPositive ? Colors.green[600] : Colors.red[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
+        ), // AnimatedOpacity
+      ), // GestureDetector
+    ); 
   }
 
   /// Empty state for chart
@@ -457,7 +487,7 @@ class SankeyChartAnalysis extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Text(
-            getTranslated(context, 'No sankey data available') ?? 'No sankey data available',
+            getTranslated(context, 'No flow data available') ?? 'No flow data available',
             style: TextStyle(
               fontSize: 16.sp,
               color: Colors.grey[600],
@@ -466,7 +496,8 @@ class SankeyChartAnalysis extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            getTranslated(context, 'Add transactions to see flow analysis') ?? 'Add transactions to see flow analysis',
+            getTranslated(context, 'Add income and expenses to see the flow') ?? 'Add income and expenses to see the flow',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.sp,
               color: Colors.grey[500],

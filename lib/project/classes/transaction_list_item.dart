@@ -6,7 +6,7 @@ import '../classes/constants.dart';
 import '../classes/input_model.dart';
 import '../localization/methods.dart';
 import '../database_management/shared_preferences_services.dart';
-import '../utils/category_icon_helper.dart';
+import '../services/category_icon_service.dart';
 
 /// Widget hiển thị một giao dịch trong danh sách với swipe actions
 class TransactionListItem extends StatelessWidget {
@@ -31,7 +31,7 @@ class TransactionListItem extends StatelessWidget {
         : Theme.of(context).colorScheme.error; // Use theme colors
 
     // Lấy icon từ category name
-    final IconData categoryIcon = CategoryIconHelper.getIconForCategory(
+    final IconData categoryIcon = CategoryIconService().getIconForCategory(
       transaction.category ?? 'Unknown',
     );
 

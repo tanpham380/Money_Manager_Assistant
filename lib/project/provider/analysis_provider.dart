@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:icofont_flutter/icofont_flutter.dart';
 import '../classes/input_model.dart';
 import '../classes/constants.dart';
 import 'transaction_provider.dart';
 import '../utils/date_format_utils.dart';
+import '../services/category_icon_service.dart';
 
 /// Trạng thái của màn hình phân tích
 enum AnalysisState {
@@ -49,6 +48,59 @@ class TrendData {
     required this.totalAmount,
     required this.label,
   });
+}
+
+/// Class đại diện cho một dòng chảy tiền trong Sankey
+class SankeyFlow {
+  final String fromCategory;
+  final String toCategory; 
+  final double amount;
+  final Color? _sourceColor; // Màu nguồn (có thể null)
+  final Color? _targetColor; // Màu đích (có thể null)
+  final bool isVisible; // Dùng cho focus mode
+  final bool isPrimary; // Đánh dấu flow chính
+
+  SankeyFlow({
+    required this.fromCategory,
+    required this.toCategory,
+    required this.amount,
+    Color? sourceColor,
+    Color? targetColor,
+    this.isVisible = true,
+    this.isPrimary = false,
+  }) : _sourceColor = sourceColor,
+       _targetColor = targetColor;
+
+  // Getter với fallback colors
+  Color get sourceColor => _sourceColor ?? Colors.green;
+  Color get targetColor => _targetColor ?? Colors.red;
+}
+
+/// Class chứa thông tin so sánh với kỳ trước
+class ComparisonData {
+  final double currentAmount;
+  final double previousAmount;
+  final double changePercentage;
+  final bool isPositiveChange; // Thu nhập tăng hoặc chi tiêu giảm = tích cực
+  final bool hasValidComparison; // Có dữ liệu kỳ trước không
+
+  ComparisonData({
+    required this.currentAmount,
+    required this.previousAmount,
+    required this.changePercentage,
+    required this.isPositiveChange,
+    required this.hasValidComparison,
+  });
+
+  factory ComparisonData.noComparison(double currentAmount) {
+    return ComparisonData(
+      currentAmount: currentAmount,
+      previousAmount: 0,
+      changePercentage: 0,
+      isPositiveChange: true,
+      hasValidComparison: false,
+    );
+  }
 }
 
 /// Class chứa dữ liệu cho Sankey diagram
@@ -102,13 +154,25 @@ class AnalysisProvider with ChangeNotifier {
   List<SankeyNodeData> _sankeyNodes = [];
   List<SankeyLinkData> _sankeyLinks = [];
 
+  // Focus mode state
+  String? _focusedCategory;
+  String? _focusedType; // 'Income' or 'Expense'
+
+  // Time comparison data
+  List<CategorySummary> _previousIncomeSummaries = [];
+  List<CategorySummary> _previousExpenseSummaries = [];
+  final Map<String, ComparisonData> _categoryComparisons = {};
+
+  // Sankey flow data for CustomPainter
+  final List<SankeyFlow> _sankeyFlows = [];
+
   // Tương tác với biểu đồ
   int? _selectedIndex;
 
   String? _errorMessage;
 
-  // Ngưỡng để nhóm các danh mục nhỏ (5% của tổng)
-  static const double _groupThreshold = 0.05;
+  // Ngưỡng để nhóm các danh mục nhỏ (0% = hiển thị tất cả)
+  static const double _groupThreshold = 0.0; // Bỏ nhóm "Others", hiển thị hết
 
   // ============ GETTERS ============
 
@@ -129,6 +193,14 @@ class AnalysisProvider with ChangeNotifier {
   List<SankeyLinkData> get sankeyLinks => _sankeyLinks;
   int? get selectedIndex => _selectedIndex;
   String? get errorMessage => _errorMessage;
+  
+  // Focus mode getters
+  String? get focusedCategory => _focusedCategory;
+  String? get focusedType => _focusedType;
+
+  // Time comparison getters
+  Map<String, ComparisonData> get categoryComparisons => _categoryComparisons;
+  List<SankeyFlow> get sankeyFlows => _sankeyFlows;
 
   /// Lấy category summary được chọn
   CategorySummary? getSelectedSummary(String type) {
@@ -230,6 +302,34 @@ class AnalysisProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cập nhật focus mode (category và type)
+  void setFocus(String? category, String? type) {
+    // Nếu click vào cùng category/type đang focus thì bỏ focus
+    if (_focusedCategory == category && _focusedType == type) {
+      _focusedCategory = null;
+      _focusedType = null;
+    } else {
+      _focusedCategory = category;
+      _focusedType = type;
+    }
+    
+    // Cập nhật visibility của flows khi focus thay đổi
+    _updateSankeyFlowsVisibility();
+    notifyListeners();
+  }
+
+  /// Đặt focus cho category cụ thể (dành cho Sankey flows)
+  void setFocusedCategory(String? category) {
+    if (_focusedCategory == category) {
+      _focusedCategory = null;
+    } else {
+      _focusedCategory = category;
+    }
+    
+    _updateSankeyFlowsVisibility();
+    notifyListeners();
+  }
+
   /// Tải và xử lý dữ liệu từ TransactionProvider
   Future<void> fetchData() async {
     try {
@@ -242,6 +342,9 @@ class AnalysisProvider with ChangeNotifier {
 
       // Lọc dữ liệu theo khoảng thời gian đã chọn
       final filteredTransactions = _filterTransactionsByDate(allTransactions);
+      
+      // Lọc dữ liệu kỳ trước để so sánh
+      final previousTransactions = _filterTransactionsByPreviousPeriod(allTransactions);
 
       // Kiểm tra nếu không có dữ liệu
       if (filteredTransactions.isEmpty) {
@@ -251,11 +354,18 @@ class AnalysisProvider with ChangeNotifier {
         return;
       }
 
-      // Tính toán dữ liệu - chỉ lặp QUA DANH SÁCH MỘT LẦN
+      // Tính toán dữ liệu kỳ hiện tại
       _calculateData(filteredTransactions);
 
-      // Generate Sankey data
+      // Tính toán dữ liệu kỳ trước để so sánh
+      _calculatePreviousPeriodData(previousTransactions);
+
+      // Tính toán so sánh giữa các kỳ
+      _calculateComparisons();
+
+      // Generate Sankey data và flows
       _generateSankeyData(filteredTransactions);
+      _generateWaterfallSankeyFlows();
 
       // Cập nhật trạng thái thành công
       _state = AnalysisState.loaded;
@@ -320,6 +430,74 @@ class AnalysisProvider with ChangeNotifier {
 
           default:
             return true;
+        }
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
+  /// Lọc giao dịch theo kỳ trước để so sánh
+  List<InputModel> _filterTransactionsByPreviousPeriod(List<InputModel> transactions) {
+    if (_selectedDateOption == 'All') {
+      return []; // Không có kỳ trước cho 'All'
+    }
+
+    return transactions.where((transaction) {
+      if (transaction.date == null) return false;
+
+      try {
+        final DateTime transactionDate =
+            DateFormatUtils.parseInternalDate(transaction.date!);
+
+        switch (_selectedDateOption) {
+          case 'Today':
+            // Ngày hôm qua - so sánh Today vs Yesterday
+            final yesterday = DateTime(todayDT.year, todayDT.month, todayDT.day - 1);
+            return transactionDate.year == yesterday.year &&
+                   transactionDate.month == yesterday.month &&
+                   transactionDate.day == yesterday.day;
+
+          case 'This week':
+            // Tuần trước - 7 ngày trước
+            final startOfLastWeek = startOfThisWeek.subtract(Duration(days: 7));
+            final endOfLastWeek = startOfThisWeek.subtract(Duration(days: 1, seconds: 1));
+            return transactionDate.isAfter(startOfLastWeek.subtract(Duration(seconds: 1))) &&
+                   transactionDate.isBefore(endOfLastWeek.add(Duration(seconds: 1)));
+
+          case 'This month':
+            // Tháng trước
+            final startOfLastMonth = DateTime(
+              startOfThisMonth.month == 1 ? startOfThisMonth.year - 1 : startOfThisMonth.year,
+              startOfThisMonth.month == 1 ? 12 : startOfThisMonth.month - 1,
+              1
+            );
+            final endOfLastMonth = startOfThisMonth.subtract(Duration(seconds: 1));
+            return transactionDate.isAfter(startOfLastMonth.subtract(Duration(seconds: 1))) &&
+                   transactionDate.isBefore(endOfLastMonth.add(Duration(seconds: 1)));
+
+          case 'This quarter':
+            // Quý trước
+            int lastQuarterMonth = startOfThisQuarter.month - 3;
+            int lastQuarterYear = startOfThisQuarter.year;
+            if (lastQuarterMonth <= 0) {
+              lastQuarterMonth += 12;
+              lastQuarterYear -= 1;
+            }
+            final startOfLastQuarter = DateTime(lastQuarterYear, lastQuarterMonth, 1);
+            final endOfLastQuarter = startOfThisQuarter.subtract(Duration(seconds: 1));
+            return transactionDate.isAfter(startOfLastQuarter.subtract(Duration(seconds: 1))) &&
+                   transactionDate.isBefore(endOfLastQuarter.add(Duration(seconds: 1)));
+
+          case 'This year':
+            // Năm trước
+            final startOfLastYear = DateTime(startOfThisYear.year - 1, 1, 1);
+            final endOfLastYear = startOfThisYear.subtract(Duration(seconds: 1));
+            return transactionDate.isAfter(startOfLastYear.subtract(Duration(seconds: 1))) &&
+                   transactionDate.isBefore(endOfLastYear.add(Duration(seconds: 1)));
+
+          default:
+            return false;
         }
       } catch (e) {
         return false;
@@ -624,109 +802,204 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Lấy icon tương ứng cho mỗi category name
   IconData _getIconForCategory(String categoryName) {
-    switch (categoryName.toLowerCase()) {
-      // Food & Dining
-      case 'food':
-        return MdiIcons.food;
-      case 'breakfast':
-        return Icons.free_breakfast_outlined;
-      case 'lunch':
-        return Icons.restaurant_outlined;
-      case 'dinner':
-        return Icons.dinner_dining_outlined;
-      case 'coffee':
-        return Icons.coffee_outlined;
-      case 'restaurant':
-        return Icons.restaurant;
+    return CategoryIconService().getIconForCategory(categoryName);
+  }
 
-      // Transportation
-      case 'transportation':
-        return Icons.directions_car;
-      case 'taxi':
-        return Icons.local_taxi;
-      case 'fuel':
-      case 'gas':
-        return Icons.local_gas_station;
-      case 'parking':
-        return Icons.local_parking;
-
-      // Shopping
-      case 'shopping':
-        return Icons.shopping_bag;
-      case 'daily necessities':
-        return Icons.add_shopping_cart;
-      case 'clothes':
-        return Icons.checkroom;
-      case 'electronics':
-        return Icons.devices;
-
-      // Entertainment
-      case 'entertainment':
-        return Icons.movie_filter;
-      case 'movies':
-      case 'cinema':
-        return Icons.movie_outlined;
-      case 'music':
-        return Icons.music_note;
-      case 'games':
-        return Icons.sports_esports;
-
-      // Bills & Utilities
-      case 'electricity':
-        return Icons.electric_bolt;
-      case 'water':
-        return Icons.water_drop;
-      case 'internet':
-        return IcoFontIcons.globe;
-      case 'phone':
-        return Icons.phone;
-      case 'rent':
-        return Icons.home;
-
-      // Health & Fitness
-      case 'health':
-      case 'medical':
-        return Icons.medical_services;
-      case 'fitness':
-      case 'gym':
-        return Icons.fitness_center;
-      case 'pharmacy':
-        return Icons.local_pharmacy;
-
-      // Education
-      case 'education':
-      case 'school':
-        return Icons.school;
-      case 'books':
-        return Icons.menu_book;
-
-      // Income categories
-      case 'salary':
-        return Icons.payments;
-      case 'business':
-        return Icons.business_center;
-      case 'investment':
-        return Icons.trending_up;
-      case 'gift':
-        return Icons.card_giftcard;
-      case 'bonus':
-        return Icons.money;
-
-      // Other
-      case 'travel':
-        return Icons.flight;
-      case 'gift & donation':
-        return Icons.volunteer_activism;
-      case 'pets':
-        return Icons.pets;
-      case 'beauty':
-        return Icons.face;
-      case 'insurance':
-        return Icons.verified_user;
-
-      // Default
-      default:
-        return Icons.category_outlined;
+  /// Tính toán dữ liệu kỳ trước để so sánh
+  void _calculatePreviousPeriodData(List<InputModel> transactions) {
+    if (transactions.isEmpty) {
+      _previousIncomeSummaries = [];
+      _previousExpenseSummaries = [];
+      return;
     }
+
+    // Tính toán tương tự như _calculateData nhưng lưu vào previous
+    final Map<String, double> expenseMap = {};
+    final Map<String, double> incomeMap = {};
+
+    for (final transaction in transactions) {
+      final amount = transaction.amount ?? 0.0;
+      final category = transaction.category ?? 'Unknown';
+
+      if (transaction.type == 'Expense') {
+        expenseMap[category] = (expenseMap[category] ?? 0.0) + amount;
+      } else if (transaction.type == 'Income') {
+        incomeMap[category] = (incomeMap[category] ?? 0.0) + amount;
+      }
+    }
+
+    _previousExpenseSummaries = _mapToSummaryList(expenseMap, 'Expense');
+    _previousIncomeSummaries = _mapToSummaryList(incomeMap, 'Income');
+  }
+
+  /// Tính toán so sánh giữa kỳ hiện tại và kỳ trước
+  void _calculateComparisons() {
+    _categoryComparisons.clear();
+
+    // So sánh expense categories
+    for (final currentSummary in _expenseSummaries) {
+      final category = currentSummary.category;
+      final currentAmount = currentSummary.totalAmount;
+      
+      final previousSummary = _previousExpenseSummaries
+          .firstWhereOrNull((s) => s.category == category);
+      final previousAmount = previousSummary?.totalAmount ?? 0.0;
+
+      if (previousAmount > 0) {
+        final changePercentage = 
+            (currentAmount - previousAmount) / previousAmount * 100;
+        final isPositiveChange = changePercentage <= 0; // Chi tiêu giảm = tích cực
+        
+        _categoryComparisons[category] = ComparisonData(
+          currentAmount: currentAmount,
+          previousAmount: previousAmount,
+          changePercentage: changePercentage.abs(),
+          isPositiveChange: isPositiveChange,
+          hasValidComparison: true,
+        );
+      } else {
+        _categoryComparisons[category] = ComparisonData.noComparison(currentAmount);
+      }
+    }
+
+    // So sánh income categories
+    for (final currentSummary in _incomeSummaries) {
+      final category = currentSummary.category;
+      final currentAmount = currentSummary.totalAmount;
+      
+      final previousSummary = _previousIncomeSummaries
+          .firstWhereOrNull((s) => s.category == category);
+      final previousAmount = previousSummary?.totalAmount ?? 0.0;
+
+      if (previousAmount > 0) {
+        final changePercentage = 
+            (currentAmount - previousAmount) / previousAmount * 100;
+        final isPositiveChange = changePercentage >= 0; // Thu nhập tăng = tích cực
+        
+        _categoryComparisons[category] = ComparisonData(
+          currentAmount: currentAmount,
+          previousAmount: previousAmount,
+          changePercentage: changePercentage.abs(),
+          isPositiveChange: isPositiveChange,
+          hasValidComparison: true,
+        );
+      } else {
+        _categoryComparisons[category] = ComparisonData.noComparison(currentAmount);
+      }
+    }
+  }
+
+  /// TẠO SANKEY FLOWS THEO LOGIC "THÁC NƯỚC" (WATERFALL) - TRỰC QUAN HƠN
+  void _generateWaterfallSankeyFlows() {
+    _sankeyFlows.clear();
+
+    if (_incomeSummaries.isEmpty || _expenseSummaries.isEmpty || _totalExpense <= 0) {
+      _updateSankeyFlowsVisibility();
+      return;
+    }
+
+    // Tạo bản sao và sắp xếp: Lớn nhất trước
+    final sortedIncomes = List<CategorySummary>.from(_incomeSummaries)
+      ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+    final sortedExpenses = List<CategorySummary>.from(_expenseSummaries)
+      ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+
+    // Dùng Map để theo dõi số tiền còn lại của mỗi nguồn thu/chi
+    final remainingIncomes = {for (var item in sortedIncomes) item.category: item.totalAmount};
+    final remainingExpenses = {for (var item in sortedExpenses) item.category: item.totalAmount};
+    
+    final List<SankeyFlow> generatedFlows = [];
+
+    // Lặp qua từng KHOẢN CHI
+    for (final expense in sortedExpenses) {
+      // Lặp qua từng NGUỒN THU để "thanh toán" cho khoản chi này
+      for (final income in sortedIncomes) {
+        // Nếu khoản chi này đã được thanh toán hết, chuyển sang khoản chi tiếp theo
+        if (remainingExpenses[expense.category]! <= 0.01) {
+          break; 
+        }
+        // Nếu nguồn thu này đã cạn, bỏ qua
+        if (remainingIncomes[income.category]! <= 0.01) {
+          continue; 
+        }
+
+        // Xác định số tiền có thể chảy từ nguồn thu hiện tại đến khoản chi hiện tại
+        final flowAmount = [
+          remainingIncomes[income.category]!,
+          remainingExpenses[expense.category]!,
+        ].reduce((a, b) => a < b ? a : b); // Lấy giá trị nhỏ hơn
+
+        if (flowAmount > 0.01) {
+          generatedFlows.add(SankeyFlow(
+            fromCategory: income.category,
+            toCategory: expense.category,
+            amount: flowAmount,
+            sourceColor: income.color,
+            targetColor: expense.color,
+            isPrimary: false, // Sẽ cập nhật sau
+          ));
+
+          // Cập nhật số tiền còn lại
+          remainingIncomes[income.category] = remainingIncomes[income.category]! - flowAmount;
+          remainingExpenses[expense.category] = remainingExpenses[expense.category]! - flowAmount;
+        }
+      }
+    }
+    
+    // Thêm flows cho số dư (nếu còn tiền thừa từ các nguồn thu)
+    for (final income in sortedIncomes) {
+      final remaining = remainingIncomes[income.category]!;
+      if (remaining > 0.01) {
+        generatedFlows.add(SankeyFlow(
+          fromCategory: income.category,
+          toCategory: 'Balance', // Kết nối đến mục "Số dư"
+          amount: remaining,
+          sourceColor: income.color,
+          targetColor: Colors.green, // Màu xanh cho số dư
+          isPrimary: false,
+        ));
+      }
+    }
+    
+    // Thêm tất cả flows với độ dày đồng nhất (bỏ phân biệt primary/secondary)
+    if (generatedFlows.isNotEmpty) {
+      for (final flow in generatedFlows) {
+        _sankeyFlows.add(SankeyFlow(
+            fromCategory: flow.fromCategory,
+            toCategory: flow.toCategory,
+            amount: flow.amount,
+            sourceColor: flow.sourceColor,
+            targetColor: flow.targetColor,
+            isPrimary: true, // Tất cả flows đều là primary để có độ dày đồng nhất
+            isVisible: true, // Sẽ được cập nhật bởi _updateSankeyFlowsVisibility
+        ));
+      }
+    }
+    
+    _updateSankeyFlowsVisibility();
+  }
+
+  /// Cập nhật Sankey flows khi focus mode thay đổi
+  void _updateSankeyFlowsVisibility() {
+    for (int i = 0; i < _sankeyFlows.length; i++) {
+      final flow = _sankeyFlows[i];
+      _sankeyFlows[i] = SankeyFlow(
+        fromCategory: flow.fromCategory,
+        toCategory: flow.toCategory,
+        amount: flow.amount,
+        sourceColor: flow._sourceColor,  // Sử dụng private field
+        targetColor: flow._targetColor,  // Sử dụng private field
+        isPrimary: flow.isPrimary,      // Sử dụng private field
+        isVisible: _shouldShowFlow(flow.fromCategory, flow.toCategory),
+      );
+    }
+  }
+
+  /// Kiểm tra có nên hiển thị flow này không (cho focus mode)
+  bool _shouldShowFlow(String fromCategory, String toCategory) {
+    if (_focusedCategory == null) return true;
+    
+    // Nếu đang focus vào một category, chỉ hiển thị flows liên quan
+    return fromCategory == _focusedCategory || toCategory == _focusedCategory;
   }
 }

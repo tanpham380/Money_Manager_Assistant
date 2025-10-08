@@ -10,7 +10,7 @@ import '../classes/transaction_list_item.dart';
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../services/alert_service.dart';
-import '../utils/category_icon_helper.dart';
+import '../services/category_icon_service.dart';
 import '../provider/transaction_provider.dart';
 import 'edit.dart';
 
@@ -253,7 +253,7 @@ class DailyTransactionDetail extends StatelessWidget {
                               builder: (context) => Edit(
                                 inputModel: transaction,
                                 categoryIcon:
-                                    CategoryIconHelper.getIconForCategory(
+                                    CategoryIconService().getIconForCategory(
                                   transaction.category ??
                                       getTranslated(context, 'Category') ??
                                       'Category',

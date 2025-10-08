@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:money_assistant/project/utils/category_icon_helper.dart';
+import 'package:money_assistant/project/services/category_icon_service.dart';
 import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -174,7 +174,7 @@ class DailyTransactionGroup extends StatelessWidget {
                               builder: (context) => Edit(
                                 inputModel: transaction,
                                 categoryIcon:
-                                    CategoryIconHelper.getIconForCategory(
+                                    CategoryIconService().getIconForCategory(
                                   transaction.category ?? 'Category',
                                 ),
                               ),
