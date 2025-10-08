@@ -25,6 +25,11 @@ class SankeyPainter extends CustomPainter {
       return;
     }
 
+    // ⚠️ SKIP PAINT nếu chưa có positions - tránh vẽ fallback khi đang load
+    if (itemPositions.isEmpty) {
+      return;
+    }
+
     // Tính max amount để normalize độ dày stroke
     final maxAmount = visibleFlows
         .map((flow) => flow.amount)
@@ -57,8 +62,17 @@ class SankeyPainter extends CustomPainter {
     final sourcePos = itemPositions['income_${flow.fromCategory}'];
     final targetPos = itemPositions['expense_${flow.toCategory}'];
     
-    if (sourcePos == null || targetPos == null) {
-      // Fallback: sử dụng calculation cũ nếu không có position data
+    // Validate positions - Kiểm tra kỹ hơn
+    final hasValidPositions = sourcePos != null && 
+                              targetPos != null &&
+                              sourcePos.dx.isFinite && 
+                              sourcePos.dy.isFinite &&
+                              targetPos.dx.isFinite && 
+                              targetPos.dy.isFinite &&
+                              targetPos.dx > sourcePos.dx; // Target phải ở bên phải source
+    
+    if (!hasValidPositions) {
+      // Fallback: sử dụng calculation cũ nếu không có position data hợp lệ
       _drawFlowFallback(canvas, size, flow, maxAmount);
       return;
     }
@@ -89,11 +103,11 @@ class SankeyPainter extends CustomPainter {
       stops: const [0.0, 0.5, 1.0], // Vị trí các màu: đầu, giữa, cuối
     );
 
-    // Tạo paint với gradient shader
+    // Tạo paint với gradient shader - validate rect bounds
     final rect = Rect.fromLTWH(
       sourcePos.dx, 
       sourcePos.dy - strokeWidth / 2,
-      targetPos.dx - sourcePos.dx,
+      (targetPos.dx - sourcePos.dx).clamp(0.0, double.infinity),
       strokeWidth,
     );
     
@@ -131,6 +145,7 @@ class SankeyPainter extends CustomPainter {
   }
 
   /// Fallback method sử dụng calculation cũ khi không có position data
+  /// Được cải thiện để tính toán chính xác hơn
   void _drawFlowFallback(Canvas canvas, Size size, SankeyFlow flow, double maxAmount) {
     // Tìm index của source và target categories
     final sourceIndex = incomeCategories.indexWhere((cat) => cat.category == flow.fromCategory);
@@ -138,37 +153,56 @@ class SankeyPainter extends CustomPainter {
 
     if (sourceIndex == -1 || targetIndex == -1) return;
 
-    // Tính vị trí theo method cũ
-    final totalIncomeItems = incomeCategories.length.clamp(1, 10);
-    final totalExpenseItems = expenseCategories.length.clamp(1, 10);
-    
-    final itemSpacing = 6.0;
-    final itemHeight = (size.height - (totalIncomeItems - 1) * itemSpacing) / totalIncomeItems;
-    final expenseItemHeight = (size.height - (totalExpenseItems - 1) * itemSpacing) / totalExpenseItems;
-    
-    final sourceY = sourceIndex * (itemHeight + itemSpacing) + itemHeight / 2;
-    final targetY = targetIndex * (expenseItemHeight + itemSpacing) + expenseItemHeight / 2;
-    final startX = 0.0;
-    final endX = size.width;
+    // Validate canvas size
+    if (!size.width.isFinite || !size.height.isFinite || size.width <= 0 || size.height <= 0) {
+      return;
+    }
 
-    final normalizedAmount = flow.amount / maxAmount;
+    // Tính vị trí với spacing và padding hợp lý hơn
+    final totalIncomeItems = incomeCategories.length.clamp(1, 20);
+    final totalExpenseItems = expenseCategories.length.clamp(1, 20);
+    
+    // Dynamic spacing dựa trên số lượng items
+    final itemSpacing = totalIncomeItems > 10 ? 4.0 : 6.0;
+    final expenseSpacing = totalExpenseItems > 10 ? 4.0 : 6.0;
+    
+    // Tính chiều cao của mỗi item
+    final itemHeight = (size.height - (totalIncomeItems - 1) * itemSpacing) / totalIncomeItems;
+    final expenseItemHeight = (size.height - (totalExpenseItems - 1) * expenseSpacing) / totalExpenseItems;
+    
+    // Tính vị trí Y (center của mỗi item)
+    final sourceY = (sourceIndex * (itemHeight + itemSpacing) + itemHeight / 2).clamp(0.0, size.height);
+    final targetY = (targetIndex * (expenseItemHeight + expenseSpacing) + expenseItemHeight / 2).clamp(0.0, size.height);
+    
+    // X positions - thêm một chút offset để tránh overlap với items
+    final startX = size.width * 0.05; // 5% offset từ bên trái
+    final endX = size.width * 0.95;   // 95% để tránh overflow
+
+    // Tính độ dày của stroke
+    final normalizedAmount = (flow.amount / maxAmount).clamp(0.0, 1.0);
     final strokeWidth = flow.isPrimary 
-        ? (1.0 + normalizedAmount * 2.0).clamp(1.0, 3.0) // Giảm xuống 1-3px
-        : (0.5 + normalizedAmount * 1.0).clamp(0.5, 1.5); // Giảm xuống 0.5-1.5px
+        ? (1.0 + normalizedAmount * 2.0).clamp(1.0, 3.0)
+        : (0.5 + normalizedAmount * 1.0).clamp(0.5, 1.5);
 
     // Tạo gradient với blend màu ở giữa
     final gradient = LinearGradient(
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
       colors: [
-        flow.sourceColor.withValues(alpha: 0.7),
-        Color.lerp(flow.sourceColor, flow.targetColor, 0.5)!.withValues(alpha: 0.6),
-        flow.targetColor.withValues(alpha: 0.7),
+        flow.sourceColor.withValues(alpha: 0.6),
+        Color.lerp(flow.sourceColor, flow.targetColor, 0.5)!.withValues(alpha: 0.5),
+        flow.targetColor.withValues(alpha: 0.6),
       ],
       stops: const [0.0, 0.5, 1.0],
     );
 
-    final rect = Rect.fromLTWH(startX, sourceY - strokeWidth / 2, endX - startX, strokeWidth);
+    final rect = Rect.fromLTWH(
+      startX, 
+      sourceY - strokeWidth / 2, 
+      (endX - startX).clamp(0.0, double.infinity), 
+      strokeWidth
+    );
+    
     final paint = Paint()
       ..shader = gradient.createShader(rect)
       ..style = PaintingStyle.stroke
@@ -176,11 +210,11 @@ class SankeyPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Tạo cubic Bezier path
+    // Tạo cubic Bezier path với smooth curve
     final path = Path();
     path.moveTo(startX, sourceY);
     
-    final distance = endX - startX;
+    final distance = (endX - startX).clamp(0.0, double.infinity);
     final controlDistance = distance * 0.6;
     final controlPoint1 = Offset(startX + controlDistance, sourceY);
     final controlPoint2 = Offset(endX - controlDistance, targetY);

@@ -842,10 +842,18 @@ class _CalendarContentState extends State<_CalendarContent> {
     }
 
     return Expanded(
-      child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+      child: ListView.separated(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: EdgeInsets.only(
+          left: 6.w,
+          right: 6.w,
+          top: 4.h,
+          bottom: 12.h, // Thêm padding bottom để không bị che
+        ),
         itemCount: groupedTransactions.length,
+        separatorBuilder: (context, index) => SizedBox(height: 4.h), // Thêm separator nhỏ
         itemBuilder: (context, index) {
           final entry = groupedTransactions[index];
           // Auto-expand first group (today or most recent)

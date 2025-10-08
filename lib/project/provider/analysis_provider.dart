@@ -17,7 +17,6 @@ enum AnalysisState {
 
 /// Loại biểu đồ hiển thị
 enum ChartType {
-  // bar, // Biểu đồ cột
   line, // Biểu đồ đường (trend)
   sankey // Sơ đồ Sankey
 }
@@ -139,7 +138,7 @@ class AnalysisProvider with ChangeNotifier {
   AnalysisState _state = AnalysisState.initial;
   String _selectedDateOption = 'All';
   String _selectedType = 'Expense'; // Mặc định là Expense
-  ChartType _selectedChartType = ChartType.sankey; // Mặc định là Sankey thay vì Bar
+  ChartType _selectedChartType = ChartType.sankey; // Mặc định là Sankey
 
   // Dữ liệu đã được tính toán
   double _totalIncome = 0.0;
@@ -201,6 +200,9 @@ class AnalysisProvider with ChangeNotifier {
   // Time comparison getters
   Map<String, ComparisonData> get categoryComparisons => _categoryComparisons;
   List<SankeyFlow> get sankeyFlows => _sankeyFlows;
+
+  // TransactionProvider delegate
+  List<InputModel> get allTransactions => _transactionProvider.allTransactions;
 
   /// Lấy category summary được chọn
   CategorySummary? getSelectedSummary(String type) {

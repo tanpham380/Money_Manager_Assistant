@@ -225,5 +225,19 @@
   "Money Flow": "Money Flow",
   "more": "more",
   "more income sources": "more income sources",
-  "more expense categories": "more expense categories"
+  "more expense categories": "more expense categories",
+  "Category Trends": "Category Trends",
+  "Last 7 days": "Last 7 days",
+  "Last 4 weeks": "Last 4 weeks", 
+  "Last 6 months": "Last 6 months",
+  "Last 4 quarters": "Last 4 quarters",
+  "Last 3 years": "Last 3 years",
+  "Surrounding 5 weeks": "Surrounding 5 weeks",
+  "Surrounding 5 months": "Surrounding 5 months", 
+  "Surrounding 5 quarters": "Surrounding 5 quarters",
+  "Surrounding 5 years": "Surrounding 5 years",
+  "Quarter": "Quarter",
+  "Year": "Year",
+  "All time": "All time",
+  "No trend data": "No trend data"
 }

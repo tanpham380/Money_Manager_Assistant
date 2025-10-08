@@ -251,6 +251,20 @@
   "Deficit": "Thâm hụt",
   "No sankey data available": "Không có dữ liệu dòng tiền",
   "Add transactions to see flow analysis": "Thêm giao dịch để xem phân tích",
-  "Cash Flow Balance": "Cân đối dòng tiền"
+  "Cash Flow Balance": "Cân đối dòng tiền",
+  "Category Trends": "Xu hướng theo Danh mục",
+  "Last 7 days": "7 ngày gần nhất",
+  "Last 4 weeks": "4 tuần gần nhất",
+  "Last 6 months": "6 tháng gần nhất", 
+  "Last 4 quarters": "4 quarters gần nhất",
+  "Last 3 years": "3 năm gần nhất",
+  "Surrounding 5 weeks": "5 tuần xung quanh",
+  "Surrounding 5 months": "5 tháng xung quanh",
+  "Surrounding 5 quarters": "5 quarters xung quanh", 
+  "Surrounding 5 years": "5 năm xung quanh",
+  "Quarter": "Quý",
+  "Year": "Năm", 
+  "All time": "Tất cả",
+  "No trend data": "Không có dữ liệu xu hướng"
 }
 

@@ -20,6 +20,31 @@ class DateFormatUtils {
     return userDateFormat.format(date);
   }
 
+  /// Xác định date format cho chart axis với localization
+  static DateFormat getChartDateFormat(DateTime samplePeriod, BuildContext context) {
+    // Lấy locale từ SharedPrefs (cách chính xác)
+    final locale = sharedPrefs.getLocale();
+    final localeCode = locale.languageCode; // 'en' hoặc 'vi'
+    
+    // Xác định format dựa theo khoảng cách thời gian
+    final now = DateTime.now();
+    final diff = now.difference(samplePeriod).inDays.abs();
+    
+    if (diff < 7) {
+      // Trong tuần: hiển thị ngày
+      return DateFormat.E(localeCode); // Thứ 2, Thứ 3...
+    } else if (diff < 35) {
+      // Trong tháng: hiển thị ngày/tháng  
+      return DateFormat.MMMd(localeCode); // Oct 8, Th10 8
+    } else if (diff < 400) {
+      // Trong năm: hiển thị tháng/năm
+      return DateFormat.MMM(localeCode); // Oct, Th10
+    } else {
+      // Nhiều năm: hiển thị năm
+      return DateFormat.y(localeCode); // 2024
+    }
+  }
+
   // ==================== INTERNAL FORMATS ====================
   /// Format internal cho key tháng (yyyy-MM) - dùng cho grouping và sorting
   static DateFormat get monthKeyFormat => DateFormat('yyyy-MM');

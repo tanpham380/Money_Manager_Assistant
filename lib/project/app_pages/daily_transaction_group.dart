@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../classes/constants.dart';
 import '../classes/input_model.dart';
 import '../classes/transaction_list_item.dart';
-import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';
 import '../utils/date_format_utils.dart';
 import '../provider/transaction_provider.dart';
@@ -65,89 +64,96 @@ class DailyTransactionGroup extends StatelessWidget {
 
     // SỬ DỤNG CONTAINER thay vì Card để thống nhất với TransactionListItem
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      margin: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h), // Giảm margin
       decoration: BoxDecoration(
-        color: Colors.white, // Màu trắng để highlight
-        borderRadius: BorderRadius.circular(16.r), // Bo tròn đồng nhất với item
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r), // Giảm bo tròn cho gọn hơn
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04), // Thêm shadow nhẹ
+            blurRadius: 4.r,
+            offset: Offset(0, 2.h),
+          ),
+        ],
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: initiallyExpanded,
-          tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          childrenPadding: EdgeInsets.only(bottom: 12.h),
+          tilePadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h), // Giảm padding
+          childrenPadding: EdgeInsets.only(
+            bottom: 6.h, // Giảm bottom padding
+            left: 4.w,
+            right: 4.w,
+          ),
           leading: Container(
-            padding: EdgeInsets.all(8.w),
+            padding: EdgeInsets.all(6.w), // Giảm padding
             decoration: BoxDecoration(
               color: Theme.of(context)
                   .colorScheme
                   .primary
-                  .withValues(alpha: 0.1), // Use theme primary
-              borderRadius: BorderRadius.circular(8.r),
+                  .withValues(alpha: 0.08), // Nhạt màu background
+              borderRadius: BorderRadius.circular(6.r), // Giảm bo tròn
             ),
             child: Icon(
               Icons.calendar_today_rounded,
-              color: Theme.of(context).colorScheme.primary, // Use theme primary
-              size: 20.sp,
+              color: Theme.of(context).colorScheme.primary,
+              size: 16.sp, // Giảm icon size
             ),
           ),
           title: Text(
             dateLabel,
             style: GoogleFonts.poppins(
-              fontSize: 15.sp,
+              fontSize: 13.sp, // Giảm từ 15sp
               fontWeight: FontWeight.w600,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface, // Use theme onSurface
+              color: Theme.of(context).colorScheme.onSurface,
+              height: 1.2, // Thêm line height
             ),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 4.h),
+              SizedBox(height: 2.h), // Giảm spacing
               Text(
                 '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'transaction' : 'transactions') ?? (transactions.length == 1 ? 'transaction' : 'transactions')}',
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontSize: 10.sp, // Giảm từ 12sp
                   color: Theme.of(context)
                       .colorScheme
                       .onSurface
-                      .withValues(alpha: 0.6), // Use theme onSurface with alpha
+                      .withValues(alpha: 0.5), // Nhạt màu hơn
+                  height: 1.2,
                 ),
               ),
-              SizedBox(height: 12.h),
-              // Summary: Thu nhập, Chi phí, Cân đối
+              SizedBox(height: 8.h), // Giảm spacing
+              // Summary: Thu nhập, Chi phí, Cân đối - HORIZONTAL COMPACT
               Row(
                 children: [
                   // Thu nhập
                   Expanded(
-                    child: _buildSummaryItem(
+                    child: _buildCompactSummary(
                       context,
                       label: 'Income',
                       amount: totalIncome,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary, // Use theme secondary
+                      color: Theme.of(context).colorScheme.secondary,
                       icon: Icons.arrow_downward_rounded,
                     ),
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 4.w), // Giảm spacing
                   // Chi phí
                   Expanded(
-                    child: _buildSummaryItem(
+                    child: _buildCompactSummary(
                       context,
                       label: 'Expense',
                       amount: totalExpense,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .error, // Use theme error
+                      color: Theme.of(context).colorScheme.error,
                       icon: Icons.arrow_upward_rounded,
                     ),
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 4.w),
                   // Cân đối
                   Expanded(
-                    child: _buildSummaryItem(
+                    child: _buildCompactSummary(
                       context,
                       label: 'Balance',
                       amount: balance,
@@ -160,11 +166,24 @@ class DailyTransactionGroup extends StatelessWidget {
             ],
           ),
           children: [
+            // Subtle divider khi expanded
+            Container(
+              height: 1.h,
+              margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
             // Danh sách các transactions - hiển thị khi mở rộng
             ...transactions
                 .map((transaction) => Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h), // Giảm padding
                       child: TransactionListItem(
                         transaction: transaction,
                         onTap: () async {
@@ -196,7 +215,8 @@ class DailyTransactionGroup extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(
+  /// Compact summary widget - Horizontal layout
+  Widget _buildCompactSummary(
     BuildContext context, {
     required String label,
     required double amount,
@@ -204,39 +224,52 @@ class DailyTransactionGroup extends StatelessWidget {
     required IconData icon,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 6.w),
+      padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 4.w), // Giảm padding
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8.r),
+        color: color.withValues(alpha: 0.06), // Nhạt màu background
+        borderRadius: BorderRadius.circular(6.r), // Giảm bo tròn
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 18.sp,
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            getTranslated(context, label) ?? label,
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.7), // Use theme onSurface with alpha
-              fontWeight: FontWeight.w500,
-            ),
+          // Icon và Label trên cùng 1 row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: color.withValues(alpha: 0.8),
+                size: 12.sp, // Icon nhỏ hơn
+              ),
+              SizedBox(width: 3.w),
+              Flexible(
+                child: Text(
+                  getTranslated(context, label) ?? label,
+                  style: TextStyle(
+                    fontSize: 9.sp, // Font nhỏ hơn
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 2.h),
+          // Amount ở dưới
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              '${format(amount.abs())} $currency',
+              '${format(amount.abs())}',
               style: GoogleFonts.aBeeZee(
-                fontSize: 13.sp,
+                fontSize: 11.sp, // Giảm từ 13sp
                 fontWeight: FontWeight.bold,
                 color: color,
+                height: 1,
               ),
             ),
           ),

@@ -40,65 +40,105 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   final Map<String, GlobalKey> _incomeKeys = {};
   final Map<String, GlobalKey> _expenseKeys = {};
   final Map<String, Offset> _itemPositions = {};
-  final GlobalKey _painterKey = GlobalKey(); // Key cho CustomPaint
+  
+  // ⚠️ KHÔNG dùng final! Key phải được tạo mới mỗi lần widget rebuild
+  late GlobalKey _painterKey;
 
-
-  /// Lấy hoặc tạo GlobalKey cho income category
-  GlobalKey _getIncomeKey(String category) {
-    return _incomeKeys.putIfAbsent(category, () => GlobalKey());
+  @override
+  void initState() {
+    super.initState();
+    // Tạo painter key MỚI cho widget instance này
+    _painterKey = GlobalKey();
+    
+    // Schedule update SAU KHI build hoàn tất và các GlobalKeys đã được tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateItemPositions();
+      }
+    });
   }
 
-  /// Lấy hoặc tạo GlobalKey cho expense category
-  GlobalKey _getExpenseKey(String category) {
-    return _expenseKeys.putIfAbsent(category, () => GlobalKey());
+  @override
+  void didUpdateWidget(SankeyChartAnalysis oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update positions khi widget được update (nhưng không dispose)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateItemPositions();
+      }
+    });
   }
 
-  /// Cập nhật vị trí của các category items
-void _updateItemPositions() {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    // Tìm RenderBox của painter
+  /// Lấy hoặc tạo GlobalKey cho income/expense category
+  GlobalKey _getKey(String category, String type) {
+    final map = type == 'Income' ? _incomeKeys : _expenseKeys;
+    return map.putIfAbsent(category, () => GlobalKey());
+  }
+
+  /// Cập nhật vị trí của các category items một cách an toàn
+  void _updateItemPositions() {
+    if (!mounted) return;
+
     final painterRenderBox = _painterKey.currentContext?.findRenderObject() as RenderBox?;
-    if (painterRenderBox == null) return;
+    
+    if (painterRenderBox == null || !painterRenderBox.hasSize) {
+      // Painter chưa ready, thử lại
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updateItemPositions();
+      });
+      return;
+    }
 
-    _itemPositions.clear();
+    // Kiểm tra có GlobalKeys không - QUAN TRỌNG!
+    if (_incomeKeys.isEmpty && _expenseKeys.isEmpty) {
+      // Chưa có keys nào, thử lại sau khi build tạo keys
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updateItemPositions();
+      });
+      return;
+    }
 
-    // Cập nhật vị trí income items
-    for (var entry in _incomeKeys.entries) {
-      final renderBox = entry.value.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox != null) {
-        final globalPosition = renderBox.localToGlobal(Offset.zero);
-        // Chuyển đổi global position sang local của painter
-        final localPosition = painterRenderBox.globalToLocal(globalPosition);
-        final size = renderBox.size;
+    final newPositions = <String, Offset>{};
 
-        _itemPositions['income_${entry.key}'] = Offset(
-          localPosition.dx + size.width, // Cạnh phải của mục income
-          localPosition.dy + size.height / 2, // Trung tâm theo chiều dọc
-        );
+    void calculatePositions(Map<String, GlobalKey> keys, String prefix) {
+      for (var entry in keys.entries) {
+        final renderBox = entry.value.currentContext?.findRenderObject() as RenderBox?;
+        if (renderBox != null && renderBox.hasSize && renderBox.attached) {
+          try {
+            final globalPosition = renderBox.localToGlobal(Offset.zero);
+            final localPosition = painterRenderBox.globalToLocal(globalPosition);
+            final size = renderBox.size;
+            final key = '$prefix${entry.key}';
+
+            if (prefix == 'income_') {
+              newPositions[key] = Offset(
+                localPosition.dx + size.width, // Cạnh phải
+                localPosition.dy + size.height / 2, // Trung tâm
+              );
+            } else {
+              newPositions[key] = Offset(
+                localPosition.dx, // Cạnh trái
+                localPosition.dy + size.height / 2, // Trung tâm
+              );
+            }
+          } catch (e) {
+            debugPrint("Could not calculate position for ${entry.key}: $e");
+          }
+        }
       }
     }
 
-    // Cập nhật vị trí expense items (tương tự)
-    for (var entry in _expenseKeys.entries) {
-      final renderBox = entry.value.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox != null) {
-        final globalPosition = renderBox.localToGlobal(Offset.zero);
-        // Chuyển đổi global position sang local của painter
-        final localPosition = painterRenderBox.globalToLocal(globalPosition);
-        final size = renderBox.size;
-        
-        _itemPositions['expense_${entry.key}'] = Offset(
-          localPosition.dx, // Cạnh trái của mục expense
-          localPosition.dy + size.height / 2, // Trung tâm theo chiều dọc
-        );
-      }
-    }
+    calculatePositions(_incomeKeys, 'income_');
+    calculatePositions(_expenseKeys, 'expense_');
 
-    if (mounted) {
-      setState(() {}); // Kích hoạt vẽ lại với positions mới
+    // Chỉ setState nếu CÓ positions mới và KHÁC với cũ
+    if (newPositions.isNotEmpty && newPositions.toString() != _itemPositions.toString()) {
+      setState(() {
+        _itemPositions.clear();
+        _itemPositions.addAll(newPositions);
+      });
     }
-  });
-}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,16 +150,25 @@ void _updateItemPositions() {
       return _buildEmptyChartState(context);
     }
 
-    // Clear và rebuild keys khi categories thay đổi
+    // Get current categories
     final currentIncomeCategories = provider.incomeSummaries.map((s) => s.category).toSet();
     final currentExpenseCategories = provider.expenseSummaries.map((s) => s.category).toSet();
     
-    // Remove keys cho categories không còn tồn tại
+    // Remove keys for categories that no longer exist
     _incomeKeys.removeWhere((key, value) => !currentIncomeCategories.contains(key));
     _expenseKeys.removeWhere((key, value) => !currentExpenseCategories.contains(key));
-
-    // Cập nhật vị trí các items sau khi build
-    _updateItemPositions();
+    
+    // Remove stale position data
+    _itemPositions.removeWhere((key, value) {
+      if (key.startsWith('income_')) {
+        final category = key.substring('income_'.length);
+        return !currentIncomeCategories.contains(category);
+      } else if (key.startsWith('expense_')) {
+        final category = key.substring('expense_'.length);
+        return !currentExpenseCategories.contains(category);
+      }
+      return false;
+    });
 
     return SingleChildScrollView(
       child: Container(
@@ -226,17 +275,26 @@ void _updateItemPositions() {
       );
     }
 
-    // Hiển thị flows khi có dữ liệu hợp lý
-    return CustomPaint(
-      key: _painterKey,
-      painter: SankeyPainter(
-        flows: provider.sankeyFlows,
-        incomeCategories: provider.incomeSummaries,
-        expenseCategories: provider.expenseSummaries,
-        itemPositions: _itemPositions, // Truyền position data
-        onCategoryTap: (category) {
-          provider.setFocusedCategory(category);
-        },
+    // Hiển thị flows với CustomPaint - render luôn để có RenderBox
+    return SizedBox(
+      width: double.infinity,
+      height: 400, // ⚠️ FORCE HEIGHT để tránh Canvas height = 0
+      child: CustomPaint(
+        key: _painterKey,
+        size: Size.infinite,
+        painter: SankeyPainter(
+          flows: provider.sankeyFlows,
+          incomeCategories: provider.incomeSummaries,
+          expenseCategories: provider.expenseSummaries,
+          itemPositions: _itemPositions, // Painter sẽ check empty và skip paint
+          onCategoryTap: (category) {
+            provider.setFocusedCategory(category);
+          },
+        ),
+        // Hiển thị loading overlay nếu chưa có positions
+        child: _itemPositions.isEmpty 
+          ? Center(child: Text('Loading...', style: TextStyle(color: Colors.grey)))
+          : null,
       ),
     );
   }
@@ -356,22 +414,20 @@ void _updateItemPositions() {
     // Lấy GlobalKey cho category để track position
     GlobalKey? categoryKey;
     if (!isBalanceItem) {
-      if (type == 'Income') {
-        categoryKey = _getIncomeKey(summary.category);
-      } else if (type == 'Expense') {
-        categoryKey = _getExpenseKey(summary.category);
-      }
+      categoryKey = _getKey(summary.category, type);
     }
 
-    return GestureDetector(
-      key: categoryKey, // Sử dụng GlobalKey để track position
-      onTap: (!isBalanceItem && widget.onCategoryTap != null) ? () {
-        widget.onCategoryTap!(summary.category, type);
-      } : null,
-      onLongPress: (!isBalanceItem && widget.onCategoryLongPress != null) ? () {
-        widget.onCategoryLongPress!(summary.category, type);
-      } : null,
-      child: AnimatedOpacity(
+    return Container(
+      // Wrap trong Container với GlobalKey để track position
+      key: categoryKey,
+      child: GestureDetector(
+        onTap: (!isBalanceItem && widget.onCategoryTap != null) ? () {
+          widget.onCategoryTap!(summary.category, type);
+        } : null,
+        onLongPress: (!isBalanceItem && widget.onCategoryLongPress != null) ? () {
+          widget.onCategoryLongPress!(summary.category, type);
+        } : null,
+        child: AnimatedOpacity(
         duration: Duration(milliseconds: 250),
         opacity: shouldDim ? 0.3 : 1.0,
         child: Container(
@@ -469,9 +525,10 @@ void _updateItemPositions() {
                 ),
             ],
           ),
+        ), // Container (inner - with decoration)
         ), // AnimatedOpacity
       ), // GestureDetector
-    ); 
+    ); // Container wrapper (outer - with GlobalKey)
   }
 
   /// Empty state for chart
@@ -508,19 +565,7 @@ void _updateItemPositions() {
     );
   }
 
-  /// Helper for showing more items text
-  Widget _buildMoreText(BuildContext context, int count, String type) {
-    return Container(
-      margin: EdgeInsets.only(top: 8.h),
-      child: Text(
-        '+ $count ${getTranslated(context, type) ?? type}',
-        style: TextStyle(
-          fontSize: 10.sp,
-          color: Colors.grey[600],
-        ),
-      ),
-    );
-  }
+
 
   /// Format amount with currency using project's existing format system
   String _formatAmount(double amount) {
