@@ -45,7 +45,7 @@ class DailyTransactionGroup extends StatelessWidget {
     }
     
     final balance = totalIncome - totalExpense;
-    final balanceColor = balance >= 0 ? green : red;
+    final balanceColor = balance >= 0 ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error; // Use theme colors
     
     // Format ngày
     final isToday = _isToday(date);
@@ -61,16 +61,12 @@ class DailyTransactionGroup extends StatelessWidget {
       dateLabel = _formatDate(context, date);
     }
 
-    // SỬ DỤNG EXPANSIONTILE - Cho phép mở rộng để xem transactions
+    // SỬ DỤNG CONTAINER thay vì Card để thống nhất với TransactionListItem
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
+        color: Colors.white, // Màu trắng để highlight
+        borderRadius: BorderRadius.circular(16.r), // Bo tròn đồng nhất với item
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -81,12 +77,12 @@ class DailyTransactionGroup extends StatelessWidget {
           leading: Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: blue2.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), // Use theme primary
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
               Icons.calendar_today_rounded,
-              color: blue3,
+              color: Theme.of(context).colorScheme.primary, // Use theme primary
               size: 20.sp,
             ),
           ),
@@ -95,7 +91,7 @@ class DailyTransactionGroup extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface, // Use theme onSurface
             ),
           ),
           subtitle: Column(
@@ -106,7 +102,7 @@ class DailyTransactionGroup extends StatelessWidget {
                 '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'transaction' : 'transactions') ?? (transactions.length == 1 ? 'transaction' : 'transactions')}',
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), // Use theme onSurface with alpha
                 ),
               ),
               SizedBox(height: 12.h),
@@ -119,7 +115,7 @@ class DailyTransactionGroup extends StatelessWidget {
                       context,
                       label: 'Income',
                       amount: totalIncome,
-                      color: green,
+                      color: Theme.of(context).colorScheme.secondary, // Use theme secondary
                       icon: Icons.arrow_downward_rounded,
                     ),
                   ),
@@ -130,7 +126,7 @@ class DailyTransactionGroup extends StatelessWidget {
                       context,
                       label: 'Expense',
                       amount: totalExpense,
-                      color: red,
+                      color: Theme.of(context).colorScheme.error, // Use theme error
                       icon: Icons.arrow_upward_rounded,
                     ),
                   ),
@@ -207,7 +203,7 @@ class DailyTransactionGroup extends StatelessWidget {
             getTranslated(context, label) ?? label,
             style: TextStyle(
               fontSize: 10.sp,
-              color: Colors.grey[700],
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), // Use theme onSurface with alpha
               fontWeight: FontWeight.w500,
             ),
           ),

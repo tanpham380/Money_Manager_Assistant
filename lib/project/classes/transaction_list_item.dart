@@ -26,7 +26,7 @@ class TransactionListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isIncome = transaction.type == 'Income';
-    final Color categoryColor = isIncome ? Colors.lightGreen : red;
+    final Color categoryColor = isIncome ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error; // Use theme colors
     
     // Lấy icon từ category name
     final IconData categoryIcon = CategoryIconHelper.getIconForCategory(
@@ -44,7 +44,7 @@ class TransactionListItem extends StatelessWidget {
             await handler(true);
             onDelete();
           },
-          color: red,
+          color: Theme.of(context).colorScheme.error, // Use theme error color
           content: Icon(
             Icons.delete_outline,
             color: Colors.white,
@@ -63,7 +63,7 @@ class TransactionListItem extends StatelessWidget {
             await handler(false);
             onDuplicate();
           },
-          color: Color.fromRGBO(255, 183, 121, 1),
+          color: Theme.of(context).colorScheme.primary, // Use theme primary color
           content: Icon(
             Icons.content_copy,
             color: Colors.white,
@@ -76,33 +76,36 @@ class TransactionListItem extends StatelessWidget {
           ),
         ),
       ],
-      child: Card(
-        elevation: 3.0,
-        margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent, // Transparent để phù hợp với SwipeActionCell
+          borderRadius: BorderRadius.circular(16.r), // Tăng bo tròn cho đẹp hơn
         ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(16.r), // Đồng nhất với Container
           splashColor: categoryColor.withValues(alpha: 0.1),
           highlightColor: categoryColor.withValues(alpha: 0.05),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9), // Màu trắng nhạt để phù hợp với group
+              // borderRadius: BorderRadius.circular(16.r), // Bo tròn đồng nhất
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h), // Padding
             child: Row(
               children: [
-                // Icon Category
+                // Icon Category - Thu nhỏ hơn
                 CircleAvatar(
-                  radius: 24.r,
+                  radius: 20.r, // Giảm từ 24.r xuống 20.r
                   backgroundColor: categoryColor.withValues(alpha: 0.15),
                   child: Icon(
                     categoryIcon,
-                    color: categoryColor,
-                    size: 28.sp,
+                    color: categoryColor.withValues(alpha: 0.8), // Làm nhạt màu icon
+                    size: 24.sp, // Giảm từ 28.sp xuống 24.sp
                   ),
                 ),
                 
-                SizedBox(width: 12.w),
+                SizedBox(width: 10.w), // Giảm từ 12.w xuống 10.w
                 
                 // Category, Description, Time
                 Expanded(
@@ -116,14 +119,14 @@ class TransactionListItem extends StatelessWidget {
                             transaction.category ??
                             'Unknown',
                         style: TextStyle(
-                          fontSize: 16.sp,
+                          fontSize: 14.sp, // Giảm từ 16.sp xuống 14.sp
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface, // Use theme onSurface
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 1.h), // Giảm từ 2.h xuống 1.h
                       
                       // Description
                       if (transaction.description != null &&
@@ -131,8 +134,8 @@ class TransactionListItem extends StatelessWidget {
                         Text(
                           transaction.description!,
                           style: TextStyle(
-                            fontSize: 13.sp,
-                            color: Colors.grey[600],
+                            fontSize: 12.sp, // Giảm từ 13.sp xuống 12.sp
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), // Use theme onSurface with alpha
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -141,20 +144,20 @@ class TransactionListItem extends StatelessWidget {
                       // Time
                       if (transaction.time != null)
                         Padding(
-                          padding: EdgeInsets.only(top: 2.h),
+                          padding: EdgeInsets.only(top: 1.h), // Giảm từ 2.h xuống 1.h
                           child: Row(
                             children: [
                               Icon(
                                 Icons.access_time,
-                                size: 12.sp,
-                                color: Colors.grey[500],
+                                size: 11.sp, // Giảm từ 12.sp xuống 11.sp
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), // Use theme onSurface with alpha
                               ),
-                              SizedBox(width: 4.w),
+                              SizedBox(width: 3.w), // Giảm từ 4.w xuống 3.w
                               Text(
                                 transaction.time!,
                                 style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: Colors.grey[500],
+                                  fontSize: 10.sp, // Giảm từ 11.sp xuống 10.sp
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), // Use theme onSurface with alpha
                                 ),
                               ),
                             ],
@@ -164,7 +167,7 @@ class TransactionListItem extends StatelessWidget {
                   ),
                 ),
                 
-                SizedBox(width: 8.w),
+                SizedBox(width: 6.w), // Giảm từ 8.w xuống 6.w
                 
                 // Amount
                 Column(
@@ -176,18 +179,18 @@ class TransactionListItem extends StatelessWidget {
                       child: Text(
                         '${isIncome ? '+' : '-'} ${format(transaction.amount ?? 0)}',
                         style: GoogleFonts.aBeeZee(
-                          fontSize: 16.sp,
+                          fontSize: 14.sp, // Giảm từ 16.sp xuống 14.sp
                           fontWeight: FontWeight.bold,
-                          color: categoryColor,
+                          color: categoryColor.withValues(alpha: 0.8), // Làm nhạt màu amount
                         ),
                       ),
                     ),
-                    SizedBox(height: 2.h),
+                    SizedBox(height: 1.h), // Giảm từ 2.h xuống 1.h
                     Text(
                       currency,
                       style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
+                        fontSize: 11.sp, // Giảm từ 12.sp xuống 11.sp
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), // Use theme onSurface with alpha
                       ),
                     ),
                   ],

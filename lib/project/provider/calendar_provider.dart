@@ -126,6 +126,16 @@ class CalendarProvider with ChangeNotifier {
     }
   }
   
+  /// Bỏ chọn ngày để hiển thị lại danh sách theo calendar format
+  void clearSelection() {
+    _selectedDay = null;
+    _rangeStart = null;
+    _rangeEnd = null;
+    _rangeSelectionMode = RangeSelectionMode.toggledOff;
+    _selectedDayEvents = [];
+    notifyListeners();
+  }
+  
   /// Xử lý khi người dùng chọn một khoảng ngày
   void onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
     _selectedDay = null;

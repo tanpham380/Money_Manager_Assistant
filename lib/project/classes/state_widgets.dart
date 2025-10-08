@@ -103,7 +103,7 @@ class ErrorStateWidget extends StatelessWidget {
             Icon(
               Icons.error_outline_rounded,
               size: 100.sp,
-              color: Colors.red[300],
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
             ),
             SizedBox(height: 24.h),
             Text(
@@ -111,7 +111,7 @@ class ErrorStateWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w600,
-                color: Colors.red[700],
+                color: Theme.of(context).colorScheme.error,
               ),
               textAlign: TextAlign.center,
             ),

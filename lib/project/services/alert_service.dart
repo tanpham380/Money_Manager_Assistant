@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../utils/responsive_extensions.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../localization/methods.dart';
+import '../classes/constants.dart'; // Add import for theme colors
 
 enum NotificationType {
   success,
@@ -140,7 +141,7 @@ class AlertService {
                   fontSize: 17.sp,
                   fontWeight: FontWeight.w600,
                   color: type == NotificationType.delete
-                      ? Colors.red
+                      ? red
                       : colors['primary'],
                 ),
               ),
@@ -246,7 +247,7 @@ class AlertService {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: type == NotificationType.delete
-                              ? Colors.red
+                              ? red
                               : colors['primary'],
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 12.h),

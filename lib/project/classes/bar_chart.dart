@@ -103,7 +103,7 @@ class BarChartAnalysis extends StatelessWidget {
           // Tương tác
           selectionBehavior: SelectionBehavior(
             enable: true,
-            selectedColor: Colors.blue,
+            selectedColor: Theme.of(context).colorScheme.primary,
             unselectedOpacity: 0.5,
           ),
           
@@ -338,7 +338,7 @@ class TrendChartAnalysis extends StatelessWidget {
           xValueMapper: (TrendData data, _) => data.month,
           yValueMapper: (TrendData data, _) => data.totalAmount,
           
-          color: type == 'Income' ? green : red,
+          color: type == 'Income' ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error,
           width: 3,
           
           // Markers
@@ -348,7 +348,7 @@ class TrendChartAnalysis extends StatelessWidget {
             width: 6,
             shape: DataMarkerType.circle,
             borderWidth: 2,
-            borderColor: type == 'Income' ? green : red,
+            borderColor: type == 'Income' ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error,
           ),
           
           // Animation - nhanh hơn

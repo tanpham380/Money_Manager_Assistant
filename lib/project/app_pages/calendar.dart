@@ -5,7 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../classes/app_bar.dart';
 import '../classes/constants.dart';
-import '../classes/daily_transaction_group.dart';
+import './daily_transaction_group.dart';
 import '../classes/input_model.dart';
 import '../classes/state_widgets.dart';
 import '../localization/methods.dart';
@@ -493,7 +493,7 @@ class _CalendarContentState extends State<_CalendarContent> {
           fontSize: 16.sp,
         ),
         defaultTextStyle: TextStyle(fontSize: 15.sp),
-        weekendTextStyle: TextStyle(fontSize: 15.sp, color: red),
+        weekendTextStyle: TextStyle(fontSize: 15.sp, color: Theme.of(context).colorScheme.error),
         outsideTextStyle: TextStyle(fontSize: 15.sp, color: Colors.grey),
         markerDecoration: BoxDecoration(
           color: Color.fromRGBO(67, 125, 229, 1),
@@ -519,6 +519,9 @@ class _CalendarContentState extends State<_CalendarContent> {
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
+        leftChevronVisible: true,
+        rightChevronVisible: true,
+        headerPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
       ),
       calendarBuilders: CalendarBuilders(
         markerBuilder: (context, date, events) {
@@ -532,7 +535,12 @@ class _CalendarContentState extends State<_CalendarContent> {
         },
       ),
       onDaySelected: (selectedDay, focusedDay) {
-        provider.onDaySelected(selectedDay, focusedDay);
+        // Nếu tap vào ngày đã chọn, bỏ chọn để hiển thị lại danh sách theo format
+        if (provider.selectedDay != null && isSameDay(provider.selectedDay, selectedDay)) {
+          provider.clearSelection();
+        } else {
+          provider.onDaySelected(selectedDay, focusedDay);
+        }
       },
       onRangeSelected: provider.onRangeSelected,
       onFormatChanged: provider.onFormatChanged,
