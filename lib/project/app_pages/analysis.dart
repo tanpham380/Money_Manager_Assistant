@@ -189,34 +189,30 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
             ? provider.totalIncome 
             : provider.totalExpense;
 
-        return CustomScrollView(
-          slivers: [
-            // Money Frame
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: ShowMoneyFrame(
-                  type: widget.type,
-                  typeValue: typeValue,
-                  balance: provider.balance,
-                  total: provider.total,
-                ),
+        return Column(
+          children: [
+            // Money Frame - Compact hơn
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), // Thu nhỏ padding
+              child: ShowMoneyFrame(
+                type: widget.type,
+                typeValue: typeValue,
+                balance: provider.balance,
+                total: provider.total,
               ),
             ),
             
-            // Chart Type Toggle
-            SliverToBoxAdapter(
+            // Chart Type Toggle - Compact hơn
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w), // Thu nhỏ padding
               child: _buildChartToggle(provider),
             ),
             
-            // Chart Area - Flexible để vừa với không gian còn lại
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.5, // 50% chiều cao màn hình
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: _buildChart(provider, summaries),
-                ),
+            // Chart Area - Flexible để fit màn hình
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), // Thu nhỏ padding
+                child: _buildChart(provider, summaries),
               ),
             ),
           ],
@@ -228,7 +224,7 @@ class _AnalysisTabViewState extends State<AnalysisTabView> {
   /// Widget toggle chọn loại biểu đồ
   Widget _buildChartToggle(AnalysisProvider provider) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h), // Thu nhỏ margin
       child: CupertinoSegmentedControl<ChartType>(
         children: {
           ChartType.donut: Padding(
@@ -354,17 +350,17 @@ class ShowDate extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: 10.w,
-        vertical: 25.h,
+        horizontal: 6.w, // Thu nhỏ từ 8.w xuống 6.w
+        vertical: 12.h, // Thu nhỏ từ 16.h xuống 12.h
       ),
       child: Row(
         children: [
           Icon(
             Icons.calendar_today,
-            size: 27.sp,
+            size: 22.sp, // Thu nhỏ từ 24.sp xuống 22.sp
             color: const Color.fromRGBO(82, 179, 252, 1),
           ),
-          SizedBox(width: 10.w),
+          SizedBox(width: 6.w), // Thu nhỏ từ 8.w xuống 6.w
           DateDisplay(selectedDate),
           const Spacer(),
           DropDownBox(true, selectedDate),
@@ -385,7 +381,7 @@ class DateDisplay extends StatelessWidget {
     final String today = DateFormatUtils.formatUserDate(todayDT);
     String since = getTranslated(context, 'Since') ?? 'Since';
     TextStyle style =
-        GoogleFonts.aBeeZee(fontSize: 20.sp, fontWeight: FontWeight.bold);
+        GoogleFonts.aBeeZee(fontSize: 16.sp, fontWeight: FontWeight.bold); // Thu nhỏ từ 18.sp xuống 16.sp
 
     final Map<String, Widget> dateMap = {
       'Today': Text(today, style: style),
@@ -431,14 +427,14 @@ class ShowMoneyFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget rowFrame(String typeName, double value, {Color? valueColor}) {
       return Padding(
-        padding: EdgeInsets.symmetric(vertical: 8.h),
+        padding: EdgeInsets.symmetric(vertical: 4.h), // Thu nhỏ từ 6.h xuống 4.h
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               getTranslated(context, typeName) ?? typeName,
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 14.sp, // Thu nhỏ từ 16.sp xuống 14.sp
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -448,7 +444,7 @@ class ShowMoneyFrame extends StatelessWidget {
                 child: Text(
                   '${format(value)} $currency',
                   style: GoogleFonts.aBeeZee(
-                    fontSize: 18.sp,
+                    fontSize: 14.sp, // Thu nhỏ từ 16.sp xuống 14.sp
                     fontWeight: FontWeight.bold,
                     color: valueColor,
                   ),
@@ -465,18 +461,19 @@ class ShowMoneyFrame extends StatelessWidget {
     Color balanceColor = balance >= 0 ? green : red;
 
     return Card(
-      elevation: 4,
+      elevation: 2, // Giảm elevation từ 4 xuống 2
+      margin: EdgeInsets.zero, // Loại bỏ margin
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(12.r), // Giảm border radius từ 16.r xuống 12.r
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(12.w), // Thu nhỏ padding từ 16.w xuống 12.w
         child: Column(
           children: [
-            rowFrame(getTranslated(context, 'Total Income') ?? 'Total Income', total > 0 ? (type == 'Income' ? typeValue : total - typeValue) : 0),
-            Divider(height: 1.h),
-            rowFrame(getTranslated(context, 'Total Expense') ?? 'Total Expense', total > 0 ? (type == 'Expense' ? typeValue : total - typeValue) : 0),
-            Divider(height: 1.h),
+            rowFrame(getTranslated(context, 'Total Income') ?? 'Total Income', total > 0 ? (type == 'Income' ? typeValue : total - typeValue) : 0 , valueColor: green),
+            Divider(height: 12.h), // Thu nhỏ divider từ 16.h xuống 12.h
+            rowFrame(getTranslated(context, 'Total Expense') ?? 'Total Expense', total > 0 ? (type == 'Expense' ? typeValue : total - typeValue) : 0 , valueColor: red),
+            Divider(height: 12.h), // Thu nhỏ divider từ 16.h xuống 12.h
             rowFrame(getTranslated(context, 'Balance') ?? 'Balance', balance, valueColor: balanceColor),
           ],
         ),
