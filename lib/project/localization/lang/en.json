@@ -214,5 +214,14 @@
   "Notification permission denied": "Notification permission denied",
   "Daily reminder enabled": "Daily reminder enabled",
   "Daily reminder disabled": "Daily reminder disabled",
-  "Reminder time updated": "Reminder time updated"
+  "Reminder time updated": "Reminder time updated",
+  "Money Flow Diagram": "Money Flow Diagram",
+  "Visualize how money flows from income sources to expenses": "Visualize how money flows from income sources to expenses",
+  "Left: Income categories": "Left: Income categories",
+  "Center: Money flow visualization": "Center: Money flow visualization",
+  "Right: Expense categories": "Right: Expense categories",
+  "Income Sources": "Income Sources",
+  "Expense Categories": "Expense Categories",
+  "Money Flow": "Money Flow",
+  "more": "more"
 }

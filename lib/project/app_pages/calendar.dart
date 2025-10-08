@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../classes/app_bar.dart';
 import '../classes/constants.dart';
 import './daily_transaction_group.dart';
 import '../classes/input_model.dart';
@@ -28,29 +27,41 @@ class Calendar extends StatelessWidget {
         if (previous != null) {
           return previous;
         }
-        return CalendarProvider(transactionProvider, context.read<NavigationProvider>());
+        return CalendarProvider(
+            transactionProvider, context.read<NavigationProvider>());
       },
       child: Scaffold(
         backgroundColor: blue1,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
-          child: BasicAppBar(getTranslated(context, 'Calendar')!),
+          child: AppBar(
+            backgroundColor: blue3,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: Text(
+              getTranslated(context, 'Calendar')!,
+              style: TextStyle(fontSize: 21.sp, color: Colors.white),
+            ),
+          ),
         ),
         body: Consumer<CalendarProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading) {
               return LoadingStateWidget(
-                message: getTranslated(context, 'Loading calendar') ?? 'Loading calendar...',
+                message: getTranslated(context, 'Loading calendar') ??
+                    'Loading calendar...',
               );
             }
-            
+
             if (provider.errorMessage != null) {
               return ErrorStateWidget(
                 message: provider.errorMessage,
                 onRetry: () => provider.refreshData(),
               );
             }
-            
+
             return _CalendarContent();
           },
         ),
@@ -66,12 +77,15 @@ class _CalendarContent extends StatefulWidget {
 
 class _CalendarContentState extends State<_CalendarContent> {
   bool _isFilterExpanded = false; // Default: collapsed
-  
+
   /// Build filter display text based on active filters
-  String _buildFilterDisplayText(BuildContext context, NavigationProvider navProvider) {
-    final hasType = navProvider.filterType != null && navProvider.filterType!.isNotEmpty;
-    final hasCategory = navProvider.filterCategory != null && navProvider.filterCategory!.isNotEmpty;
-    
+  String _buildFilterDisplayText(
+      BuildContext context, NavigationProvider navProvider) {
+    final hasType =
+        navProvider.filterType != null && navProvider.filterType!.isNotEmpty;
+    final hasCategory = navProvider.filterCategory != null &&
+        navProvider.filterCategory!.isNotEmpty;
+
     if (navProvider.isOthersCategory) {
       // "Others" category
       if (hasType) {
@@ -87,38 +101,42 @@ class _CalendarContentState extends State<_CalendarContent> {
       return '${getTranslated(context, 'All') ?? 'All'} - ${getTranslated(context, navProvider.filterCategory!) ?? navProvider.filterCategory!}';
     } else if (hasType) {
       // Type only
-      return getTranslated(context, navProvider.filterType!) ?? navProvider.filterType!;
+      return getTranslated(context, navProvider.filterType!) ??
+          navProvider.filterType!;
     }
-    
+
     return '';
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final navProvider = context.watch<NavigationProvider>();
-    
+
     return Consumer<CalendarProvider>(
       builder: (context, provider, child) {
-        final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-        
+        final transactionProvider =
+            Provider.of<TransactionProvider>(context, listen: false);
+
         return Column(
           children: [
             // Unified Filter Section with toggle
             _buildQuickFilterChips(context, navProvider, transactionProvider),
-            
+
             _buildCalendar(context, provider),
             SizedBox(height: 8.h),
-            
+
             // Danh sách giao dịch
-            _buildTransactionList(context, provider, navProvider, transactionProvider),
+            _buildTransactionList(
+                context, provider, navProvider, transactionProvider),
           ],
         );
       },
     );
   }
-  
+
   /// Widget hiển thị Quick Filter Chips cho Type và Category
-  Widget _buildQuickFilterChips(BuildContext context, NavigationProvider navProvider, TransactionProvider transactionProvider) {
+  Widget _buildQuickFilterChips(BuildContext context,
+      NavigationProvider navProvider, TransactionProvider transactionProvider) {
     // Lấy danh sách categories unique từ transactions
     final categories = <String>{};
     for (final tx in transactionProvider.allTransactions) {
@@ -127,7 +145,7 @@ class _CalendarContentState extends State<_CalendarContent> {
       }
     }
     final sortedCategories = categories.toList()..sort();
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -149,13 +167,14 @@ class _CalendarContentState extends State<_CalendarContent> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: navProvider.hasActiveFilter 
+              color: navProvider.hasActiveFilter
                   ? (navProvider.filterColor ?? blue3).withValues(alpha: 0.08)
                   : Colors.transparent,
-              border: navProvider.hasActiveFilter 
+              border: navProvider.hasActiveFilter
                   ? Border(
                       bottom: BorderSide(
-                        color: (navProvider.filterColor ?? blue3).withValues(alpha: 0.3),
+                        color: (navProvider.filterColor ?? blue3)
+                            .withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     )
@@ -165,9 +184,9 @@ class _CalendarContentState extends State<_CalendarContent> {
               children: [
                 // Filter icon and title
                 Icon(
-                  Icons.filter_alt_outlined, 
-                  size: 18.sp, 
-                  color: navProvider.hasActiveFilter 
+                  Icons.filter_alt_outlined,
+                  size: 18.sp,
+                  color: navProvider.hasActiveFilter
                       ? (navProvider.filterColor ?? blue3)
                       : Colors.grey[600],
                 ),
@@ -202,7 +221,7 @@ class _CalendarContentState extends State<_CalendarContent> {
                     ],
                   ),
                 ),
-                
+
                 // Clear filter button (if active)
                 if (navProvider.hasActiveFilter) ...[
                   Material(
@@ -222,7 +241,7 @@ class _CalendarContentState extends State<_CalendarContent> {
                   ),
                   SizedBox(width: 4.w),
                 ],
-                
+
                 // Toggle expand/collapse button
                 Material(
                   color: Colors.transparent,
@@ -250,7 +269,7 @@ class _CalendarContentState extends State<_CalendarContent> {
               ],
             ),
           ),
-          
+
           // Animated filter chips section
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
@@ -261,13 +280,14 @@ class _CalendarContentState extends State<_CalendarContent> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(height: 8.h),
-                      
+
                       // Type Filters Row
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.w),
                         child: Row(
                           children: [
-                            Icon(Icons.compare_arrows, size: 14.sp, color: Colors.grey[600]),
+                            Icon(Icons.compare_arrows,
+                                size: 14.sp, color: Colors.grey[600]),
                             SizedBox(width: 6.w),
                             Text(
                               getTranslated(context, 'Type') ?? 'Type',
@@ -279,7 +299,8 @@ class _CalendarContentState extends State<_CalendarContent> {
                             ),
                             SizedBox(width: 8.w),
                             FilterChip(
-                              label: Text(getTranslated(context, 'All') ?? 'All'),
+                              label:
+                                  Text(getTranslated(context, 'All') ?? 'All'),
                               labelStyle: TextStyle(fontSize: 11.sp),
                               selected: navProvider.filterType == null,
                               onSelected: (_) {
@@ -287,17 +308,24 @@ class _CalendarContentState extends State<_CalendarContent> {
                               },
                               selectedColor: blue3.withValues(alpha: 0.2),
                               checkmarkColor: blue3,
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 0),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                             SizedBox(width: 6.w),
                             FilterChip(
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.arrow_downward, size: 11.sp, color: navProvider.filterType == 'Income' ? blue3 : null),
+                                  Icon(Icons.arrow_downward,
+                                      size: 11.sp,
+                                      color: navProvider.filterType == 'Income'
+                                          ? blue3
+                                          : null),
                                   SizedBox(width: 4.w),
-                                  Text(getTranslated(context, 'Income') ?? 'Income'),
+                                  Text(getTranslated(context, 'Income') ??
+                                      'Income'),
                                 ],
                               ),
                               labelStyle: TextStyle(fontSize: 11.sp),
@@ -314,19 +342,27 @@ class _CalendarContentState extends State<_CalendarContent> {
                                   navProvider.clearFilter();
                                 }
                               },
-                              selectedColor: blue3.withValues(alpha: 0.2), // Đổi từ green thành blue3
+                              selectedColor: blue3.withValues(
+                                  alpha: 0.2), // Đổi từ green thành blue3
                               checkmarkColor: blue3, // Đổi từ green thành blue3
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 0),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                             SizedBox(width: 6.w),
                             FilterChip(
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.arrow_upward, size: 11.sp, color: navProvider.filterType == 'Expense' ? blue2 : null), // Đổi từ red thành blue2
+                                  Icon(Icons.arrow_upward,
+                                      size: 11.sp,
+                                      color: navProvider.filterType == 'Expense'
+                                          ? blue2
+                                          : null), // Đổi từ red thành blue2
                                   SizedBox(width: 4.w),
-                                  Text(getTranslated(context, 'Expense') ?? 'Expense'),
+                                  Text(getTranslated(context, 'Expense') ??
+                                      'Expense'),
                                 ],
                               ),
                               labelStyle: TextStyle(fontSize: 11.sp),
@@ -343,27 +379,32 @@ class _CalendarContentState extends State<_CalendarContent> {
                                   navProvider.clearFilter();
                                 }
                               },
-                              selectedColor: blue2.withValues(alpha: 0.2), // Đổi từ red thành blue2
+                              selectedColor: blue2.withValues(
+                                  alpha: 0.2), // Đổi từ red thành blue2
                               checkmarkColor: blue2, // Đổi từ red thành blue2
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 0),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                           ],
                         ),
                       ),
-                      
+
                       SizedBox(height: 8.h),
-                      
+
                       // Category Filters Row (Scrollable)
                       if (sortedCategories.isNotEmpty) ...[
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12.w),
                           child: Row(
                             children: [
-                              Icon(Icons.category_outlined, size: 14.sp, color: Colors.grey[600]),
+                              Icon(Icons.category_outlined,
+                                  size: 14.sp, color: Colors.grey[600]),
                               SizedBox(width: 6.w),
                               Text(
-                                getTranslated(context, 'Category') ?? 'Category',
+                                getTranslated(context, 'Category') ??
+                                    'Category',
                                 style: TextStyle(
                                   fontSize: 12.sp,
                                   fontWeight: FontWeight.w600,
@@ -382,14 +423,17 @@ class _CalendarContentState extends State<_CalendarContent> {
                             itemCount: sortedCategories.length,
                             itemBuilder: (context, index) {
                               final category = sortedCategories[index];
-                              final isSelected = navProvider.filterCategory == category;
-                              final categoryColor = _getCategoryColor(category, index);
-                              
+                              final isSelected =
+                                  navProvider.filterCategory == category;
+                              final categoryColor =
+                                  _getCategoryColor(category, index);
+
                               return Padding(
                                 padding: EdgeInsets.only(right: 6.w),
                                 child: FilterChip(
                                   label: Text(
-                                    getTranslated(context, category) ?? category,
+                                    getTranslated(context, category) ??
+                                        category,
                                     style: TextStyle(fontSize: 11.sp),
                                   ),
                                   selected: isSelected,
@@ -397,15 +441,18 @@ class _CalendarContentState extends State<_CalendarContent> {
                                     if (selected) {
                                       // Nếu chọn category: giữ nguyên type filter hiện tại (có thể là null = "All")
                                       navProvider.navigateToCalendarWithFilter(
-                                        type: navProvider.filterType ?? '', // Empty string means no type filter
+                                        type: navProvider.filterType ??
+                                            '', // Empty string means no type filter
                                         category: category,
                                         icon: Icons.category,
                                         color: categoryColor,
                                       );
                                     } else {
                                       // If deselecting, clear only category filter, keep type filter
-                                      if (navProvider.filterType != null && navProvider.filterType!.isNotEmpty) {
-                                        navProvider.navigateToCalendarWithFilter(
+                                      if (navProvider.filterType != null &&
+                                          navProvider.filterType!.isNotEmpty) {
+                                        navProvider
+                                            .navigateToCalendarWithFilter(
                                           type: navProvider.filterType!,
                                           category: '',
                                           icon: navProvider.filterIcon,
@@ -416,17 +463,20 @@ class _CalendarContentState extends State<_CalendarContent> {
                                       }
                                     }
                                   },
-                                  selectedColor: categoryColor.withValues(alpha: 0.2),
+                                  selectedColor:
+                                      categoryColor.withValues(alpha: 0.2),
                                   checkmarkColor: categoryColor,
-                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 0),
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10.w, vertical: 0),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
                               );
                             },
                           ),
                         ),
                       ],
-                      
+
                       SizedBox(height: 8.h),
                     ],
                   )
@@ -436,7 +486,7 @@ class _CalendarContentState extends State<_CalendarContent> {
       ),
     );
   }
-  
+
   /// Helper để lấy màu cho category
   Color _getCategoryColor(String category, int index) {
     // Sử dụng màu từ constants.dart hoặc generate based on index
@@ -452,7 +502,7 @@ class _CalendarContentState extends State<_CalendarContent> {
     ];
     return colors[index % colors.length];
   }
-  
+
   Widget _buildCalendar(BuildContext context, CalendarProvider provider) {
     return TableCalendar(
       locale: Localizations.localeOf(context).languageCode,
@@ -466,7 +516,8 @@ class _CalendarContentState extends State<_CalendarContent> {
       firstDay: DateTime.utc(2015, 01, 01),
       lastDay: DateTime.utc(2100, 01, 01),
       focusedDay: provider.focusedDay,
-      calendarFormat: provider.calendarFormat, // Sẽ đổi mặc định thành week ở CalendarProvider
+      calendarFormat: provider
+          .calendarFormat, // Sẽ đổi mặc định thành week ở CalendarProvider
       selectedDayPredicate: (day) => isSameDay(provider.selectedDay, day),
       rangeStartDay: provider.rangeStart,
       rangeEndDay: provider.rangeEnd,
@@ -493,7 +544,8 @@ class _CalendarContentState extends State<_CalendarContent> {
           fontSize: 16.sp,
         ),
         defaultTextStyle: TextStyle(fontSize: 15.sp),
-        weekendTextStyle: TextStyle(fontSize: 15.sp, color: Theme.of(context).colorScheme.error),
+        weekendTextStyle: TextStyle(
+            fontSize: 15.sp, color: Theme.of(context).colorScheme.error),
         outsideTextStyle: TextStyle(fontSize: 15.sp, color: Colors.grey),
         markerDecoration: BoxDecoration(
           color: Color.fromRGBO(67, 125, 229, 1),
@@ -536,7 +588,8 @@ class _CalendarContentState extends State<_CalendarContent> {
       ),
       onDaySelected: (selectedDay, focusedDay) {
         // Nếu tap vào ngày đã chọn, bỏ chọn để hiển thị lại danh sách theo format
-        if (provider.selectedDay != null && isSameDay(provider.selectedDay, selectedDay)) {
+        if (provider.selectedDay != null &&
+            isSameDay(provider.selectedDay, selectedDay)) {
           provider.clearSelection();
         } else {
           provider.onDaySelected(selectedDay, focusedDay);
@@ -548,7 +601,7 @@ class _CalendarContentState extends State<_CalendarContent> {
       pageJumpingEnabled: true,
     );
   }
-  
+
   Widget _buildEventsMarker(List events) {
     double width = events.length < 100 ? 18.w : 28.w;
     return AnimatedContainer(
@@ -572,37 +625,43 @@ class _CalendarContentState extends State<_CalendarContent> {
       ),
     );
   }
-  
+
   /// Tính toán khoảng thời gian dựa trên calendar format và focusedDay
   Map<String, DateTime> _calculateDateRange(CalendarProvider provider) {
     final focusedDay = provider.focusedDay;
     DateTime startDate, endDate;
-    
+
     switch (provider.calendarFormat) {
       case CalendarFormat.week:
         // Tuần hiện tại: từ thứ 2 đến chủ nhật
-        final startOfWeek = focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
-        startDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-        endDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day + 6);
+        final startOfWeek =
+            focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
+        startDate =
+            DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+        endDate =
+            DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day + 6);
         break;
-        
+
       case CalendarFormat.twoWeeks:
         // 2 tuần: từ thứ 2 tuần trước đến chủ nhật tuần hiện tại
-        final startOfCurrentWeek = focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
-        startDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day - 7);
-        endDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day + 6);
+        final startOfCurrentWeek =
+            focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
+        startDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month,
+            startOfCurrentWeek.day - 7);
+        endDate = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month,
+            startOfCurrentWeek.day + 6);
         break;
-        
+
       case CalendarFormat.month:
         // Tháng hiện tại: từ ngày 1 đến cuối tháng
         startDate = DateTime(focusedDay.year, focusedDay.month, 1);
         endDate = DateTime(focusedDay.year, focusedDay.month + 1, 0);
         break;
     }
-    
+
     return {'start': startDate, 'end': endDate};
   }
-  
+
   /// Filter transactions theo khoảng thời gian
   List<InputModel> _filterTransactionsByDateRange(
     List<InputModel> transactions,
@@ -613,18 +672,22 @@ class _CalendarContentState extends State<_CalendarContent> {
       if (tx.date == null) return false;
       try {
         final txDate = DateFormatUtils.parseInternalDate(tx.date!);
-        final normalizedTxDate = DateTime(txDate.year, txDate.month, txDate.day);
-        final normalizedStart = DateTime(startDate.year, startDate.month, startDate.day);
-        final normalizedEnd = DateTime(endDate.year, endDate.month, endDate.day);
-        
+        final normalizedTxDate =
+            DateTime(txDate.year, txDate.month, txDate.day);
+        final normalizedStart =
+            DateTime(startDate.year, startDate.month, startDate.day);
+        final normalizedEnd =
+            DateTime(endDate.year, endDate.month, endDate.day);
+
         // So sánh: startDate <= txDate <= endDate (inclusive both ends)
-        return !normalizedTxDate.isBefore(normalizedStart) && !normalizedTxDate.isAfter(normalizedEnd);
+        return !normalizedTxDate.isBefore(normalizedStart) &&
+            !normalizedTxDate.isAfter(normalizedEnd);
       } catch (e) {
         return false;
       }
     }).toList();
   }
-  
+
   /// Nhóm giao dịch theo ngày (sắp xếp từ mới đến cũ)
   List<MapEntry<DateTime, List<InputModel>>> _groupTransactionsByDate(
     CalendarProvider provider,
@@ -633,23 +696,23 @@ class _CalendarContentState extends State<_CalendarContent> {
   ) {
     final Map<DateTime, List<InputModel>> grouped = {};
     final allTransactions = <InputModel>[];
-    
+
     // Lấy base transactions
     var baseTransactions = transactionProvider.allTransactions;
-    
+
     // Áp dụng filter type và category nếu có
     if (navProvider.hasActiveFilter) {
       baseTransactions = baseTransactions.where((tx) {
         // Filter by type - Only filter if type is not empty
-        if (navProvider.filterType != null && 
-            navProvider.filterType!.isNotEmpty && 
+        if (navProvider.filterType != null &&
+            navProvider.filterType!.isNotEmpty &&
             tx.type != navProvider.filterType) {
           return false;
         }
-        
+
         // Filter by category - Special handling for "Others"
-        if (navProvider.filterCategory != null && 
-            navProvider.filterCategory!.isNotEmpty && 
+        if (navProvider.filterCategory != null &&
+            navProvider.filterCategory!.isNotEmpty &&
             !navProvider.isOthersCategory) {
           if (tx.category != navProvider.filterCategory) {
             return false;
@@ -657,45 +720,46 @@ class _CalendarContentState extends State<_CalendarContent> {
         }
         // If it's "Others" category, we show ALL transactions (filtered by type only)
         // This is because "Others" is a grouping of small categories, not a real category
-        
+
         return true;
       }).toList();
     }
-    
+
     // CASE 1: Nếu có ngày được chọn cụ thể VÀ KHÔNG CÓ FILTER
     // → Chỉ hiển thị transactions của ngày đó
     if (provider.selectedDay != null && !navProvider.hasActiveFilter) {
       allTransactions.addAll(provider.getEventsForDay(provider.selectedDay!));
-    } 
+    }
     // CASE 2 & 3: Hiển thị theo calendar format hoặc date range từ filter
     else {
-      
       // CASE 2: Nếu có filter date range từ Analysis screen
-      if (navProvider.filterStartDate != null || navProvider.filterEndDate != null) {
+      if (navProvider.filterStartDate != null ||
+          navProvider.filterEndDate != null) {
         final startDate = navProvider.filterStartDate ?? DateTime(1990, 1, 1);
         final endDate = navProvider.filterEndDate ?? DateTime(2100, 12, 31);
-        allTransactions.addAll(_filterTransactionsByDateRange(baseTransactions, startDate, endDate));
-      } 
+        allTransactions.addAll(_filterTransactionsByDateRange(
+            baseTransactions, startDate, endDate));
+      }
       // CASE 3: Filter theo calendar format (Week/2Weeks/Month)
       else {
         final dateRange = _calculateDateRange(provider);
         allTransactions.addAll(_filterTransactionsByDateRange(
-          baseTransactions, 
-          dateRange['start']!, 
+          baseTransactions,
+          dateRange['start']!,
           dateRange['end']!,
         ));
       }
     }
-    
+
     // Nhóm theo ngày
     for (final transaction in allTransactions) {
       if (transaction.date == null) continue;
-      
+
       try {
         // Parse from ISO format (yyyy-MM-dd)
         final date = DateFormatUtils.parseInternalDate(transaction.date!);
         final normalizedDate = DateTime(date.year, date.month, date.day);
-        
+
         if (!grouped.containsKey(normalizedDate)) {
           grouped[normalizedDate] = [];
         }
@@ -704,27 +768,31 @@ class _CalendarContentState extends State<_CalendarContent> {
         // Bỏ qua giao dịch có format ngày không hợp lệ
       }
     }
-    
+
     // Sắp xếp theo ngày: ưu tiên ngày hiện tại ở trên đầu, rồi các ngày khác theo thứ tự mới nhất
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     final sortedEntries = grouped.entries.toList()
       ..sort((a, b) {
         // Ngày hiện tại luôn ở trên đầu
-        final aIsToday = a.key.year == today.year && a.key.month == today.month && a.key.day == today.day;
-        final bIsToday = b.key.year == today.year && b.key.month == today.month && b.key.day == today.day;
-        
+        final aIsToday = a.key.year == today.year &&
+            a.key.month == today.month &&
+            a.key.day == today.day;
+        final bIsToday = b.key.year == today.year &&
+            b.key.month == today.month &&
+            b.key.day == today.day;
+
         if (aIsToday && !bIsToday) return -1;
         if (!aIsToday && bIsToday) return 1;
-        
+
         // Các ngày khác sắp xếp theo thứ tự mới nhất trước
         return b.key.compareTo(a.key);
       });
-    
+
     return sortedEntries;
   }
-  
+
   /// Xây dựng danh sách giao dịch nhóm theo ngày
   Widget _buildTransactionList(
     BuildContext context,
@@ -732,8 +800,9 @@ class _CalendarContentState extends State<_CalendarContent> {
     NavigationProvider navProvider,
     TransactionProvider transactionProvider,
   ) {
-    final groupedTransactions = _groupTransactionsByDate(provider, navProvider, transactionProvider);
-    
+    final groupedTransactions =
+        _groupTransactionsByDate(provider, navProvider, transactionProvider);
+
     if (groupedTransactions.isEmpty) {
       return Expanded(
         child: Center(
@@ -747,7 +816,8 @@ class _CalendarContentState extends State<_CalendarContent> {
               ),
               SizedBox(height: 16.h),
               Text(
-                getTranslated(context, 'No transactions found') ?? 'No transactions found',
+                getTranslated(context, 'No transactions found') ??
+                    'No transactions found',
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: Colors.grey[600],
@@ -756,8 +826,9 @@ class _CalendarContentState extends State<_CalendarContent> {
               ),
               SizedBox(height: 8.h),
               Text(
-                getTranslated(context, 'Add some transactions to see them here') ?? 
-                'Add some transactions to see them here',
+                getTranslated(
+                        context, 'Add some transactions to see them here') ??
+                    'Add some transactions to see them here',
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: Colors.grey[500],
@@ -769,7 +840,7 @@ class _CalendarContentState extends State<_CalendarContent> {
         ),
       );
     }
-    
+
     return Expanded(
       child: ListView.builder(
         physics: const BouncingScrollPhysics(),

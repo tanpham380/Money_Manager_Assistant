@@ -2,7 +2,7 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_material_pickers/helpers/show_date_picker.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/Provider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -106,13 +106,14 @@ class AddEditInput extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               children: [
                 // CARD DUY NHẤT - Merge tất cả các trường vào một Card
-                                // Smart Suggestions
+                // Smart Suggestions
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.0.h),
                   child: Consumer<FormProvider>(
                     builder: (context, provider, child) {
                       // Hiển thị gợi ý cho cả Expense và Income
-                      if (provider.model.type != 'Expense' && provider.model.type != 'Income') {
+                      if (provider.model.type != 'Expense' &&
+                          provider.model.type != 'Income') {
                         return const SizedBox.shrink();
                       }
 
@@ -139,8 +140,8 @@ class AddEditInput extends StatelessWidget {
                               },
                             ),
                             ActionChip(
-                              avatar:
-                                  const Icon(Icons.restaurant_outlined, size: 18),
+                              avatar: const Icon(Icons.restaurant_outlined,
+                                  size: 18),
                               label: Text(
                                 getTranslated(context, 'Lunch') ?? 'Lunch',
                                 style: TextStyle(fontSize: 13.sp),
@@ -163,13 +164,15 @@ class AddEditInput extends StatelessWidget {
                               onPressed: () {
                                 final p = context.read<FormProvider>();
                                 p.descriptionController.text =
-                                    getTranslated(context, 'Dinner') ?? 'Dinner';
+                                    getTranslated(context, 'Dinner') ??
+                                        'Dinner';
                                 p.updateCategory(
                                     categoryItem(MdiIcons.food, 'Food'));
                               },
                             ),
                             ActionChip(
-                              avatar: const Icon(Icons.coffee_outlined, size: 18),
+                              avatar:
+                                  const Icon(Icons.coffee_outlined, size: 18),
                               label: Text(
                                 getTranslated(context, 'Coffee') ?? 'Coffee',
                                 style: TextStyle(fontSize: 13.sp),
@@ -177,7 +180,8 @@ class AddEditInput extends StatelessWidget {
                               onPressed: () {
                                 final p = context.read<FormProvider>();
                                 p.descriptionController.text =
-                                    getTranslated(context, 'Coffee') ?? 'Coffee';
+                                    getTranslated(context, 'Coffee') ??
+                                        'Coffee';
                                 p.updateCategory(
                                     categoryItem(Icons.coffee, 'Coffee'));
                               },
@@ -185,7 +189,8 @@ class AddEditInput extends StatelessWidget {
                             ActionChip(
                               avatar: const Icon(Icons.wifi_outlined, size: 18),
                               label: Text(
-                                getTranslated(context, 'Internet') ?? 'Internet',
+                                getTranslated(context, 'Internet') ??
+                                    'Internet',
                                 style: TextStyle(fontSize: 13.sp),
                               ),
                               onPressed: () {
@@ -193,8 +198,8 @@ class AddEditInput extends StatelessWidget {
                                 p.descriptionController.text =
                                     getTranslated(context, 'Internet') ??
                                         'Internet';
-                                p.updateCategory(
-                                    categoryItem(IcoFontIcons.globe, 'Internet'));
+                                p.updateCategory(categoryItem(
+                                    IcoFontIcons.globe, 'Internet'));
                               },
                             ),
                             ActionChip(
@@ -207,9 +212,9 @@ class AddEditInput extends StatelessWidget {
                               ),
                               onPressed: () {
                                 final p = context.read<FormProvider>();
-                                p.descriptionController.text =
-                                    getTranslated(context, 'Daily Necessities') ??
-                                        'Daily Necessities';
+                                p.descriptionController.text = getTranslated(
+                                        context, 'Daily Necessities') ??
+                                    'Daily Necessities';
                                 p.updateCategory(categoryItem(
                                     Icons.add_shopping_cart,
                                     'Daily Necessities'));
@@ -231,7 +236,8 @@ class AddEditInput extends StatelessWidget {
                               },
                             ),
                             ActionChip(
-                              avatar: const Icon(Icons.movie_outlined, size: 18),
+                              avatar:
+                                  const Icon(Icons.movie_outlined, size: 18),
                               label: Text(
                                 getTranslated(context, 'Movies') ?? 'Movies',
                                 style: TextStyle(fontSize: 13.sp),
@@ -239,7 +245,8 @@ class AddEditInput extends StatelessWidget {
                               onPressed: () {
                                 final p = context.read<FormProvider>();
                                 p.descriptionController.text =
-                                    getTranslated(context, 'Movies') ?? 'Movies';
+                                    getTranslated(context, 'Movies') ??
+                                        'Movies';
                                 p.updateCategory(
                                     categoryItem(Icons.movie_filter, 'Movies'));
                               },
@@ -253,11 +260,11 @@ class AddEditInput extends StatelessWidget {
                           runSpacing: 4.0.h,
                           children: [
                             ActionChip(
-                              avatar: const Icon(Icons.account_balance_wallet_outlined,
+                              avatar: const Icon(
+                                  Icons.account_balance_wallet_outlined,
                                   size: 18),
                               label: Text(
-                                getTranslated(context, 'Salary') ??
-                                    'Salary',
+                                getTranslated(context, 'Salary') ?? 'Salary',
                                 style: TextStyle(fontSize: 13.sp),
                               ),
                               onPressed: () {
@@ -265,13 +272,13 @@ class AddEditInput extends StatelessWidget {
                                 p.descriptionController.text =
                                     getTranslated(context, 'Monthly Salary') ??
                                         'Monthly Salary';
-                                p.updateCategory(
-                                    categoryItem(MdiIcons.accountCash, 'Salary'));
+                                p.updateCategory(categoryItem(
+                                    MdiIcons.accountCash, 'Salary'));
                               },
                             ),
                             ActionChip(
-                              avatar:
-                                  const Icon(Icons.business_center_outlined, size: 18),
+                              avatar: const Icon(Icons.business_center_outlined,
+                                  size: 18),
                               label: Text(
                                 getTranslated(context, 'Bonus') ?? 'Bonus',
                                 style: TextStyle(fontSize: 13.sp),
@@ -279,16 +286,18 @@ class AddEditInput extends StatelessWidget {
                               onPressed: () {
                                 final p = context.read<FormProvider>();
                                 p.descriptionController.text =
-                                    getTranslated(context, 'Year-end Bonus') ?? 'Year-end Bonus';
-                                p.updateCategory(
-                                    categoryItem(IcoFontIcons.moneyBag, 'Bonus'));
+                                    getTranslated(context, 'Year-end Bonus') ??
+                                        'Year-end Bonus';
+                                p.updateCategory(categoryItem(
+                                    IcoFontIcons.moneyBag, 'Bonus'));
                               },
                             ),
                             ActionChip(
                               avatar: const Icon(Icons.trending_up_outlined,
                                   size: 18),
                               label: Text(
-                                getTranslated(context, 'InvestmentIncome') ?? 'Investment Income',
+                                getTranslated(context, 'InvestmentIncome') ??
+                                    'Investment Income',
                                 style: TextStyle(fontSize: 13.sp),
                               ),
                               onPressed: () {
@@ -296,29 +305,33 @@ class AddEditInput extends StatelessWidget {
                                 p.descriptionController.text =
                                     getTranslated(context, 'Stock Dividend') ??
                                         'Stock Dividend';
-                                p.updateCategory(
-                                    categoryItem(Icons.business_center_rounded, 'InvestmentIncome'));
+                                p.updateCategory(categoryItem(
+                                    Icons.business_center_rounded,
+                                    'InvestmentIncome'));
                               },
                             ),
                             ActionChip(
                               avatar: const Icon(Icons.work_outline, size: 18),
                               label: Text(
-                                getTranslated(context, 'Side job') ?? 'Side job',
+                                getTranslated(context, 'Side job') ??
+                                    'Side job',
                                 style: TextStyle(fontSize: 13.sp),
                               ),
                               onPressed: () {
                                 final p = context.read<FormProvider>();
-                                p.descriptionController.text =
-                                    getTranslated(context, 'Freelance Project') ??
-                                        'Freelance Project';
-                                p.updateCategory(
-                                    categoryItem(IcoFontIcons.searchJob, 'Side job'));
+                                p.descriptionController.text = getTranslated(
+                                        context, 'Freelance Project') ??
+                                    'Freelance Project';
+                                p.updateCategory(categoryItem(
+                                    IcoFontIcons.searchJob, 'Side job'));
                               },
                             ),
                             ActionChip(
-                              avatar: const Icon(Icons.card_giftcard_outlined, size: 18),
+                              avatar: const Icon(Icons.card_giftcard_outlined,
+                                  size: 18),
                               label: Text(
-                                getTranslated(context, 'GiftsIncome') ?? 'Gifts',
+                                getTranslated(context, 'GiftsIncome') ??
+                                    'Gifts',
                                 style: TextStyle(fontSize: 13.sp),
                               ),
                               onPressed: () {
@@ -326,14 +339,16 @@ class AddEditInput extends StatelessWidget {
                                 p.descriptionController.text =
                                     getTranslated(context, 'Birthday Gift') ??
                                         'Birthday Gift';
-                                p.updateCategory(
-                                    categoryItem(IcoFontIcons.gift, 'GiftsIncome'));
+                                p.updateCategory(categoryItem(
+                                    IcoFontIcons.gift, 'GiftsIncome'));
                               },
                             ),
                             ActionChip(
-                              avatar: const Icon(Icons.receipt_outlined, size: 18),
+                              avatar:
+                                  const Icon(Icons.receipt_outlined, size: 18),
                               label: Text(
-                                getTranslated(context, 'Tax Refund') ?? 'Tax Refund',
+                                getTranslated(context, 'Tax Refund') ??
+                                    'Tax Refund',
                                 style: TextStyle(fontSize: 13.sp),
                               ),
                               onPressed: () {
@@ -341,8 +356,8 @@ class AddEditInput extends StatelessWidget {
                                 p.descriptionController.text =
                                     getTranslated(context, 'Tax Refund') ??
                                         'Tax Refund';
-                                p.updateCategory(
-                                    categoryItem(IcoFontIcons.money, 'Tax Refund'));
+                                p.updateCategory(categoryItem(
+                                    IcoFontIcons.money, 'Tax Refund'));
                               },
                             ),
                           ],
@@ -373,7 +388,6 @@ class AddEditInput extends StatelessWidget {
                     ],
                   ),
                 ),
-
 
                 // Save/Delete Buttons
                 Padding(
@@ -427,7 +441,7 @@ class _AmountCardState extends State<AmountCard> {
   void _onAmountChanged(String value, TextEditingController controller) {
     // Cancel previous debounce timer
     _debounce?.cancel();
-    
+
     // Don't format if empty or currently typing
     if (value.isEmpty) return;
 
@@ -436,11 +450,11 @@ class _AmountCardState extends State<AmountCard> {
       // Remove existing commas for parsing
       final numericValue = value.replaceAll(',', '');
       if (numericValue.isEmpty) return;
-      
+
       try {
         final number = double.parse(numericValue);
         final formatted = AmountFormatter.format(number);
-        
+
         // Only update if different to avoid cursor jump
         if (formatted != value) {
           controller.value = TextEditingValue(
@@ -458,16 +472,20 @@ class _AmountCardState extends State<AmountCard> {
   Widget build(BuildContext context) {
     return Consumer<FormProvider>(
       builder: (context, provider, child) {
-        final colorMain = provider.model.type == 'Income' 
-            ? Theme.of(context).colorScheme.secondary // Use secondary for Income (green)
-            : Theme.of(context).colorScheme.error; // Use error for Expense (red)
+        final colorMain = provider.model.type == 'Income'
+            ? Theme.of(context)
+                .colorScheme
+                .secondary // Use secondary for Income (green)
+            : Theme.of(context)
+                .colorScheme
+                .error; // Use error for Expense (red)
         final amountController = provider.amountController;
 
         return Semantics(
           label: getTranslated(context, 'Amount input section'),
           child: Padding(
-            padding:
-                EdgeInsets.only(top: 5.h, bottom: 15.h, right: 20.w, left: 20.w),
+            padding: EdgeInsets.only(
+                top: 5.h, bottom: 15.h, right: 20.w, left: 20.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -485,16 +503,20 @@ class _AmountCardState extends State<AmountCard> {
                   showCursor: true,
                   maxLines: 1,
                   autofocus: false,
-                  onChanged: (value) => _onAmountChanged(value, amountController),
+                  onChanged: (value) =>
+                      _onAmountChanged(value, amountController),
                   onFieldSubmitted: (_) {
                     // Format immediately before saving
                     _debounce?.cancel();
                     _onAmountChanged(amountController.text, amountController);
-                    
+
                     // Thực hiện lưu trực tiếp khi nhấn Done trên bàn phím
                     Future.delayed(const Duration(milliseconds: 350), () {
-                      final isNew = context.read<FormProvider>().model.id == null;
-                      context.read<FormProvider>().saveInput(context, isNewInput: isNew);
+                      final isNew =
+                          context.read<FormProvider>().model.id == null;
+                      context
+                          .read<FormProvider>()
+                          .saveInput(context, isNewInput: isNew);
                     });
                   },
                   // Chỉ cho phép nhập số
@@ -528,11 +550,13 @@ class _AmountCardState extends State<AmountCard> {
                             icon: Icon(
                               Icons.clear,
                               size: 24.sp,
-                              semanticLabel: getTranslated(context, 'Clear amount'),
+                              semanticLabel:
+                                  getTranslated(context, 'Clear amount'),
                             ),
                             onPressed: amountController.clear)
                         : const SizedBox(),
-                    semanticCounterText: getTranslated(context, 'Amount input field'),
+                    semanticCounterText:
+                        getTranslated(context, 'Amount input field'),
                   ),
                 ),
               ],
@@ -574,11 +598,16 @@ class CategoryCard extends StatelessWidget {
               decoration: BoxDecoration(
                 // Highlight màu đỏ nhạt nếu chưa chọn category
                 color: isDefaultCategory
-                    ? Theme.of(context).colorScheme.error.withValues(alpha: 0.05) // Use error color
+                    ? Theme.of(context)
+                        .colorScheme
+                        .error
+                        .withValues(alpha: 0.05) // Use error color
                     : Colors.transparent,
                 border: Border(
                   left: BorderSide(
-                    color: isDefaultCategory ? Theme.of(context).colorScheme.error : Colors.transparent, // Use error color
+                    color: isDefaultCategory
+                        ? Theme.of(context).colorScheme.error
+                        : Colors.transparent, // Use error color
                     width: 4.w,
                   ),
                 ),
@@ -604,7 +633,11 @@ class CategoryCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 24.sp,
                             fontWeight: FontWeight.bold,
-                            color: isDefaultCategory ? Colors.grey : Theme.of(context).colorScheme.onSurface, // Use onSurface
+                            color: isDefaultCategory
+                                ? Colors.grey
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface, // Use onSurface
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -613,7 +646,9 @@ class CategoryCard extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_ios_outlined,
                       size: 20.sp,
-                      color: isDefaultCategory ? Theme.of(context).colorScheme.error : Colors.grey, // Use error color
+                      color: isDefaultCategory
+                          ? Theme.of(context).colorScheme.error
+                          : Colors.grey, // Use error color
                       semanticLabel: getTranslated(context, 'Select category'),
                     ),
                   ],
@@ -635,9 +670,13 @@ class DescriptionCard extends StatelessWidget {
     return Consumer<FormProvider>(
       builder: (context, provider, child) {
         final descriptionController = provider.descriptionController;
-        final colorMain = provider.model.type == 'Income' 
-            ? Theme.of(context).colorScheme.secondary // Use secondary for Income (green)
-            : Theme.of(context).colorScheme.error; // Use error for Expense (red)
+        final colorMain = provider.model.type == 'Income'
+            ? Theme.of(context)
+                .colorScheme
+                .secondary // Use secondary for Income (green)
+            : Theme.of(context)
+                .colorScheme
+                .error; // Use error for Expense (red)
 
         return Semantics(
           label: getTranslated(context, 'Description input section'),
@@ -670,7 +709,8 @@ class DescriptionCard extends StatelessWidget {
                           icon: Icon(
                             Icons.clear,
                             size: 20.sp,
-                            semanticLabel: getTranslated(context, 'Clear description'),
+                            semanticLabel:
+                                getTranslated(context, 'Clear description'),
                           ),
                           onPressed: descriptionController.clear)
                       : const SizedBox(),
@@ -679,11 +719,15 @@ class DescriptionCard extends StatelessWidget {
                     child: Icon(
                       Icons.description_outlined,
                       size: 40.sp,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), // Use onSurface with alpha
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7), // Use onSurface with alpha
                       semanticLabel: getTranslated(context, 'Description icon'),
                     ),
                   ),
-                  semanticCounterText: getTranslated(context, 'Description input field')),
+                  semanticCounterText:
+                      getTranslated(context, 'Description input field')),
             ),
           ),
         );
@@ -709,10 +753,16 @@ class DateCard extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     showMaterialDatePicker(
-                      headerColor: Theme.of(context).colorScheme.primary, // Use primary color
-                      headerTextColor: Theme.of(context).colorScheme.onSurface, // Use onSurface
-                      backgroundColor: Theme.of(context).colorScheme.surface, // Use surface
-                      buttonTextColor: Theme.of(context).colorScheme.primary, // Use primary
+                      headerColor: Theme.of(context)
+                          .colorScheme
+                          .primary, // Use primary color
+                      headerTextColor: Theme.of(context)
+                          .colorScheme
+                          .onSurface, // Use onSurface
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surface, // Use surface
+                      buttonTextColor:
+                          Theme.of(context).colorScheme.primary, // Use primary
                       cancelText: getTranslated(context, 'CANCEL'),
                       confirmText: getTranslated(context, 'OK') ?? 'OK',
                       maxLongSide: 450.w,
@@ -721,8 +771,8 @@ class DateCard extends StatelessWidget {
                       context: context,
                       firstDate: DateTime(1990, 1, 1),
                       lastDate: DateTime(2100, 12, 31),
-                      selectedDate:
-                          DateFormatUtils.parseInternalDate(provider.model.date!),
+                      selectedDate: DateFormatUtils.parseInternalDate(
+                          provider.model.date!),
                       onChanged: (value) {
                         provider.updateDate(value);
                       },
@@ -736,14 +786,17 @@ class DateCard extends StatelessWidget {
                         child: Icon(
                           Icons.event,
                           size: 40.sp,
-                          color: Theme.of(context).colorScheme.primary, // Use primary color
-                          semanticLabel: getTranslated(context, 'Date picker icon'),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary, // Use primary color
+                          semanticLabel:
+                              getTranslated(context, 'Date picker icon'),
                         ),
                       ),
                       Text(
                         DateFormatUtils.formatUserDate(
-                          DateFormatUtils.parseInternalDate(provider.model.date!)
-                        ),
+                            DateFormatUtils.parseInternalDate(
+                                provider.model.date!)),
                         style: GoogleFonts.aBeeZee(
                           fontSize: 21.5.sp,
                         ),
@@ -766,7 +819,11 @@ class DateCard extends StatelessWidget {
                           cancelText:
                               getTranslated(context, 'Cancel') ?? 'Cancel',
                           okText: getTranslated(context, 'Ok') ?? 'Ok',
-                          unselectedColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), // Use onSurface with alpha
+                          unselectedColor: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(
+                                  alpha: 0.5), // Use onSurface with alpha
                           dialogInsetPadding: EdgeInsets.symmetric(
                               horizontal: 50.w, vertical: 30.0.h),
                           elevation: 12,

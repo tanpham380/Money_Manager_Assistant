@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import '../utils/date_format_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -26,35 +26,36 @@ class DailyTransactionDetail extends StatelessWidget {
 
   /// Xóa giao dịch với confirmation
   Future<void> _deleteTransaction(BuildContext context, int id) async {
-    final confirmed = await  AlertService.show(
+    final confirmed = await AlertService.show(
       context,
       type: NotificationType.delete,
-      title: 'Delete Transaction',  // Raw key
-      message: 'Are you sure you want to delete this transaction?',  // Raw key
-      actionText: 'Delete',  // Raw key
-      cancelText: 'Cancel',  // Raw key
+      title: 'Delete Transaction', // Raw key
+      message: 'Are you sure you want to delete this transaction?', // Raw key
+      actionText: 'Delete', // Raw key
+      cancelText: 'Cancel', // Raw key
     );
 
     if (confirmed == true) {
       try {
         // Sử dụng TransactionProvider thay vì DB trực tiếp
-        final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+        final transactionProvider =
+            Provider.of<TransactionProvider>(context, listen: false);
         await transactionProvider.deleteTransaction(id);
-        
+
         if (context.mounted) {
-           AlertService.show(
+          AlertService.show(
             context,
             type: NotificationType.success,
-            message: 'Transaction has been deleted',  // Raw key
+            message: 'Transaction has been deleted', // Raw key
           );
         }
       } catch (e) {
         print('Error deleting transaction: $e');
         if (context.mounted) {
-           AlertService.show(
+          AlertService.show(
             context,
             type: NotificationType.error,
-            message: 'Error deleting transaction',  // Raw key
+            message: 'Error deleting transaction', // Raw key
           );
         }
       }
@@ -62,26 +63,28 @@ class DailyTransactionDetail extends StatelessWidget {
   }
 
   /// Sao chép giao dịch
-  Future<void> _duplicateTransaction(BuildContext context, InputModel transaction) async {
+  Future<void> _duplicateTransaction(
+      BuildContext context, InputModel transaction) async {
     try {
       // Sử dụng TransactionProvider thay vì DB trực tiếp
-      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final transactionProvider =
+          Provider.of<TransactionProvider>(context, listen: false);
       await transactionProvider.duplicateTransaction(transaction);
-      
+
       if (context.mounted) {
-         AlertService.show(
+        AlertService.show(
           context,
           type: NotificationType.success,
-          message: 'Transaction has been duplicated',  // Raw key
+          message: 'Transaction has been duplicated', // Raw key
         );
       }
     } catch (e) {
       print('Error duplicating transaction: $e');
       if (context.mounted) {
-         AlertService.show(
+        AlertService.show(
           context,
           type: NotificationType.error,
-          message: 'Error duplicating transaction',  // Raw key
+          message: 'Error duplicating transaction', // Raw key
         );
       }
     }
@@ -249,8 +252,11 @@ class DailyTransactionDetail extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => Edit(
                                 inputModel: transaction,
-                                categoryIcon: CategoryIconHelper.getIconForCategory(
-                                  transaction.category ?? getTranslated(context, 'Category') ?? 'Category',
+                                categoryIcon:
+                                    CategoryIconHelper.getIconForCategory(
+                                  transaction.category ??
+                                      getTranslated(context, 'Category') ??
+                                      'Category',
                                 ),
                               ),
                             ),

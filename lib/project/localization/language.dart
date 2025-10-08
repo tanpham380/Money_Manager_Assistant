@@ -21,6 +21,5 @@ class Language {
         1, '🇺🇸', 'English', 'en', 'US', '\$', 'USD', 'United States Dollar'),
     Language(
         2, '🇻🇳', 'Tiếng Việt', 'vi', 'VN', '₫', 'VND', 'Vietnamese Dong'),
-
   ];
 }

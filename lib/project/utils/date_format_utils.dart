@@ -102,15 +102,21 @@ class DateFormatUtils {
     return DateFormat('MMM').format(date);
   }
 
-    // ==================== LOCALIZED FORMATS ====================
+  // ==================== LOCALIZED FORMATS ====================
   /// Lấy tên thứ đã được dịch theo locale
   static String getLocalizedWeekdayName(BuildContext context, DateTime date) {
     final weekdayIndex = date.weekday;
     final weekdayKeys = [
-      'Sunday', 'Monday', 'Tuesday', 'Wednesday',
-      'Thursday', 'Friday', 'Saturday'
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday'
     ];
-    final key = weekdayKeys[weekdayIndex - 1]; // DateTime.weekday is 1-7 (Monday=1, Sunday=7)
+    final key = weekdayKeys[
+        weekdayIndex - 1]; // DateTime.weekday is 1-7 (Monday=1, Sunday=7)
     return getTranslated(context, key) ?? key;
   }
 
@@ -118,15 +124,26 @@ class DateFormatUtils {
   static String getLocalizedMonthName(BuildContext context, DateTime date) {
     final monthIndex = date.month - 1;
     final monthKeys = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     final key = monthKeys[monthIndex];
     return getTranslated(context, key) ?? key;
   }
 
   /// Format ngày đầy đủ với thứ và tháng đã được dịch
-  static String formatLocalizedFullWeekday(BuildContext context, DateTime date) {
+  static String formatLocalizedFullWeekday(
+      BuildContext context, DateTime date) {
     final weekday = getLocalizedWeekdayName(context, date);
     final month = getLocalizedMonthName(context, date);
     return '$weekday, $month ${date.day}, ${date.year}';
@@ -139,7 +156,7 @@ class DateFormatUtils {
     final weekday = getLocalizedWeekdayName(context, date);
     final month = getLocalizedMonthName(context, date);
     final locale = Localizations.localeOf(context).languageCode;
-    
+
     // Format khác nhau cho tiếng Việt và tiếng Anh
     if (locale == 'vi') {
       // Tiếng Việt: "Thứ Hai, 04 Tháng 10 2025"
@@ -151,7 +168,8 @@ class DateFormatUtils {
   }
 
   /// Format ngày với thứ và ngày ngắn (theo user format)
-  static String formatLocalizedWeekdayWithUserDate(BuildContext context, DateTime date) {
+  static String formatLocalizedWeekdayWithUserDate(
+      BuildContext context, DateTime date) {
     final weekday = getLocalizedWeekdayName(context, date);
     final dateStr = formatUserDate(date);
     return '$weekday, $dateStr';

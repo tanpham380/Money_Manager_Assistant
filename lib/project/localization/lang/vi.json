@@ -216,7 +216,7 @@
   "Add new transaction": "Thêm giao dịch mới",
   "Donut": "Bánh donut",
   "Bar": "Cột",
-  "Trend": "Xu hướng",
+  "Sankey": "Sơ đồ Sankey",
   "Ok": "Đồng ý",
   "Delete Transaction": "Xóa giao dịch",
   "Error occurred": "Đã xảy ra lỗi",
@@ -230,6 +230,17 @@
   "Notification permission denied": "Quyền thông báo bị từ chối",
   "Daily reminder enabled": "Nhắc nhở hàng ngày đã được bật",
   "Daily reminder disabled": "Nhắc nhở hàng ngày đã được tắt",
-  "Reminder time updated": "Thời gian nhắc nhở đã được cập nhật"
+  "Reminder time updated": "Thời gian nhắc nhở đã được cập nhật",
+  "View": "Xem",
+  "About this view:": "Về biểu đồ này:",
+  "Money Flow Diagram": "Sơ đồ dòng tiền",
+  "Visualize how money flows from income sources to expenses": "Trực quan hóa dòng chảy tiền từ nguồn thu đến các khoản chi",
+  "Left: Income categories": "Trái: Các nguồn thu nhập",
+  "Center: Money flow visualization": "Giữa: Hiển thị dòng tiền",
+  "Right: Expense categories": "Phải: Các hạng mục chi tiêu",
+  "Income Sources": "Nguồn thu nhập",
+  "Expense Categories": "Hạng mục chi tiêu",
+  "Money Flow": "Dòng tiền",
+  "more": "thêm"
 }
 

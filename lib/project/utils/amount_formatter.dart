@@ -10,6 +10,7 @@ class AmountFormatter {
     final formatter = NumberFormat('#,###,###,###,###,###.##', 'en_US');
     return formatter.format(value);
   }
+
   /// Chèn text vào controller tại vị trí cursor
   /// Xử lý các quy tắc:
   /// - Giới hạn độ dài tối đa 13 ký tự
@@ -21,18 +22,18 @@ class AmountFormatter {
   ) {
     final text = controller.text;
     final TextSelection textSelection = controller.selection;
-    
+
     String newText = text.replaceRange(
       textSelection.start,
       textSelection.end,
       myText,
     );
-    
+
     // Giới hạn độ dài tối đa
     if (newText.length > 13) {
       newText = newText.substring(0, 13);
     }
-    
+
     // Xử lý số thập phân
     if (newText.contains('.')) {
       newText = _handleDecimalInput(newText);
@@ -60,7 +61,7 @@ class AmountFormatter {
     }
 
     final selectionLength = textSelection.end - textSelection.start;
-    
+
     // Có selection - xóa selection
     if (selectionLength > 0) {
       final newText = text.replaceRange(
@@ -78,34 +79,34 @@ class AmountFormatter {
     final newStart = textSelection.start - offset;
     final newEnd = textSelection.start;
     final newText = text.replaceRange(newStart, newEnd, '');
-    
+
     _updateControllerText(controller, newText);
   }
 
   /// Xử lý input có dấu thập phân
   static String _handleDecimalInput(String newText) {
     final parts = newText.split('.');
-    
+
     if (parts.length > 2) {
       // Có nhiều hơn 1 dấu chấm - loại bỏ dấu chấm cuối cùng
       return newText.substring(0, newText.length - 1);
     }
-    
+
     final fractionalPart = parts.last;
-    
+
     // Giới hạn 2 số sau dấu thập phân
     if (fractionalPart.length > 2) {
       final wholePart = parts.first;
       return '$wholePart.${fractionalPart.substring(0, 2)}';
     }
-    
+
     return newText;
   }
 
   /// Format số với dấu phẩy
   static String _formatWithCommas(String text) {
     if (text.isEmpty) return text;
-    
+
     try {
       final number = double.parse(text.replaceAll(',', ''));
       return AmountFormatter.format(number);
@@ -141,7 +142,7 @@ class AmountFormatter {
   /// Parse amount từ formatted string
   static double parseAmount(String formattedText) {
     if (formattedText.isEmpty) return 0;
-    
+
     try {
       return double.parse(formattedText.replaceAll(',', ''));
     } catch (e) {

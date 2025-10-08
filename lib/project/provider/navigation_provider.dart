@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 /// Provider quản lý navigation giữa các tabs và filter
 class NavigationProvider with ChangeNotifier {
   int _currentTabIndex = 0;
-  
+
   // Filter cho Calendar
   String? _filterType;
   String? _filterCategory;
   IconData? _filterIcon;
   Color? _filterColor;
-  
+
   // Special flag for "Others" grouped category
   bool _isOthersCategory = false;
-  
+
   // Bộ lọc khoảng thời gian
   DateTime? _filterStartDate;
   DateTime? _filterEndDate;
-  
+
   // Getters
   int get currentTabIndex => _currentTabIndex;
   String? get filterType => _filterType;
@@ -24,17 +24,17 @@ class NavigationProvider with ChangeNotifier {
   IconData? get filterIcon => _filterIcon;
   Color? get filterColor => _filterColor;
   bool get isOthersCategory => _isOthersCategory;
-  
+
   // Getters cho khoảng thời gian
   DateTime? get filterStartDate => _filterStartDate;
   DateTime? get filterEndDate => _filterEndDate;
-  
+
   /// Chuyển sang tab chỉ định
   void changeTab(int index) {
     _currentTabIndex = index;
     notifyListeners();
   }
-  
+
   /// Chuyển sang Calendar với filter và khoảng thời gian
   void navigateToCalendarWithFilter({
     required String type,
@@ -55,7 +55,7 @@ class NavigationProvider with ChangeNotifier {
     _currentTabIndex = 2; // Index của Calendar tab
     notifyListeners();
   }
-  
+
   /// Clear filter
   void clearFilter() {
     _filterType = null;
@@ -67,7 +67,7 @@ class NavigationProvider with ChangeNotifier {
     _isOthersCategory = false;
     notifyListeners();
   }
-  
+
   /// Check nếu có filter active
   /// Có filter khi: có type (và không rỗng) HOẶC có category (và không rỗng)
   bool get hasActiveFilter {

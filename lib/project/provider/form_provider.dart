@@ -24,8 +24,8 @@ class FormProvider with ChangeNotifier {
 
   // Constructor để khởi tạo state cho form
   FormProvider({
-    InputModel? input, 
-    String? type, 
+    InputModel? input,
+    String? type,
     IconData? categoryIcon,
     required TransactionProvider transactionProvider,
   }) : _transactionProvider = transactionProvider {
@@ -136,7 +136,7 @@ class FormProvider with ChangeNotifier {
   Future<void> saveInput(BuildContext context, {bool isNewInput = true}) async {
     final validationError = validateInput(context);
     if (validationError != null) {
-       AlertService.show(
+      AlertService.show(
         context,
         type: NotificationType.error,
         message: validationError,
@@ -160,7 +160,7 @@ class FormProvider with ChangeNotifier {
         _model.category = 'Category';
         _currentTime = TimeOfDay.now();
 
-         AlertService.show(
+        AlertService.show(
           context,
           type: NotificationType.success,
           message: getTranslated(context, 'Data has been saved') ??
@@ -169,7 +169,7 @@ class FormProvider with ChangeNotifier {
       } else {
         await _transactionProvider.updateTransaction(_model);
         Navigator.pop(context);
-         AlertService.show(
+        AlertService.show(
           context,
           type: NotificationType.success,
           message: 'Transaction has been updated',
@@ -177,7 +177,7 @@ class FormProvider with ChangeNotifier {
       }
     } catch (e) {
       print('Error saving input: $e');
-       AlertService.show(
+      AlertService.show(
         context,
         type: NotificationType.error,
         message: 'Error saving data',
@@ -190,7 +190,7 @@ class FormProvider with ChangeNotifier {
 
   // Hàm xóa dữ liệu
   Future<void> deleteInput(BuildContext context) async {
-    final confirmed = await  AlertService.show(
+    final confirmed = await AlertService.show(
       context,
       type: NotificationType.delete,
       title: 'Delete Transaction',
@@ -203,14 +203,14 @@ class FormProvider with ChangeNotifier {
       try {
         await _transactionProvider.deleteTransaction(_model.id!);
         Navigator.pop(context);
-         AlertService.show(
+        AlertService.show(
           context,
           type: NotificationType.success,
           message: 'Transaction has been deleted',
         );
       } catch (e) {
         print('Error deleting input: $e');
-         AlertService.show(
+        AlertService.show(
           context,
           type: NotificationType.error,
           message: 'Error deleting data',

@@ -34,7 +34,9 @@ class EmptyStateWidget extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
             Text(
-              title ?? getTranslated(context, 'No data available') ?? 'No data available',
+              title ??
+                  getTranslated(context, 'No data available') ??
+                  'No data available',
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w600,
@@ -63,7 +65,8 @@ class EmptyStateWidget extends StatelessWidget {
                   style: TextStyle(fontSize: 16.sp),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -107,7 +110,9 @@ class ErrorStateWidget extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
             Text(
-              title ?? getTranslated(context, 'Error occurred') ?? 'An error occurred',
+              title ??
+                  getTranslated(context, 'Error occurred') ??
+                  'An error occurred',
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w600,
@@ -132,11 +137,14 @@ class ErrorStateWidget extends StatelessWidget {
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
                 label: Text(
-                  retryText ?? getTranslated(context, 'Try again') ?? 'Try again',
+                  retryText ??
+                      getTranslated(context, 'Try again') ??
+                      'Try again',
                   style: TextStyle(fontSize: 16.sp),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -199,15 +207,18 @@ class NoTransactionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String message = date != null
-        ? getTranslated(context, 'No transactions on this date') ?? 'No transactions on this date'
-        : getTranslated(context, 'No transactions found') ?? 'No transactions found';
+        ? getTranslated(context, 'No transactions on this date') ??
+            'No transactions on this date'
+        : getTranslated(context, 'No transactions found') ??
+            'No transactions found';
 
     return EmptyStateWidget(
       icon: Icons.receipt_long_outlined,
       title: getTranslated(context, 'No transactions') ?? 'No transactions',
       message: message,
       onAction: onAddTransaction,
-      actionText: getTranslated(context, 'Add transaction') ?? 'Add transaction',
+      actionText:
+          getTranslated(context, 'Add transaction') ?? 'Add transaction',
     );
   }
 }

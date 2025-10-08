@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 
 import '../classes/app_bar.dart';
 import '../classes/category_item.dart';

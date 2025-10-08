@@ -21,10 +21,10 @@ class AlertService {
       EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h);
 
   /// Show alert or toast notification
-  /// 
+  ///
   /// IMPORTANT: Pass RAW localization keys, NOT pre-translated strings
   /// AlertService will handle translation internally
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// AlertService.show(
@@ -140,9 +140,8 @@ class AlertService {
                 style: TextStyle(
                   fontSize: 17.sp,
                   fontWeight: FontWeight.w600,
-                  color: type == NotificationType.delete
-                      ? red
-                      : colors['primary'],
+                  color:
+                      type == NotificationType.delete ? red : colors['primary'],
                 ),
               ),
               isDefaultAction: true,

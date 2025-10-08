@@ -1,7 +1,7 @@
 import 'package:provider/provider.dart';
 
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 
 import '../database_management/shared_preferences_services.dart';
 import '../localization/methods.dart';

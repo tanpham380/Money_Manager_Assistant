@@ -20,7 +20,7 @@ class CategoryIconHelper {
         return Icons.coffee_outlined;
       case 'restaurant':
         return Icons.restaurant;
-        
+
       // Transportation
       case 'transportation':
         return Icons.directions_car;
@@ -31,7 +31,7 @@ class CategoryIconHelper {
         return Icons.local_gas_station;
       case 'parking':
         return Icons.local_parking;
-        
+
       // Shopping
       case 'shopping':
         return Icons.shopping_bag;
@@ -41,7 +41,7 @@ class CategoryIconHelper {
         return Icons.checkroom;
       case 'electronics':
         return Icons.devices;
-        
+
       // Entertainment
       case 'entertainment':
         return Icons.movie_filter;
@@ -52,7 +52,7 @@ class CategoryIconHelper {
         return Icons.music_note;
       case 'games':
         return Icons.sports_esports;
-        
+
       // Bills & Utilities
       case 'electricity':
         return Icons.electric_bolt;
@@ -64,7 +64,7 @@ class CategoryIconHelper {
         return Icons.phone;
       case 'rent':
         return Icons.home;
-        
+
       // Health & Fitness
       case 'health':
       case 'medical':
@@ -74,14 +74,14 @@ class CategoryIconHelper {
         return Icons.fitness_center;
       case 'pharmacy':
         return Icons.local_pharmacy;
-        
+
       // Education
       case 'education':
       case 'school':
         return Icons.school;
       case 'books':
         return Icons.menu_book;
-        
+
       // Income categories
       case 'salary':
         return Icons.payments;
@@ -93,7 +93,7 @@ class CategoryIconHelper {
         return Icons.card_giftcard;
       case 'bonus':
         return Icons.money;
-        
+
       // Other
       case 'travel':
         return Icons.flight;
@@ -105,7 +105,7 @@ class CategoryIconHelper {
         return Icons.face;
       case 'insurance':
         return Icons.verified_user;
-        
+
       // Default
       default:
         return Icons.category_outlined;

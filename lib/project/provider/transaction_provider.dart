@@ -34,7 +34,6 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
 
       _allTransactions = await DB.inputModelList();
-
     } catch (e) {
       _errorMessage = 'Failed to load transactions: $e';
       _allTransactions = [];
@@ -113,7 +112,8 @@ class TransactionProvider with ChangeNotifier {
       try {
         // Parse from ISO format (yyyy-MM-dd)
         final transactionDate = DateFormatUtils.parseInternalDate(t.date!);
-        return transactionDate.year == month.year && transactionDate.month == month.month;
+        return transactionDate.year == month.year &&
+            transactionDate.month == month.month;
       } catch (e) {
         return false;
       }

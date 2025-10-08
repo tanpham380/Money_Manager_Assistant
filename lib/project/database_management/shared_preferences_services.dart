@@ -123,8 +123,7 @@ class SharedPrefs {
   List<List<CategoryItem>> getAllExpenseItemsLists() {
     List<List<CategoryItem>> expenseItemsLists = [];
     for (int i = 0; i < parentExpenseItemNames.length; i++) {
-      var parentExpenseItem =
-          sharedPrefs.getItems(parentExpenseItemNames[i]);
+      var parentExpenseItem = sharedPrefs.getItems(parentExpenseItemNames[i]);
       expenseItemsLists.add(parentExpenseItem);
     }
     return expenseItemsLists;

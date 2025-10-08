@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_scaler/responsive_scaler.dart';
 import 'app_pages/analysis.dart';
 import 'app_pages/input.dart';
@@ -50,7 +50,7 @@ class _HomeState extends State<Home> {
       _bottomNavigationBarItem(Icons.account_circle, 'Other'),
     ];
 
-        // Provide TransactionProvider at Home level so all pages share the same instance
+    // Provide TransactionProvider at Home level so all pages share the same instance
     return Consumer<NavigationProvider>(
       builder: (context, navProvider, child) {
         return Scaffold(
@@ -58,7 +58,9 @@ class _HomeState extends State<Home> {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.shadow, // Use shadow color
+                    color: Theme.of(context)
+                        .colorScheme
+                        .shadow, // Use shadow color
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
@@ -69,8 +71,10 @@ class _HomeState extends State<Home> {
                 selectedFontSize: scale(16),
                 unselectedFontSize: scale(14),
                 backgroundColor: blue1,
-                selectedItemColor: Theme.of(context).colorScheme.primary, // Use primary color
-                unselectedItemColor: Theme.of(context).colorScheme.onSurface, // Use onSurface
+                selectedItemColor:
+                    Theme.of(context).colorScheme.primary, // Use primary color
+                unselectedItemColor:
+                    Theme.of(context).colorScheme.onSurface, // Use onSurface
                 type: BottomNavigationBarType.fixed,
                 items: bottomItems,
                 currentIndex: navProvider.currentTabIndex,

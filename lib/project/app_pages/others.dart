@@ -3,7 +3,7 @@ import 'dart:core';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -102,18 +102,19 @@ class _SettingsState extends State<Settings> {
   Future<void> _toggleReminder(bool value) async {
     if (value) {
       // Request permission trước khi bật reminder
-      bool hasPermission = await  NotificationService.requestPermission();
+      bool hasPermission = await NotificationService.requestPermission();
       if (!hasPermission) {
         AlertService.show(
           context,
           type: NotificationType.error,
-          message: getTranslated(context, 'Notification permission denied') ?? 'Notification permission denied',
+          message: getTranslated(context, 'Notification permission denied') ??
+              'Notification permission denied',
         );
         return;
       }
 
       // Bật reminder
-      await  NotificationService.scheduleDailyReminder(
+      await NotificationService.scheduleDailyReminder(
           _reminderHour, _reminderMinute);
       setState(() {
         _isReminderEnabled = true;
@@ -122,11 +123,12 @@ class _SettingsState extends State<Settings> {
       AlertService.show(
         context,
         type: NotificationType.success,
-        message: getTranslated(context, 'Daily reminder enabled') ?? 'Daily reminder enabled',
+        message: getTranslated(context, 'Daily reminder enabled') ??
+            'Daily reminder enabled',
       );
     } else {
       // Tắt reminder
-      await  NotificationService.cancelReminder();
+      await NotificationService.cancelReminder();
       setState(() {
         _isReminderEnabled = false;
       });
@@ -134,9 +136,9 @@ class _SettingsState extends State<Settings> {
       AlertService.show(
         context,
         type: NotificationType.success,
-        message: getTranslated(context, 'Daily reminder disabled') ?? 'Daily reminder disabled',
+        message: getTranslated(context, 'Daily reminder disabled') ??
+            'Daily reminder disabled',
       );
-      
     }
   }
 
@@ -172,12 +174,13 @@ class _SettingsState extends State<Settings> {
 
       // Nếu reminder đang bật, reschedule với thời gian mới
       if (_isReminderEnabled) {
-        await  NotificationService.scheduleDailyReminder(
+        await NotificationService.scheduleDailyReminder(
             _reminderHour, _reminderMinute);
         AlertService.show(
           context,
           type: NotificationType.success,
-          message: getTranslated(context, 'Reminder time updated') ?? 'Reminder time updated',
+          message: getTranslated(context, 'Reminder time updated') ??
+              'Reminder time updated',
         );
       }
     }
@@ -288,8 +291,10 @@ class _SettingsState extends State<Settings> {
                 // ImportExportScreen
 
                 if (index == 0 || index == 1) {
-                  unawaited(Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => pageRoute[index])));
+                  unawaited(Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => pageRoute[index])));
                 } else if (index == 2) {
                   unawaited(Navigator.push(context,
                           MaterialPageRoute(builder: (context) => FormatDate()))
@@ -299,11 +304,12 @@ class _SettingsState extends State<Settings> {
                     context,
                     type: NotificationType.delete,
                     title: 'Reset Categories',
-                    message: 'This action cannot be undone. Are you sure you want to reset all categories?',
+                    message:
+                        'This action cannot be undone. Are you sure you want to reset all categories?',
                     actionText: 'Reset',
                     cancelText: 'Cancel',
                   );
-                  
+
                   if (confirmed == true) {
                     sharedPrefs.setItems(setCategoriesToDefault: true);
                     AlertService.show(
@@ -317,11 +323,12 @@ class _SettingsState extends State<Settings> {
                     context,
                     type: NotificationType.delete,
                     title: 'Delete All Data',
-                    message: 'Deleted data can not be recovered. Are you sure you want to delete all data?',
+                    message:
+                        'Deleted data can not be recovered. Are you sure you want to delete all data?',
                     actionText: 'Delete',
                     cancelText: 'Cancel',
                   );
-                  
+
                   if (confirmed == true) {
                     await DB.deleteAll();
                     AlertService.show(

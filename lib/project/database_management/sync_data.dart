@@ -166,7 +166,7 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
               continue;
             }
           }
-          
+
           InputModel model = InputModel(
             id: int.parse(values[0]),
             type: values[1],

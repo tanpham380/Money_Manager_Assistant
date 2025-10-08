@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 
 import 'package:provider/provider.dart';
 
@@ -28,13 +28,16 @@ class SaveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: ElevatedButton.icon(
-        onPressed: isLoading ? null : () { // Disable khi loading
-          if (saveInput && onSave != null) {
-            onSave!();
-          } else if (saveCategoryFunc != null) {
-            saveCategoryFunc!();
-          }
-        },
+        onPressed: isLoading
+            ? null
+            : () {
+                // Disable khi loading
+                if (saveInput && onSave != null) {
+                  onSave!();
+                } else if (saveCategoryFunc != null) {
+                  saveCategoryFunc!();
+                }
+              },
         style: ElevatedButton.styleFrom(
           foregroundColor: white,
           backgroundColor: const Color.fromRGBO(236, 158, 66, 1),
@@ -46,7 +49,7 @@ class SaveButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(18.0.r),
           ),
         ),
-        label: isLoading 
+        label: isLoading
             ? SizedBox(
                 width: 20.w,
                 height: 20.h,
@@ -59,7 +62,7 @@ class SaveButton extends StatelessWidget {
                 getTranslated(context, 'Save')!,
                 style: TextStyle(fontSize: 25.sp),
               ),
-        icon: isLoading 
+        icon: isLoading
             ? SizedBox(width: 25.sp) // Placeholder để giữ spacing
             : Icon(
                 Icons.save,
@@ -78,7 +81,7 @@ class SaveAndDeleteButton extends StatelessWidget {
   final String? parentExpenseItem, categoryName;
   final BuildContext? contextEx, contextExEdit, contextIn, contextInEdit;
   final GlobalKey<FormState>? formKey;
-  
+
   const SaveAndDeleteButton({
     Key? key,
     required this.saveAndDeleteInput,
@@ -202,7 +205,7 @@ Future<void> deleteCategoryFunction(
     actionText: 'Delete',
     cancelText: 'Cancel',
   );
-  
+
   if (confirmed == true) {
     onDeletion();
   }

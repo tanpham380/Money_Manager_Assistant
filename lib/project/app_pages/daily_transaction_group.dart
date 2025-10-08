@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money_assistant/project/utils/category_icon_helper.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../classes/constants.dart';
@@ -35,7 +35,7 @@ class DailyTransactionGroup extends StatelessWidget {
     // Tính toán tổng thu nhập và chi phí
     double totalIncome = 0.0;
     double totalExpense = 0.0;
-    
+
     for (final transaction in transactions) {
       if (transaction.type == 'Income') {
         totalIncome += transaction.amount ?? 0.0;
@@ -43,14 +43,16 @@ class DailyTransactionGroup extends StatelessWidget {
         totalExpense += transaction.amount ?? 0.0;
       }
     }
-    
+
     final balance = totalIncome - totalExpense;
-    final balanceColor = balance >= 0 ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error; // Use theme colors
-    
+    final balanceColor = balance >= 0
+        ? Theme.of(context).colorScheme.secondary
+        : Theme.of(context).colorScheme.error; // Use theme colors
+
     // Format ngày
     final isToday = _isToday(date);
     final isYesterday = _isYesterday(date);
-    
+
     String dateLabel;
     if (isToday) {
       dateLabel = getTranslated(context, 'Today') ?? 'Today';
@@ -77,7 +79,10 @@ class DailyTransactionGroup extends StatelessWidget {
           leading: Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), // Use theme primary
+              color: Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withValues(alpha: 0.1), // Use theme primary
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
@@ -91,7 +96,9 @@ class DailyTransactionGroup extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface, // Use theme onSurface
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface, // Use theme onSurface
             ),
           ),
           subtitle: Column(
@@ -102,7 +109,10 @@ class DailyTransactionGroup extends StatelessWidget {
                 '${transactions.length} ${getTranslated(context, transactions.length == 1 ? 'transaction' : 'transactions') ?? (transactions.length == 1 ? 'transaction' : 'transactions')}',
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), // Use theme onSurface with alpha
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6), // Use theme onSurface with alpha
                 ),
               ),
               SizedBox(height: 12.h),
@@ -115,7 +125,9 @@ class DailyTransactionGroup extends StatelessWidget {
                       context,
                       label: 'Income',
                       amount: totalIncome,
-                      color: Theme.of(context).colorScheme.secondary, // Use theme secondary
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary, // Use theme secondary
                       icon: Icons.arrow_downward_rounded,
                     ),
                   ),
@@ -126,7 +138,9 @@ class DailyTransactionGroup extends StatelessWidget {
                       context,
                       label: 'Expense',
                       amount: totalExpense,
-                      color: Theme.of(context).colorScheme.error, // Use theme error
+                      color: Theme.of(context)
+                          .colorScheme
+                          .error, // Use theme error
                       icon: Icons.arrow_upward_rounded,
                     ),
                   ),
@@ -147,37 +161,41 @@ class DailyTransactionGroup extends StatelessWidget {
           ),
           children: [
             // Danh sách các transactions - hiển thị khi mở rộng
-            ...transactions.map((transaction) => Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              child: TransactionListItem(
-                transaction: transaction,
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Edit(
-                        inputModel: transaction,
-                        categoryIcon: CategoryIconHelper.getIconForCategory(
-                          transaction.category ?? 'Category',
-                        ),
+            ...transactions
+                .map((transaction) => Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      child: TransactionListItem(
+                        transaction: transaction,
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Edit(
+                                inputModel: transaction,
+                                categoryIcon:
+                                    CategoryIconHelper.getIconForCategory(
+                                  transaction.category ?? 'Category',
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        onDelete: () async {
+                          await _deleteTransaction(context, transaction.id!);
+                        },
+                        onDuplicate: () async {
+                          await _duplicateTransaction(context, transaction);
+                        },
                       ),
-                    ),
-                  );
-                },
-                onDelete: () async {
-                  await _deleteTransaction(context, transaction.id!);
-                },
-                onDuplicate: () async {
-                  await _duplicateTransaction(context, transaction);
-                },
-              ),
-            )).toList(),
+                    ))
+                .toList(),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildSummaryItem(
     BuildContext context, {
     required String label,
@@ -203,7 +221,10 @@ class DailyTransactionGroup extends StatelessWidget {
             getTranslated(context, label) ?? label,
             style: TextStyle(
               fontSize: 10.sp,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), // Use theme onSurface with alpha
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7), // Use theme onSurface with alpha
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -223,7 +244,7 @@ class DailyTransactionGroup extends StatelessWidget {
       ),
     );
   }
-  
+
   /// Xóa giao dịch với confirmation
   Future<void> _deleteTransaction(BuildContext context, int id) async {
     final confirmed = await NotificationService.show(
@@ -237,9 +258,10 @@ class DailyTransactionGroup extends StatelessWidget {
 
     if (confirmed == true) {
       try {
-        final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+        final transactionProvider =
+            Provider.of<TransactionProvider>(context, listen: false);
         await transactionProvider.deleteTransaction(id);
-        
+
         if (context.mounted) {
           NotificationService.show(
             context,
@@ -260,11 +282,13 @@ class DailyTransactionGroup extends StatelessWidget {
   }
 
   /// Sao chép giao dịch
-  Future<void> _duplicateTransaction(BuildContext context, InputModel transaction) async {
+  Future<void> _duplicateTransaction(
+      BuildContext context, InputModel transaction) async {
     try {
-      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final transactionProvider =
+          Provider.of<TransactionProvider>(context, listen: false);
       await transactionProvider.duplicateTransaction(transaction);
-      
+
       if (context.mounted) {
         NotificationService.show(
           context,
@@ -285,18 +309,18 @@ class DailyTransactionGroup extends StatelessWidget {
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && 
-           date.month == now.month && 
-           date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
-  
+
   bool _isYesterday(DateTime date) {
     final yesterday = DateTime.now().subtract(Duration(days: 1));
-    return date.year == yesterday.year && 
-           date.month == yesterday.month && 
-           date.day == yesterday.day;
+    return date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day;
   }
-  
+
   /// Format ngày theo locale của người dùng
   String _formatDate(BuildContext context, DateTime date) {
     final locale = Localizations.localeOf(context).languageCode;

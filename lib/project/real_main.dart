@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app_lock/flutter_app_lock.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
- import 'package:money_assistant/project/services/notification_service.dart';
+import 'package:money_assistant/project/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_scaler/responsive_scaler.dart';
@@ -20,20 +20,20 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void realMain() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await  NotificationService.init();
-  
+  await NotificationService.init();
+
   // Initialize SharedPreferences FIRST (required for date migration)
   await sharedPrefs.sharePrefsInit();
-  
+
   // Initialize database
   await DB.init();
-  
+
   // Run date migration if needed (convert old dd/MM/yyyy to yyyy-MM-dd)
   // This will safely migrate existing data to ISO format
   await DateMigration.migrateDates();
 
   // Set up callback để xử lý khi user tap notification
-   NotificationService.onNotificationTap = (String? payload) {
+  NotificationService.onNotificationTap = (String? payload) {
     if (payload == 'add_input') {
       // Navigate đến tab Input (index 0)
       if (navigatorKey.currentContext != null) {
@@ -54,7 +54,7 @@ void realMain() async {
 
   // Reschedule reminder nếu đã được bật
   if (sharedPrefs.isReminderEnabled) {
-    await  NotificationService.scheduleDailyReminder(
+    await NotificationService.scheduleDailyReminder(
       sharedPrefs.reminderHour,
       sharedPrefs.reminderMinute,
     );
@@ -170,7 +170,7 @@ class _MyAppState extends State<MyApp> {
             context: context,
             child: widget!,
           );
-          
+
           return MediaQuery(
             data: MediaQuery.of(context)
                 .copyWith(textScaler: TextScaler.linear(1)),

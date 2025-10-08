@@ -151,7 +151,8 @@ List<CategoryItem> createItemList({
 //for analysis, report
 
 final DateTime now = tz.TZDateTime.now(tz.local),
-    todayDT = DateTime(tz.TZDateTime.now(tz.local).year, tz.TZDateTime.now(tz.local).month, tz.TZDateTime.now(tz.local).day),
+    todayDT = DateTime(tz.TZDateTime.now(tz.local).year,
+        tz.TZDateTime.now(tz.local).month, tz.TZDateTime.now(tz.local).day),
     startOfThisWeek = todayDT.subtract(Duration(days: todayDT.weekday - 1)),
     startOfThisMonth = DateTime(todayDT.year, todayDT.month, 1),
     startOfThisYear = DateTime(todayDT.year, 1, 1),
@@ -181,49 +182,47 @@ List<InputModel> filterData(
     BuildContext context, List<InputModel> data, String selectedDate) {
   // filter data based on user's selected day
   return data
-          .map((data) {
-            // Parse from ISO format (yyyy-MM-dd)
-            DateTime dateSelectedDT =
-                DateFormatUtils.parseInternalDate(data.date!);
+      .map((data) {
+        // Parse from ISO format (yyyy-MM-dd)
+        DateTime dateSelectedDT = DateFormatUtils.parseInternalDate(data.date!);
 
-            if (selectedDate == 'Today') {
-              if (dateSelectedDT.isAfter(todayDT.subtract(Duration(days: 1))) &&
-                  dateSelectedDT.isBefore(todayDT.add(Duration(days: 1)))) {
-                return inputModel(data);
-              }
-            } else if (selectedDate == 'This week') {
-              if (dateSelectedDT
-                      .isAfter(startOfThisWeek.subtract(Duration(days: 1))) &&
-                  dateSelectedDT
-                      .isBefore(startOfThisWeek.add(Duration(days: 7)))) {
-                return inputModel(data);
-              }
-            } else if (selectedDate == 'This month') {
-              if (dateSelectedDT
-                      .isAfter(startOfThisMonth.subtract(Duration(days: 1))) &&
-                  dateSelectedDT
-                      .isBefore(DateTime(todayDT.year, todayDT.month + 1, 1))) {
-                return inputModel(data);
-              }
-            } else if (selectedDate == 'This quarter') {
-              if (dateSelectedDT.isAfter(
-                      startOfThisQuarter.subtract(Duration(days: 1))) &&
-                  dateSelectedDT.isBefore(DateTime(startOfThisQuarter.year,
-                      startOfThisQuarter.month + 3, 1))) {
-                return inputModel(data);
-              }
-            } else if (selectedDate == 'This year') {
-              if (dateSelectedDT
-                      .isAfter(startOfThisYear.subtract(Duration(days: 1))) &&
-                  dateSelectedDT.isBefore(DateTime(todayDT.year + 1, 1, 1))) {
-                return inputModel(data);
-              }
-            } else {
-              return inputModel(data);
-            }
-          })
-          .where((element) => element != null)
-          .toList()
+        if (selectedDate == 'Today') {
+          if (dateSelectedDT.isAfter(todayDT.subtract(Duration(days: 1))) &&
+              dateSelectedDT.isBefore(todayDT.add(Duration(days: 1)))) {
+            return inputModel(data);
+          }
+        } else if (selectedDate == 'This week') {
+          if (dateSelectedDT
+                  .isAfter(startOfThisWeek.subtract(Duration(days: 1))) &&
+              dateSelectedDT.isBefore(startOfThisWeek.add(Duration(days: 7)))) {
+            return inputModel(data);
+          }
+        } else if (selectedDate == 'This month') {
+          if (dateSelectedDT
+                  .isAfter(startOfThisMonth.subtract(Duration(days: 1))) &&
+              dateSelectedDT
+                  .isBefore(DateTime(todayDT.year, todayDT.month + 1, 1))) {
+            return inputModel(data);
+          }
+        } else if (selectedDate == 'This quarter') {
+          if (dateSelectedDT
+                  .isAfter(startOfThisQuarter.subtract(Duration(days: 1))) &&
+              dateSelectedDT.isBefore(DateTime(
+                  startOfThisQuarter.year, startOfThisQuarter.month + 3, 1))) {
+            return inputModel(data);
+          }
+        } else if (selectedDate == 'This year') {
+          if (dateSelectedDT
+                  .isAfter(startOfThisYear.subtract(Duration(days: 1))) &&
+              dateSelectedDT.isBefore(DateTime(todayDT.year + 1, 1, 1))) {
+            return inputModel(data);
+          }
+        } else {
+          return inputModel(data);
+        }
+      })
+      .where((element) => element != null)
+      .toList()
       .cast<InputModel>();
 }
 

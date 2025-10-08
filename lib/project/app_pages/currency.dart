@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/constants.dart';
@@ -59,11 +59,13 @@ class Currency extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                        Language.languageList[index].currencyName,
+                                        Language
+                                            .languageList[index].currencyName,
                                         style: TextStyle(fontSize: 20.sp)),
                                     SizedBox(height: 2.5.h),
                                     Text(
-                                        Language.languageList[index].currencyCode,
+                                        Language
+                                            .languageList[index].currencyCode,
                                         style: TextStyle(fontSize: 15.sp))
                                   ],
                                 ),

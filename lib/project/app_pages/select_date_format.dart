@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../classes/constants.dart';

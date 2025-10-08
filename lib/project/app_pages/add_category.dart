@@ -81,8 +81,7 @@ class AddCategory extends StatelessWidget {
                   Padding(
                       padding: EdgeInsets.symmetric(vertical: 90.h),
                       child: Save(
-                          formKey:
-                              type == 'Income' ? _formKey4 : _formKey5,
+                          formKey: type == 'Income' ? _formKey4 : _formKey5,
                           contextEx: contextEx,
                           contextExEdit: contextExEdit,
                           contextIn: contextIn,

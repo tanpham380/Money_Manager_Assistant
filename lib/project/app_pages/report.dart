@@ -1,6 +1,6 @@
 /// Package import
 import 'package:flutter/material.dart';
- import '../utils/responsive_extensions.dart';
+import '../utils/responsive_extensions.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -143,19 +143,19 @@ class _ReportBodyState extends State<ReportBody> {
                       : sortByCategory(snapshot.data!, 'Expense');
 
                   List<InputModel> transactionsYearly = transactions
-                          .map((data) {
-                            DateTime dateSelectedDT =
-                                DateFormatUtils.parseUserDate(data.date!);
+                      .map((data) {
+                        DateTime dateSelectedDT =
+                            DateFormatUtils.parseUserDate(data.date!);
 
-                            if (dateSelectedDT.isAfter(startOfThisYear
-                                    .subtract(Duration(days: 1))) &&
-                                dateSelectedDT
-                                    .isBefore(DateTime(todayDT.year, 12, 31))) {
-                              return inputModel(data);
-                            }
-                          })
-                          .where((element) => element != null)
-                          .toList()
+                        if (dateSelectedDT.isAfter(
+                                startOfThisYear.subtract(Duration(days: 1))) &&
+                            dateSelectedDT
+                                .isBefore(DateTime(todayDT.year, 12, 31))) {
+                          return inputModel(data);
+                        }
+                      })
+                      .where((element) => element != null)
+                      .toList()
                       .cast<InputModel>();
 
                   if (transactionsYearly.isNotEmpty) {
@@ -188,34 +188,100 @@ class _ReportBodyState extends State<ReportBody> {
                                   getTranslated(context, 'Jan') ?? 'Jan',
                                   startOfThisYear.subtract(Duration(days: 1)),
                                   30),
-                              monthBasedTransaction(getTranslated(context, 'Feb') ?? 'Feb', date(30), 59),
-                              monthBasedTransaction(getTranslated(context, 'Mar') ?? 'Mar', date(59), 90),
-                              monthBasedTransaction(getTranslated(context, 'Apr') ?? 'Apr', date(90), 120),
-                              monthBasedTransaction(getTranslated(context, 'May') ?? 'May', date(120), 151),
-                              monthBasedTransaction(getTranslated(context, 'Jun') ?? 'Jun', date(151), 181),
-                              monthBasedTransaction(getTranslated(context, 'Jul') ?? 'Jul', date(181), 212),
-                              monthBasedTransaction(getTranslated(context, 'Aug') ?? 'Aug', date(212), 243),
-                              monthBasedTransaction(getTranslated(context, 'Sep') ?? 'Sep', date(243), 273),
-                              monthBasedTransaction(getTranslated(context, 'Oct') ?? 'Oct', date(273), 303),
-                              monthBasedTransaction(getTranslated(context, 'Nov') ?? 'Nov', date(303), 334),
-                              monthBasedTransaction(getTranslated(context, 'Dec') ?? 'Dec', date(334), 365),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Feb') ?? 'Feb',
+                                  date(30),
+                                  59),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Mar') ?? 'Mar',
+                                  date(59),
+                                  90),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Apr') ?? 'Apr',
+                                  date(90),
+                                  120),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'May') ?? 'May',
+                                  date(120),
+                                  151),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Jun') ?? 'Jun',
+                                  date(151),
+                                  181),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Jul') ?? 'Jul',
+                                  date(181),
+                                  212),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Aug') ?? 'Aug',
+                                  date(212),
+                                  243),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Sep') ?? 'Sep',
+                                  date(243),
+                                  273),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Oct') ?? 'Oct',
+                                  date(273),
+                                  303),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Nov') ?? 'Nov',
+                                  date(303),
+                                  334),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Dec') ?? 'Dec',
+                                  date(334),
+                                  365),
                             ]
                           : [
                               monthBasedTransaction(
                                   getTranslated(context, 'Jan') ?? 'Jan',
                                   startOfThisYear.subtract(Duration(days: 1)),
                                   30),
-                              monthBasedTransaction(getTranslated(context, 'Feb') ?? 'Feb', date(30), 58),
-                              monthBasedTransaction(getTranslated(context, 'Mar') ?? 'Mar', date(58), 89),
-                              monthBasedTransaction(getTranslated(context, 'Apr') ?? 'Apr', date(89), 119),
-                              monthBasedTransaction(getTranslated(context, 'May') ?? 'May', date(119), 150),
-                              monthBasedTransaction(getTranslated(context, 'Jun') ?? 'Jun', date(150), 180),
-                              monthBasedTransaction(getTranslated(context, 'Jul') ?? 'Jul', date(180), 211),
-                              monthBasedTransaction(getTranslated(context, 'Aug') ?? 'Aug', date(211), 242),
-                              monthBasedTransaction(getTranslated(context, 'Sep') ?? 'Sep', date(242), 272),
-                              monthBasedTransaction(getTranslated(context, 'Oct') ?? 'Oct', date(272), 302),
-                              monthBasedTransaction(getTranslated(context, 'Nov') ?? 'Nov', date(302), 333),
-                              monthBasedTransaction(getTranslated(context, 'Dec') ?? 'Dec', date(333), 364),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Feb') ?? 'Feb',
+                                  date(30),
+                                  58),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Mar') ?? 'Mar',
+                                  date(58),
+                                  89),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Apr') ?? 'Apr',
+                                  date(89),
+                                  119),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'May') ?? 'May',
+                                  date(119),
+                                  150),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Jun') ?? 'Jun',
+                                  date(150),
+                                  180),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Jul') ?? 'Jul',
+                                  date(180),
+                                  211),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Aug') ?? 'Aug',
+                                  date(211),
+                                  242),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Sep') ?? 'Sep',
+                                  date(242),
+                                  272),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Oct') ?? 'Oct',
+                                  date(272),
+                                  302),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Nov') ?? 'Nov',
+                                  date(302),
+                                  333),
+                              monthBasedTransaction(
+                                  getTranslated(context, 'Dec') ?? 'Dec',
+                                  date(333),
+                                  364),
                             ];
 
                   double maximumMonthAmount =
@@ -460,16 +526,25 @@ class _ReportBodyState extends State<ReportBody> {
                                                         onTap:
                                                             (CompletionHandler
                                                                 handler) async {
-                                                          final confirmed = await AlertService.show(
+                                                          final confirmed =
+                                                              await AlertService
+                                                                  .show(
                                                             context,
-                                                            type: NotificationType.delete,
-                                                            title: 'Delete Transaction',
-                                                            message: 'Are you sure you want to delete this transaction?',
-                                                            actionText: 'Delete',
-                                                            cancelText: 'Cancel',
+                                                            type:
+                                                                NotificationType
+                                                                    .delete,
+                                                            title:
+                                                                'Delete Transaction',
+                                                            message:
+                                                                'Are you sure you want to delete this transaction?',
+                                                            actionText:
+                                                                'Delete',
+                                                            cancelText:
+                                                                'Cancel',
                                                           );
-                                                          
-                                                          if (confirmed == true) {
+
+                                                          if (confirmed ==
+                                                              true) {
                                                             await DB.delete(
                                                                 selectedTransactions[
                                                                         index]
@@ -482,8 +557,11 @@ class _ReportBodyState extends State<ReportBody> {
                                                                 .changeInputModelList();
                                                             AlertService.show(
                                                               context,
-                                                              type: NotificationType.success,
-                                                              message: 'Transaction has been deleted',
+                                                              type:
+                                                                  NotificationType
+                                                                      .success,
+                                                              message:
+                                                                  'Transaction has been deleted',
                                                             );
                                                           }
                                                         },
@@ -507,8 +585,11 @@ class _ReportBodyState extends State<ReportBody> {
                                                               .changeInputModelList();
                                                           AlertService.show(
                                                             context,
-                                                            type: NotificationType.success,
-                                                            message: 'Transaction has been updated',
+                                                            type:
+                                                                NotificationType
+                                                                    .success,
+                                                            message:
+                                                                'Transaction has been updated',
                                                           );
                                                         },
                                                         color: Color.fromRGBO(
@@ -530,7 +611,10 @@ class _ReportBodyState extends State<ReportBody> {
                                                             text: TextSpan(
                                                               children: [
                                                                 TextSpan(
-                                                                  text: DateFormatUtils.formatUserDate(DateFormatUtils.parseInternalDate(selectedTransactions[index].date!)),
+                                                                  text: DateFormatUtils.formatUserDate(
+                                                                      DateFormatUtils.parseInternalDate(
+                                                                          selectedTransactions[index]
+                                                                              .date!)),
                                                                   style:
                                                                       TextStyle(
                                                                     fontSize:
