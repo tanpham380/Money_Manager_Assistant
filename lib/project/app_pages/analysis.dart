@@ -32,21 +32,29 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     
-    // Đơn giản hóa - chỉ cần AnalysisProvider
+    // Đơn giản hóa - chỉ cần AnalysisProvider với proper instance reuse
     return ChangeNotifierProxyProvider<TransactionProvider, AnalysisProvider>(
-      create: (context) => AnalysisProvider(context.read<TransactionProvider>()),
+      create: (context) {
+        final provider = AnalysisProvider(context.read<TransactionProvider>());
+        print('[Analysis] Created new AnalysisProvider instance: ${provider.hashCode}');
+        return provider;
+      },
       update: (context, transactionProvider, previous) {
         if (previous != null) {
+          print('[Analysis] Reusing existing AnalysisProvider instance: ${previous.hashCode}');
           return previous;
+        } else {
+          final provider = AnalysisProvider(transactionProvider);
+          print('[Analysis] Creating AnalysisProvider in update: ${provider.hashCode}');
+          return provider;
         }
-        return AnalysisProvider(transactionProvider);
       },
       child: Scaffold(
         backgroundColor: blue1,
         appBar: AppBar(
           backgroundColor: blue2,
           title: Text(
-            getTranslated(context, 'Analysis') ?? 'Analysis',
+            context.tr('Analysis'), // Optimized localization
             style: TextStyle(fontSize: 21.sp, color: Colors.white),
           ),
         ),
@@ -205,7 +213,7 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
                 Icon(Icons.account_tree, size: 18.sp),
                 SizedBox(width: 4.w),
                 Text(
-                  getTranslated(context, 'Sankey') ?? 'Sankey',
+                  context.tr('Sankey'), // Optimized
                   style: TextStyle(fontSize: 13.sp),
                 ),
               ],
@@ -219,7 +227,7 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
                 Icon(Icons.show_chart, size: 18.sp),
                 SizedBox(width: 4.w),
                 Text(
-                  getTranslated(context, 'Trend') ?? 'Trend',
+                  context.tr('Trend'), // Optimized
                   style: TextStyle(fontSize: 13.sp),
                 ),
               ],
@@ -232,12 +240,11 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
             ? provider.selectedChartType 
             : ChartType.sankey,
         onValueChanged: (ChartType value) {
+          // Chỉ cần cập nhật loại biểu đồ
           provider.updateChartType(value);
-          if (value == ChartType.line) {
-            // Fetch trend data cho cả Income và Expense
-            provider.fetchTrendData('Income', 6);
-            provider.fetchTrendData('Expense', 6);
-          }
+          
+          // XÓA BỎ HOÀN TOÀN CÁC LỆNH GỌI fetchTrendData
+          // Dữ liệu trend đã được tính toán sẵn trong fetchData
         },
       ),
     );
@@ -245,7 +252,7 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
 
   /// Xây dựng biểu đồ tổng hợp hiển thị cả Income và Expense với animations
   Widget _buildCombinedChart(BuildContext context, AnalysisProvider provider) {
-    // Callback xử lý selection
+    // Callback xử lý selection - tận dụng provider's calculations
     void handleSelection(int index,
         {bool forceNavigate = false, required String type}) {
       if (index < 0) return;
@@ -257,12 +264,12 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
 
       final summary = summaries[index];
 
-      // Luôn navigate khi click
+      // Luôn navigate khi click - sử dụng trực tiếp provider method
       provider.updateSelectedIndex(index);
 
-      // Điều hướng sang Calendar với filter chi tiết
+      // Điều hướng sang Calendar - tận dụng provider's dateRange calculation
       final navProvider = context.read<NavigationProvider>();
-      final dateRange = provider.getDateRange();
+      final dateRange = provider.getDateRange(); // Reuse existing calculation
 
       // Check if this is "Others" grouped category
       final isOthersGroup = summary.category == 'Others';
@@ -333,27 +340,15 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
   }
 
   Widget _buildCombinedSankeyChart(BuildContext context, AnalysisProvider provider) {
+    // Calculate dateRange once và pass xuống
+    final dateRange = provider.getDateRange();
+    
     // Use ValueKey với date option để force rebuild khi thay đổi
     return SankeyChartAnalysis(
       key: ValueKey('sankey_${provider.selectedDateOption}'),
-      onCategoryTap: (category, type) {
-        // Tap → Focus mode
-        provider.setFocus(category, type);
-      },
-      onCategoryLongPress: (category, type) {
-        // Long press → Navigation to Calendar
-        final navProvider = context.read<NavigationProvider>();
-        final dateRange = provider.getDateRange();
-        
-        navProvider.navigateToCalendarWithFilter(
-          type: type,
-          category: category,
-          icon: Icons.category,
-          color: type == 'Income' ? Colors.green : Colors.red,
-          startDate: dateRange['start'],
-          endDate: dateRange['end'],
-        );
-      },
+      dateRange: dateRange, // Pass calculated dateRange
+      // XÓA BỎ callback onCategoryTap ĐỂ TRÁNH DOUBLE-CALL
+      // Logic xử lý tap được gói gọn bên trong SankeyChartAnalysis
     );
   }
 
@@ -601,7 +596,7 @@ class ShowMoneyFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy provider để truy cập totalIncome và totalExpense khi type == 'All'
+    // Lấy provider để truy cập totalIncome và totalExpense
     final analysisProvider = context.watch<AnalysisProvider>();
 
     Widget rowFrame(String typeName, double value, {Color? valueColor}) {
@@ -637,8 +632,8 @@ class ShowMoneyFrame extends StatelessWidget {
       );
     }
 
-    // Xác định màu cho chênh lệch
-    Color balanceColor = balance >= 0 ? green : red;
+    // Xác định màu cho chênh lệch - sử dụng balance từ provider
+    Color balanceColor = analysisProvider.balance >= 0 ? green : red;
 
     return Card(
       elevation: 2, // Giảm elevation từ 4 xuống 2
@@ -651,9 +646,9 @@ class ShowMoneyFrame extends StatelessWidget {
         padding: EdgeInsets.all(12.w), // Thu nhỏ padding từ 16.w xuống 12.w
         child: Column(
           children: [
-            // Xử lý hiển thị theo loại
+            // Xử lý hiển thị theo loại - tận dụng values từ provider
             if (type == 'All') ...[
-              // Hiển thị tổng hợp cho màn hình unified
+              // Hiển thị tổng hợp - sử dụng trực tiếp từ provider
               rowFrame(getTranslated(context, 'Total Income') ?? 'Total Income',
                   analysisProvider.totalIncome,
                   valueColor: green),
@@ -679,7 +674,8 @@ class ShowMoneyFrame extends StatelessWidget {
                   valueColor: red),
             ],
             Divider(height: 12.h), // Thu nhỏ divider từ 16.h xuống 12.h
-            rowFrame(getTranslated(context, 'Balance') ?? 'Balance', balance,
+            rowFrame(getTranslated(context, 'Balance') ?? 'Balance', 
+                analysisProvider.balance, // Sử dụng trực tiếp từ provider
                 valueColor: balanceColor),
           ],
         ),

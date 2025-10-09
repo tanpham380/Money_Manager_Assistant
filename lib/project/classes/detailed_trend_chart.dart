@@ -504,8 +504,8 @@ class DetailedTrendChartAnalysis extends StatelessWidget {
           // Selection behavior
           selectionBehavior: SelectionBehavior(
             enable: true,
-            selectedColor: firstItem.color.withOpacity(0.8),
-            unselectedColor: firstItem.color.withOpacity(0.3),
+            selectedColor: firstItem.color.withValues(alpha: .8),
+            unselectedColor: firstItem.color.withValues(alpha: .3),
           ),
         );
       }).toList(),
@@ -630,10 +630,10 @@ class DetailedTrendChartAnalysis extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(3.w), // Giảm thêm
                 decoration: BoxDecoration(
-                  color: item.color.withOpacity(0.2),
+                  color: item.color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(3.r), // Giảm thêm
                   border: Border.all(
-                    color: item.color.withOpacity(0.5),
+                    color: item.color.withValues(alpha: 0.5),
                     width: isIncome ? 2 : 1, // Income có border thicker
                   ),
                 ),

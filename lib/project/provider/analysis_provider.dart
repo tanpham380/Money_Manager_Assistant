@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import '../classes/input_model.dart';
 import '../classes/constants.dart';
+import '../database_management/shared_preferences_services.dart';
 import 'transaction_provider.dart';
 import '../utils/date_format_utils.dart';
 import '../services/category_icon_service.dart';
@@ -136,7 +137,7 @@ class AnalysisProvider with ChangeNotifier {
 
   final TransactionProvider _transactionProvider;
   AnalysisState _state = AnalysisState.initial;
-  String _selectedDateOption = 'All';
+  String _selectedDateOption = sharedPrefs.selectedAnalysisDateOption;
   String _selectedType = 'Expense'; // Mặc định là Expense
   ChartType _selectedChartType = ChartType.sankey; // Mặc định là Sankey
 
@@ -145,7 +146,6 @@ class AnalysisProvider with ChangeNotifier {
   double _totalExpense = 0.0;
   List<CategorySummary> _expenseSummaries = [];
   List<CategorySummary> _incomeSummaries = [];
-  List<TrendData> _trendData = [];
   List<TrendData> _incomeTrendData = [];
   List<TrendData> _expenseTrendData = [];
 
@@ -185,7 +185,6 @@ class AnalysisProvider with ChangeNotifier {
   double get total => _totalIncome + _totalExpense;
   List<CategorySummary> get expenseSummaries => _expenseSummaries;
   List<CategorySummary> get incomeSummaries => _incomeSummaries;
-  List<TrendData> get trendData => _trendData;
   List<TrendData> get incomeTrendData => _incomeTrendData;
   List<TrendData> get expenseTrendData => _expenseTrendData;
   List<SankeyNodeData> get sankeyNodes => _sankeyNodes;
@@ -275,6 +274,7 @@ class AnalysisProvider with ChangeNotifier {
   void updateDateOption(String newOption) {
     if (_selectedDateOption != newOption) {
       _selectedDateOption = newOption;
+      sharedPrefs.selectedAnalysisDateOption = newOption; // Lưu vào Analysis setting
       _selectedIndex = null; // Reset selection
       fetchData();
     }
@@ -306,18 +306,28 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Cập nhật focus mode (category và type)
   void setFocus(String? category, String? type) {
+    print('[AnalysisProvider] setFocus START: category=$category, type=$type');
+    print('[AnalysisProvider] setFocus BEFORE: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
+    
     // Nếu click vào cùng category/type đang focus thì bỏ focus
     if (_focusedCategory == category && _focusedType == type) {
       _focusedCategory = null;
       _focusedType = null;
+      print('[AnalysisProvider] setFocus TOGGLE OFF: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     } else {
       _focusedCategory = category;
       _focusedType = type;
+      print('[AnalysisProvider] setFocus SET: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     }
+    
+    print('[AnalysisProvider] setFocus AFTER: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     
     // Cập nhật visibility của flows khi focus thay đổi
     _updateSankeyFlowsVisibility();
+    print('[AnalysisProvider] setFocus AFTER _updateSankeyFlowsVisibility: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
+    
     notifyListeners();
+    print('[AnalysisProvider] setFocus END: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
   }
 
   /// Đặt focus cho category cụ thể (dành cho Sankey flows)
@@ -334,47 +344,59 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Tải và xử lý dữ liệu từ TransactionProvider
   Future<void> fetchData() async {
+    print('[AnalysisProvider] fetchData START - focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     try {
       // Đặt trạng thái loading
       _state = AnalysisState.loading;
       notifyListeners();
 
-      // Lấy tất cả dữ liệu từ TransactionProvider thay vì DB
+      // BƯỚC 1: Lấy nguồn dữ liệu gốc MỘT LẦN DUY NHẤT
       final allTransactions = _transactionProvider.allTransactions;
 
-      // Lọc dữ liệu theo khoảng thời gian đã chọn
+      // BƯỚC 2: TÍNH TOÁN CHO SANKEY CHART VÀ CÁC SỐ LIỆU TỔNG QUAN
+      // Lọc dữ liệu theo date option người dùng chọn (Today, This week,...)
       final filteredTransactions = _filterTransactionsByDate(allTransactions);
       
       // Lọc dữ liệu kỳ trước để so sánh
       final previousTransactions = _filterTransactionsByPreviousPeriod(allTransactions);
 
-      // Kiểm tra nếu không có dữ liệu
+      // Kiểm tra empty state DỰA TRÊN BỘ LỌC NÀY
       if (filteredTransactions.isEmpty) {
         _state = AnalysisState.empty;
-        _resetData();
+        _resetData(); // Reset cả sankey và trend
+        print('[AnalysisProvider] fetchData - Empty data, after _resetData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
         notifyListeners();
         return;
       }
 
-      // Tính toán dữ liệu kỳ hiện tại
+      // Tính toán các số liệu tổng, summary từ dữ liệu đã lọc
       _calculateData(filteredTransactions);
 
+      // BƯỚC 3: TÍNH TOÁN CHO TREND CHART
+      // Lọc dữ liệu riêng cho Trend Chart (6 tháng gần nhất)
+      final trendTransactions = _filterTransactionsForTrend(allTransactions, 6);
+      // Tính toán dữ liệu trend từ bộ dữ liệu riêng này
+      _calculateTrendData(trendTransactions, 6);
+
+      // BƯỚC 4: TÍNH TOÁN PHẦN CÒN LẠI CHO SANKEY
       // Tính toán dữ liệu kỳ trước để so sánh
       _calculatePreviousPeriodData(previousTransactions);
 
       // Tính toán so sánh giữa các kỳ
       _calculateComparisons();
 
-      // Generate Sankey data và flows
+      // Generate Sankey data và flows từ filteredTransactions
       _generateSankeyData(filteredTransactions);
       _generateWaterfallSankeyFlows();
 
-      // Cập nhật trạng thái thành công
+      // BƯỚC 5: HOÀN TẤT
       _state = AnalysisState.loaded;
+      print('[AnalysisProvider] fetchData END - focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     } catch (e) {
       _state = AnalysisState.error;
       _errorMessage = e.toString();
       _resetData();
+      print('[AnalysisProvider] fetchData ERROR - after _resetData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     } finally {
       notifyListeners();
     }
@@ -384,7 +406,9 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Callback khi TransactionProvider có changes
   void _onTransactionsChanged() {
+    print('[AnalysisProvider] _onTransactionsChanged - Before fetchData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     fetchData();
+    print('[AnalysisProvider] _onTransactionsChanged - After fetchData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
   }
 
   /// Lọc giao dịch theo khoảng thời gian đã chọn
@@ -433,6 +457,24 @@ class AnalysisProvider with ChangeNotifier {
           default:
             return true;
         }
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
+  /// Lọc giao dịch chỉ dành cho Trend Chart (X tháng gần nhất)
+  List<InputModel> _filterTransactionsForTrend(List<InputModel> transactions, int months) {
+    final now = DateTime.now();
+    // Lấy ngày đầu tiên của X tháng trước
+    final startDate = DateTime(now.year, now.month - (months - 1), 1); 
+
+    return transactions.where((transaction) {
+      if (transaction.date == null) return false;
+      try {
+        final transactionDate = DateFormatUtils.parseInternalDate(transaction.date!);
+        // Chỉ lấy các giao dịch từ ngày bắt đầu trở đi
+        return !transactionDate.isBefore(startDate);
       } catch (e) {
         return false;
       }
@@ -592,80 +634,52 @@ class AnalysisProvider with ChangeNotifier {
     return result;
   }
 
-  /// Lấy dữ liệu xu hướng theo thời gian cho một type cụ thể
-  Future<void> fetchTrendData(String type, int months) async {
-    try {
-      // Lấy tất cả giao dịch từ TransactionProvider thay vì DB
-      final allTransactions = _transactionProvider.allTransactions;
+  /// Tính toán dữ liệu trend từ một danh sách giao dịch đã được lọc sẵn cho Trend Chart
+  void _calculateTrendData(List<InputModel> trendTransactions, int months) {
+    // Tách ra Income và Expense transactions
+    final incomeTransactions = trendTransactions.where((t) => t.type == 'Income').toList();
+    final expenseTransactions = trendTransactions.where((t) => t.type == 'Expense').toList();
 
-      // Lọc theo loại
-      final transactions =
-          allTransactions.where((t) => t.type == type).toList();
-
-      // Nhóm theo tháng
+    // Hàm helper để nhóm theo tháng
+    List<TrendData> groupByType(List<InputModel> filteredTransactions) {
       final Map<String, double> monthlyData = {};
       final now = DateTime.now();
 
-      // Khởi tạo tất cả các tháng với giá trị 0
+      // Khởi tạo các tháng với giá trị 0
       for (int i = months - 1; i >= 0; i--) {
         final monthDate = DateTime(now.year, now.month - i, 1);
         final monthKey = DateFormatUtils.formatMonthKey(monthDate);
         monthlyData[monthKey] = 0.0;
       }
 
-      // Điền dữ liệu thực tế
-      for (final transaction in transactions) {
+      // Điền dữ liệu thực tế từ list đã được lọc sẵn
+      for (final transaction in filteredTransactions) {
         if (transaction.date == null) continue;
-
         try {
-          // Parse from ISO format (yyyy-MM-dd)
           final date = DateFormatUtils.parseInternalDate(transaction.date!);
-
-          // Chỉ lấy dữ liệu trong X tháng gần nhất
-          final monthsAgo = DateTime(now.year, now.month - months, 1);
-          if (date.isBefore(monthsAgo)) continue;
-
           final monthKey = DateFormatUtils.formatMonthKey(date);
           if (monthlyData.containsKey(monthKey)) {
-            monthlyData[monthKey] =
-                monthlyData[monthKey]! + (transaction.amount ?? 0.0);
+            monthlyData[monthKey] = monthlyData[monthKey]! + (transaction.amount ?? 0.0);
           }
         } catch (e) {
           continue;
         }
       }
 
-      // Chuyển đổi thành TrendData với tất cả các tháng
-      final trendData = monthlyData.entries.map((entry) {
+      // Chuyển đổi thành TrendData
+      return monthlyData.entries.map((entry) {
         final date = DateFormatUtils.parseMonthKey(entry.key);
         return TrendData(
           month: date,
           totalAmount: entry.value,
           label: DateFormatUtils.formatShortMonth(date),
         );
-      }).toList()
-        ..sort((a, b) => a.month.compareTo(b.month));
-
-      // Lưu vào field tương ứng
-      if (type == 'Income') {
-        _incomeTrendData = trendData;
-      } else if (type == 'Expense') {
-        _expenseTrendData = trendData;
-      }
-
-      // Cũng cập nhật _trendData cho compatibility
-      _trendData = trendData;
-
-      notifyListeners();
-    } catch (e) {
-      // Xử lý lỗi nếu cần
-      if (type == 'Income') {
-        _incomeTrendData = [];
-      } else if (type == 'Expense') {
-        _expenseTrendData = [];
-      }
-      _trendData = [];
+      }).toList()..sort((a, b) => a.month.compareTo(b.month));
     }
+
+    // Tính toán và lưu trữ
+    _incomeTrendData = groupByType(incomeTransactions);
+    _expenseTrendData = groupByType(expenseTransactions);
   }
 
   /// Reset tất cả dữ liệu về 0/empty
@@ -674,7 +688,6 @@ class AnalysisProvider with ChangeNotifier {
     _totalExpense = 0.0;
     _expenseSummaries = [];
     _incomeSummaries = [];
-    _trendData = [];
     _incomeTrendData = [];
     _expenseTrendData = [];
     _sankeyNodes = [];
@@ -895,7 +908,7 @@ class AnalysisProvider with ChangeNotifier {
   void _generateWaterfallSankeyFlows() {
     _sankeyFlows.clear();
 
-    if (_incomeSummaries.isEmpty || _expenseSummaries.isEmpty || _totalExpense <= 0) {
+    if (_incomeSummaries.isEmpty) {
       _updateSankeyFlowsVisibility();
       return;
     }
@@ -912,15 +925,17 @@ class AnalysisProvider with ChangeNotifier {
     
     final List<SankeyFlow> generatedFlows = [];
 
-    // Lặp qua từng KHOẢN CHI
-    for (final expense in sortedExpenses) {
-      // Lặp qua từng NGUỒN THU để "thanh toán" cho khoản chi này
-      for (final income in sortedIncomes) {
-        // Nếu khoản chi này đã được thanh toán hết, chuyển sang khoản chi tiếp theo
-        if (remainingExpenses[expense.category]! <= 0.01) {
-          break; 
-        }
-        // Nếu nguồn thu này đã cạn, bỏ qua
+    // Chỉ tạo flows Income->Expense nếu có expense categories
+    if (_expenseSummaries.isNotEmpty && _totalExpense > 0) {
+      // Lặp qua từng KHOẢN CHI
+      for (final expense in sortedExpenses) {
+        // Lặp qua từng NGUỒN THU để "thanh toán" cho khoản chi này
+        for (final income in sortedIncomes) {
+          // Nếu khoản chi này đã được thanh toán hết, chuyển sang khoản chi tiếp theo
+          if (remainingExpenses[expense.category]! <= 0.01) {
+            break; 
+          }
+          // Nếu nguồn thu này đã cạn, bỏ qua
         if (remainingIncomes[income.category]! <= 0.01) {
           continue; 
         }
@@ -947,6 +962,7 @@ class AnalysisProvider with ChangeNotifier {
         }
       }
     }
+    } // Đóng block "if có expense categories"
     
     // Thêm flows cho số dư (nếu còn tiền thừa từ các nguồn thu)
     for (final income in sortedIncomes) {
@@ -954,10 +970,10 @@ class AnalysisProvider with ChangeNotifier {
       if (remaining > 0.01) {
         generatedFlows.add(SankeyFlow(
           fromCategory: income.category,
-          toCategory: 'Balance', // Kết nối đến mục "Số dư"
+          toCategory: 'Balance', // Dùng key chuẩn 'Balance' 
           amount: remaining,
           sourceColor: income.color,
-          targetColor: Colors.green, // Màu xanh cho số dư
+          targetColor: _totalIncome >= _totalExpense ? green : red, // Green nếu dương, red nếu âm
           isPrimary: false,
         ));
       }

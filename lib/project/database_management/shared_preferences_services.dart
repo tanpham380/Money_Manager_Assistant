@@ -37,6 +37,19 @@ class SharedPrefs {
     _sharedPrefs!.setString('selectedDate', value);
   }
 
+  // Lưu selectedDateOption cho Analysis và Calendar riêng biệt
+  String get selectedAnalysisDateOption => _sharedPrefs!.getString('selectedAnalysisDateOption') ?? 'All';
+  
+  set selectedAnalysisDateOption(String value) {
+    _sharedPrefs!.setString('selectedAnalysisDateOption', value);
+  }
+
+  String get selectedCalendarDateOption => _sharedPrefs!.getString('selectedCalendarDateOption') ?? 'This month';
+  
+  set selectedCalendarDateOption(String value) {
+    _sharedPrefs!.setString('selectedCalendarDateOption', value);
+  }
+
   String get appCurrency =>
       _sharedPrefs!.getString('appCurrency') ?? Platform.localeName;
 

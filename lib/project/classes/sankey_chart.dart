@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/analysis_provider.dart';
+import '../provider/navigation_provider.dart';
 import '../localization/methods.dart';
 import '../utils/responsive_extensions.dart';
 import '../classes/constants.dart'; // Import for format() function
@@ -23,12 +24,12 @@ class BalanceItem {
 
 class SankeyChartAnalysis extends StatefulWidget {
   final Function(String category, String type)? onCategoryTap;
-  final Function(String category, String type)? onCategoryLongPress;
+  final Map<String, DateTime?>? dateRange; // Pre-calculated dateRange
   
   const SankeyChartAnalysis({
     Key? key, 
     this.onCategoryTap,
-    this.onCategoryLongPress,
+    this.dateRange, // Optional pre-calculated dateRange
   }) : super(key: key);
 
   @override
@@ -41,16 +42,17 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   final Map<String, GlobalKey> _expenseKeys = {};
   final Map<String, Offset> _itemPositions = {};
   
-  // ⚠️ KHÔNG dùng final! Key phải được tạo mới mỗi lần widget rebuild
   late GlobalKey _painterKey;
+
+  // Double-tap detection
+  final Map<String, DateTime> _lastTapTimes = {};
+  static const Duration _doubleTapMaxDelay = Duration(milliseconds: 300);
 
   @override
   void initState() {
     super.initState();
-    // Tạo painter key MỚI cho widget instance này
     _painterKey = GlobalKey();
     
-    // Schedule update SAU KHI build hoàn tất và các GlobalKeys đã được tạo
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _updateItemPositions();
@@ -73,6 +75,87 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   GlobalKey _getKey(String category, String type) {
     final map = type == 'Income' ? _incomeKeys : _expenseKeys;
     return map.putIfAbsent(category, () => GlobalKey());
+  }
+
+  /// Handle category tap với double-tap detection
+  void _handleCategoryTap(String category, String type) {
+    final now = DateTime.now();
+    final key = '$type:$category';
+    final lastTap = _lastTapTimes[key];
+    
+    print('[SankeyChart] Tap on $category ($type)');
+    
+    if (lastTap != null && now.difference(lastTap) <= _doubleTapMaxDelay) {
+      // Double-tap detected - navigate to Calendar with filter
+      print('[SankeyChart] Double-tap detected - navigating to Calendar');
+      _navigateToCalendarWithFilter(category, type);
+      _lastTapTimes.remove(key); // Clear to prevent triple-tap
+    } else {
+      // Single tap - set focus for flow visualization
+      print('[SankeyChart] Single tap - setting focus');
+      final provider = context.read<AnalysisProvider>();
+      print('[SankeyChart] Provider instance: ${provider.hashCode}');
+      print('[SankeyChart] Before setFocus - focused: ${provider.focusedCategory} (${provider.focusedType})');
+      
+      if (provider.focusedCategory == category && provider.focusedType == type) {
+        // Already focused, clear focus
+        print('[SankeyChart] Clearing focus (was already focused)');
+        provider.setFocus(null, null);
+      } else {
+        // Set new focus
+        print('[SankeyChart] Setting focus to $category ($type)');
+        provider.setFocus(category, type);
+      }
+      
+      print('[SankeyChart] After setFocus - focused: ${provider.focusedCategory} (${provider.focusedType})');
+      _lastTapTimes[key] = now;
+      
+      // Call original callback if provided
+      widget.onCategoryTap?.call(category, type);
+    }
+  }
+
+  /// Navigate to Calendar with category filter
+  void _navigateToCalendarWithFilter(String category, String type) {
+    final navProvider = context.read<NavigationProvider>();
+    
+    // Get category color and icon from provider
+    final analysisProvider = context.read<AnalysisProvider>();
+    Color? categoryColor;
+    IconData? categoryIcon;
+    
+    if (type == 'Income') {
+      final summary = analysisProvider.incomeSummaries.firstWhere(
+        (s) => s.category == category,
+        orElse: () => CategorySummary(
+          category: category, totalAmount: 0, icon: Icons.category, color: Colors.green,
+        ),
+      );
+      categoryColor = summary.color;
+      categoryIcon = summary.icon;
+    } else if (type == 'Expense') {
+      final summary = analysisProvider.expenseSummaries.firstWhere(
+        (s) => s.category == category,
+        orElse: () => CategorySummary(
+          category: category, totalAmount: 0, icon: Icons.category, color: Colors.red,
+        ),
+      );
+      categoryColor = summary.color;
+      categoryIcon = summary.icon;
+    }
+    
+    // Get date range - sử dụng pre-calculated hoặc tính mới
+    final dateRange = widget.dateRange ?? analysisProvider.getDateRange();
+    
+    // Navigate với filter và date range
+    navProvider.navigateToCalendarWithFilter(
+      type: type,
+      category: category,
+      icon: categoryIcon,
+      color: categoryColor,
+      startDate: dateRange['start'],
+      endDate: dateRange['end'],
+    );
   }
 
   /// Cập nhật vị trí của các category items một cách an toàn
@@ -143,6 +226,8 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AnalysisProvider>();
+    print('[SankeyChart] Build with provider instance: ${provider.hashCode}');
+    
     final hasIncome = provider.incomeSummaries.isNotEmpty;
     final hasExpense = provider.expenseSummaries.isNotEmpty;
 
@@ -153,6 +238,12 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
     // Get current categories
     final currentIncomeCategories = provider.incomeSummaries.map((s) => s.category).toSet();
     final currentExpenseCategories = provider.expenseSummaries.map((s) => s.category).toSet();
+    
+    // Add Balance to expense categories if it exists (for position tracking)
+    final balance = provider.totalIncome - provider.totalExpense;
+    if (balance > 0) {
+      currentExpenseCategories.add('Balance');
+    }
     
     // Remove keys for categories that no longer exist
     _incomeKeys.removeWhere((key, value) => !currentIncomeCategories.contains(key));
@@ -228,18 +319,19 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
           flex: 3,
           child: _buildColumn(
             context,
+            provider,
             title: getTranslated(context, 'Income Sources') ?? 'Income Sources',
             summaries: provider.incomeSummaries,
             totalAmount: provider.totalIncome,
             themeColor: Colors.green,
-            categoryType: 'Income',
+            categoryType: 'Income', // <-- TRUYỀN CATEGORYTYPE CHO INCOME
           ),
         ),
 
         // Dòng chảy ở giữa - Sankey Flows
         Expanded(
           flex: 1,
-          child: _buildSankeyFlowLayer(context, provider),
+          child: _buildSankeyFlowLayer(context, provider, destinations),
         ),
 
         // Cột 2: Phân bổ (Chi tiêu + Số dư)
@@ -247,12 +339,13 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
           flex: 3,
           child: _buildColumn(
             context,
+            provider,
             title: getTranslated(context, 'Allocation') ?? 'Allocation',
             summaries: destinations,
             totalAmount: provider.totalIncome, // Tổng phân bổ bằng tổng thu
             themeColor: Colors.blue, // Dùng màu trung tính
             isDestination: true,
-            categoryType: 'Expense',
+            categoryType: 'Expense', // <-- TRUYỀN CATEGORYTYPE CHO EXPENSE
           ),
         ),
       ],
@@ -260,7 +353,7 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   }
 
   /// Layer chứa Sankey flows (CustomPainter)
-  Widget _buildSankeyFlowLayer(BuildContext context, AnalysisProvider provider) {
+  Widget _buildSankeyFlowLayer(BuildContext context, AnalysisProvider provider, List<dynamic> destinations) {
     // Kiểm tra có dữ liệu flows không
     final visibleFlows = provider.sankeyFlows.where((flow) => flow.isVisible).toList();
     if (visibleFlows.isEmpty) {
@@ -276,6 +369,14 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
     }
 
     // Hiển thị flows với CustomPaint - render luôn để có RenderBox
+    // Tính maxAmount một lần ở SankeyChart level
+    final allAmounts = [
+      ...provider.sankeyFlows.map((f) => f.amount),
+      ...provider.incomeSummaries.map((s) => s.totalAmount),
+      ...provider.expenseSummaries.map((s) => s.totalAmount),
+    ];
+    final maxAmount = allAmounts.isEmpty ? 1.0 : allAmounts.reduce((a, b) => a > b ? a : b);
+
     return SizedBox(
       width: double.infinity,
       height: 400, // ⚠️ FORCE HEIGHT để tránh Canvas height = 0
@@ -286,7 +387,11 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
           flows: provider.sankeyFlows,
           incomeCategories: provider.incomeSummaries,
           expenseCategories: provider.expenseSummaries,
+          destinations: destinations, // Pass destinations list
           itemPositions: _itemPositions, // Painter sẽ check empty và skip paint
+          maxAmount: maxAmount, // Pass pre-calculated maxAmount
+          focusedCategory: provider.focusedCategory, // Pass focus info
+          focusedType: provider.focusedType, // Pass focus type
           onCategoryTap: (category) {
             provider.setFocusedCategory(category);
           },
@@ -302,15 +407,16 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   /// Tạo item "Số dư" giả lập
   dynamic _createBalanceItem(BuildContext context, double balance) {
     return BalanceItem(
-      category: getTranslated(context, 'Balance') ?? 'Savings',
-      icon: Icons.savings_outlined,
+      category: 'Balance', // Dùng key chuẩn 'Balance' cho tracking
+      icon: balance >= 0 ? Icons.savings_outlined : Icons.warning_outlined,
       totalAmount: balance,
     );
   }
 
   /// Widget chung để xây dựng một cột (Nguồn thu hoặc Phân bổ)
   Widget _buildColumn(
-    BuildContext context, {
+    BuildContext context,
+    AnalysisProvider provider, {
     required String title,
     required List<dynamic> summaries,
     required double totalAmount,
@@ -352,16 +458,22 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
             // Xác định màu sắc cho từng item trong cột Phân Bổ
             Color itemColor = themeColor;
             if (isDestination) {
-              // Nếu là hạng mục "Số dư" thì màu xanh, còn lại là màu đỏ
-              final balanceLabel = getTranslated(context, 'Balance') ?? 'Savings';
-              itemColor = (summary.category == balanceLabel) ? Colors.green : Colors.red;
+              if (summary.category == 'Balance') {
+                // Balance: xanh nếu dương, đỏ nếu âm
+                itemColor = summary.totalAmount >= 0 ? green : red;
+              } else {
+                // Expense categories: màu đỏ
+                itemColor = red;
+              }
             }
 
             return _buildCategoryItem(
               context,
+              provider,
               summary,
               itemColor,
               totalAmount,
+              categoryType, // <-- TRUYỀN THAM SỐ categoryType VÀO ĐÂY
             );
           }),
       ],
@@ -371,30 +483,31 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   /// Widget cho từng hạng mục
   Widget _buildCategoryItem(
     BuildContext context,
+    AnalysisProvider provider,
     dynamic summary,
     Color themeColor,
     double totalAmount,
+    String categoryType, // <-- THÊM THAM SỐ NÀY
   ) {
-    final provider = context.watch<AnalysisProvider>();
+    // Use passed provider instance - guaranteed to be the same instance used in build
+    print('[SankeyChart] _buildCategoryItem provider instance: ${provider.hashCode}');
     final percentage = totalAmount > 0 ? (summary.totalAmount / totalAmount) : 0.0;
 
-    // Xác định type dựa trên themeColor hoặc category
-    String type = '';
-    final balanceLabel = getTranslated(context, 'Balance') ?? 'Savings';
-    final isBalanceItem = summary.category == balanceLabel;
+    // SỬA LẠI LOGIC XÁC ĐỊNH TYPE - DÙNG THAM SỐ TRUYỀN VÀO
+    final isBalanceItem = summary.category == 'Balance'; // Kiểm tra với key chuẩn
+    final String type = isBalanceItem ? '' : categoryType;
     
-    if (!isBalanceItem) {
-      if (themeColor == Colors.green) {
-        type = 'Income';
-      } else if (themeColor == Colors.red) {
-        type = 'Expense';
-      }
-    }
+    // Debug: check categoryType parameter
+    print('[SankeyChart] CategoryType parameter: $categoryType, Final type: $type');
 
     // Kiểm tra focus mode - highlight cả categories có flow liên quan
     final isFocused = provider.focusedCategory == summary.category && 
                      provider.focusedType == type;
     final hasAnyFocus = provider.focusedCategory != null;
+    
+    print('[SankeyChart] Category: ${summary.category}, Type: $type');
+    print('[SankeyChart] Provider focused: ${provider.focusedCategory} (${provider.focusedType})');
+    print('[SankeyChart] isFocused: $isFocused, hasAnyFocus: $hasAnyFocus');
     
     // Kiểm tra xem category này có liên quan đến focused category không
     bool isRelated = false;
@@ -404,29 +517,32 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
         if ((flow.fromCategory == provider.focusedCategory && flow.toCategory == summary.category) ||
             (flow.toCategory == provider.focusedCategory && flow.fromCategory == summary.category)) {
           isRelated = true;
+          print('[SankeyChart] Found related flow: ${flow.fromCategory} -> ${flow.toCategory}');
           break;
         }
       }
     }
     
     final shouldDim = hasAnyFocus && !isFocused && !isRelated;
+    print('[SankeyChart] isRelated: $isRelated, shouldDim: $shouldDim');
 
     // Lấy GlobalKey cho category để track position
     GlobalKey? categoryKey;
     if (!isBalanceItem) {
       categoryKey = _getKey(summary.category, type);
+    } else {
+      // Balance item cũng cần GlobalKey để track position cho flows
+      categoryKey = _expenseKeys.putIfAbsent('Balance', () => GlobalKey());
     }
 
     return Container(
       // Wrap trong Container với GlobalKey để track position
       key: categoryKey,
       child: GestureDetector(
-        onTap: (!isBalanceItem && widget.onCategoryTap != null) ? () {
-          widget.onCategoryTap!(summary.category, type);
+        onTap: !isBalanceItem ? () {
+          _handleCategoryTap(summary.category, type);
         } : null,
-        onLongPress: (!isBalanceItem && widget.onCategoryLongPress != null) ? () {
-          widget.onCategoryLongPress!(summary.category, type);
-        } : null,
+        // XÓA BỎ onLongPress THEO YÊU CẦU
         child: AnimatedOpacity(
         duration: Duration(milliseconds: 250),
         opacity: shouldDim ? 0.3 : 1.0,

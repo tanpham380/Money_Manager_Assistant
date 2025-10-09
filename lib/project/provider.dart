@@ -5,24 +5,6 @@ import 'classes/input_model.dart';
 import 'database_management/shared_preferences_services.dart';
 import 'database_management/sqflite_services.dart';
 
-// input
-class ChangeCategoryA with ChangeNotifier {
-  CategoryItem? categoryItemA;
-
-  void changeCategory(CategoryItem newItem) {
-    categoryItemA = newItem;
-    notifyListeners();
-  }
-}
-
-class ChangeModelType with ChangeNotifier {
-  String? modelType;
-  void changeModelType(String newType) {
-    modelType = newType;
-    notifyListeners();
-  }
-}
-
 // analysis, report
 class ChangeSelectedDate with ChangeNotifier {
   String? selectedAnalysisDate;
