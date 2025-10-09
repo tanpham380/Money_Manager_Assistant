@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../classes/input_model.dart';
 import 'transaction_provider.dart';
 import 'navigation_provider.dart';
+import '../database_management/shared_preferences_services.dart';
 
 /// Trạng thái của màn hình Calendar
 enum CalendarState {
@@ -18,8 +19,7 @@ class CalendarProvider with ChangeNotifier {
 
   final TransactionProvider _transactionProvider;
   final NavigationProvider _navigationProvider;
-  CalendarFormat _calendarFormat =
-      CalendarFormat.week; // Đổi mặc định từ month thành week
+  late CalendarFormat _calendarFormat;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   DateTime? _rangeStart;
@@ -57,6 +57,10 @@ class CalendarProvider with ChangeNotifier {
   // ============ CONSTRUCTOR ============
 
   CalendarProvider(this._transactionProvider, this._navigationProvider) {
+    // Load calendar format from SharedPrefs
+    final formatString = sharedPrefs.selectedCalendarFormat;
+    _calendarFormat = _parseCalendarFormat(formatString);
+
     // Nếu có filter với khoảng thời gian, focus vào ngày bắt đầu
     if (_navigationProvider.filterStartDate != null) {
       _focusedDay = _navigationProvider.filterStartDate!;
@@ -84,6 +88,32 @@ class CalendarProvider with ChangeNotifier {
   }
 
   // ============ PRIVATE METHODS ============
+
+  /// Parse CalendarFormat from string
+  CalendarFormat _parseCalendarFormat(String formatString) {
+    switch (formatString) {
+      case 'month':
+        return CalendarFormat.month;
+      case 'twoWeeks':
+        return CalendarFormat.twoWeeks;
+      case 'week':
+        return CalendarFormat.week;
+      default:
+        return CalendarFormat.week; // default
+    }
+  }
+
+  /// Convert CalendarFormat to string
+  String _calendarFormatToString(CalendarFormat format) {
+    switch (format) {
+      case CalendarFormat.month:
+        return 'month';
+      case CalendarFormat.twoWeeks:
+        return 'twoWeeks';
+      case CalendarFormat.week:
+        return 'week';
+    }
+  }
 
   /// Callback khi TransactionProvider có changes
   void _onTransactionsChanged() {
@@ -162,6 +192,7 @@ class CalendarProvider with ChangeNotifier {
   void onFormatChanged(CalendarFormat format) {
     if (_calendarFormat != format) {
       _calendarFormat = format;
+      sharedPrefs.selectedCalendarFormat = _calendarFormatToString(format);
       notifyListeners();
     }
   }

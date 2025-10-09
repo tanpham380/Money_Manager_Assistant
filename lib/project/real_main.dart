@@ -195,7 +195,7 @@ class _MyAppState extends State<MyApp> {
           final appLock = AppLock(
             builder: (context, arg) => child!,
             lockScreenBuilder: (context) => const MainLockScreen(),
-            enabled: sharedPrefs.isPasscodeOn,
+            initiallyEnabled: sharedPrefs.isPasscodeOn,
             initialBackgroundLockLatency: const Duration(seconds: 15),
           );
 

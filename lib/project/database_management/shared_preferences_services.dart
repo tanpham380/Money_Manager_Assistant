@@ -50,6 +50,12 @@ class SharedPrefs {
     _sharedPrefs!.setString('selectedCalendarDateOption', value);
   }
 
+  String get selectedCalendarFormat => _sharedPrefs!.getString('selectedCalendarFormat') ?? 'week';
+  
+  set selectedCalendarFormat(String value) {
+    _sharedPrefs!.setString('selectedCalendarFormat', value);
+  }
+
   String get appCurrency =>
       _sharedPrefs!.getString('appCurrency') ?? Platform.localeName;
 
