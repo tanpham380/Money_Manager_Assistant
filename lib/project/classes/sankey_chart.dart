@@ -196,6 +196,7 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
               );
             }
           } catch (e) {
+            // Silently ignore position calculation errors - positions will be recalculated later
           }
         }
       }
@@ -509,7 +510,7 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
       categoryKey = _getKey(summary.category, type);
     } else {
       // Balance item cũng cần GlobalKey để track position cho flows
-      categoryKey = _expenseKeys.putIfAbsent('Balance', () => GlobalKey());
+      categoryKey = _expenseKeys.putIfAbsent('Balance', GlobalKey.new);
     }
 
     return Container(

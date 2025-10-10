@@ -33,7 +33,6 @@ Locale locale(String languageCode) {
 }
 
 /// Legacy function for backward compatibility
-/// TODO: Gradually replace with context.tr()
 String? getTranslated(BuildContext context, String key) {
   return context.tr(key);
 }

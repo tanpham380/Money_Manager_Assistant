@@ -18,6 +18,7 @@ abstract class DB {
       String _path = p.join(databasesPath, 'money_crud.db');
       _db = await openDatabase(_path, version: _version, onCreate: onCreate);
     } catch (ex) {
+      // Silently ignore database initialization errors - database will be created when needed
     }
   }
 

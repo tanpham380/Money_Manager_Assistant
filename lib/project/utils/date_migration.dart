@@ -36,9 +36,6 @@ class DateMigration {
       // Get all transactions from database
       final allTransactions = await DB.inputModelList();
 
-      int migrated = 0;
-      int failed = 0;
-
       for (final transaction in allTransactions) {
         if (transaction.date == null || transaction.date!.isEmpty) continue;
 
@@ -57,11 +54,8 @@ class DateMigration {
           // Update transaction
           transaction.date = isoDate;
           await DB.update(transaction);
-
-          migrated++;
         } catch (e) {
-
-          failed++;
+          // Silently ignore failed migrations - transaction will keep original format
         }
       }
 

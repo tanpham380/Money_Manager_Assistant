@@ -51,6 +51,7 @@ class DropDownBox extends StatelessWidget {
                     context.read<ChangeSelectedDate>().changeSelectedReportDate(
                         newSelectedDate: value.toString());
                   } catch (e) {
+                    // Silently ignore if ChangeSelectedDate provider is not available
                   }
                 }
               },

@@ -1,5 +1,4 @@
 // Backward compatibility wrapper for SharedPrefs
-// TODO: Gradually migrate to use services directly
 
 import 'package:flutter/material.dart';
 import '../localization/methods.dart';
