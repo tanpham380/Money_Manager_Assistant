@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../classes/input_model.dart';
 import '../utils/date_format_utils.dart';
+import '../services/alert_service.dart';
 import 'sqflite_services.dart';
 
 class ImportExportScreen extends StatefulWidget {
@@ -59,10 +60,10 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
 
   Future<void> _exportData(BuildContext context, String fileName) async {
     if (fileName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(getTranslated(context, 'Please enter a file name') ??
-                'Please enter a file name')),
+      AlertService.show(
+        context,
+        type: NotificationType.error,
+        message: 'Please enter a file name',
       );
       return;
     }
@@ -93,17 +94,16 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
       setState(() {
         files = documentsDirectory!.listSync();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                getTranslated(context, 'Data exported successfully') ??
-                    'Data exported successfully')),
+      AlertService.show(
+        context,
+        type: NotificationType.success,
+        message: 'Data exported successfully',
       );
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(getTranslated(context, 'Failed to export data') ??
-                'Failed to export data')),
+      AlertService.show(
+        context,
+        type: NotificationType.error,
+        message: 'Failed to export data',
       );
     }
   }
@@ -184,17 +184,16 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
         }
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                getTranslated(context, 'Data imported successfully') ??
-                    'Data imported successfully')),
+      AlertService.show(
+        context,
+        type: NotificationType.success,
+        message: 'Data imported successfully',
       );
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(getTranslated(context, 'Failed to import data') ??
-                'Failed to import data')),
+      AlertService.show(
+        context,
+        type: NotificationType.error,
+        message: 'Failed to import data',
       );
     }
   }
@@ -237,25 +236,24 @@ class _ImportExportScreenState extends State<ImportExportScreen> {
             files = documentsDirectory!.listSync();
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    getTranslated(context, 'File deleted successfully') ??
-                        'File deleted successfully')),
+          AlertService.show(
+            context,
+            type: NotificationType.success,
+            message: 'File deleted successfully',
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(getTranslated(context, 'File does not exist') ??
-                    'File does not exist')),
+          AlertService.show(
+            context,
+            type: NotificationType.error,
+            message: 'File does not exist',
           );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(getTranslated(context, 'An error occurred') ??
-                'An error occurred: ')),
+      AlertService.show(
+        context,
+        type: NotificationType.error,
+        message: 'An error occurred',
       );
     }
   }

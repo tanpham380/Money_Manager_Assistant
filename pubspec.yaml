@@ -48,6 +48,7 @@ dependencies:
   timezone: ^0.10.0
   collection: ^1.19.1
   local_auth: ^2.3.0
+  lottie: ^3.3.2
 
 dependency_overrides:
   flutter_colorpicker: ^1.1.0
