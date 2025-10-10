@@ -519,7 +519,7 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
       child: GestureDetector(
         onTap: !isBalanceItem ? () {
           _handleCategoryTap(summary.category, type);
-        } : null,
+        } : null, // ignore: unnecessary_lambdas
         // XÓA BỎ onLongPress THEO YÊU CẦU
         child: AnimatedOpacity(
         duration: Duration(milliseconds: 250),
