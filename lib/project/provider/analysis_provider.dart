@@ -306,28 +306,21 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Cập nhật focus mode (category và type)
   void setFocus(String? category, String? type) {
-    print('[AnalysisProvider] setFocus START: category=$category, type=$type');
-    print('[AnalysisProvider] setFocus BEFORE: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
-    
+
     // Nếu click vào cùng category/type đang focus thì bỏ focus
     if (_focusedCategory == category && _focusedType == type) {
       _focusedCategory = null;
       _focusedType = null;
-      print('[AnalysisProvider] setFocus TOGGLE OFF: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     } else {
       _focusedCategory = category;
       _focusedType = type;
-      print('[AnalysisProvider] setFocus SET: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     }
     
-    print('[AnalysisProvider] setFocus AFTER: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     
     // Cập nhật visibility của flows khi focus thay đổi
     _updateSankeyFlowsVisibility();
-    print('[AnalysisProvider] setFocus AFTER _updateSankeyFlowsVisibility: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
     
     notifyListeners();
-    print('[AnalysisProvider] setFocus END: _focusedCategory=$_focusedCategory, _focusedType=$_focusedType');
   }
 
   /// Đặt focus cho category cụ thể (dành cho Sankey flows)
@@ -344,7 +337,6 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Tải và xử lý dữ liệu từ TransactionProvider
   Future<void> fetchData() async {
-    print('[AnalysisProvider] fetchData START - focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     try {
       // Đặt trạng thái loading
       _state = AnalysisState.loading;
@@ -364,7 +356,6 @@ class AnalysisProvider with ChangeNotifier {
       if (filteredTransactions.isEmpty) {
         _state = AnalysisState.empty;
         _resetData(); // Reset cả sankey và trend
-        print('[AnalysisProvider] fetchData - Empty data, after _resetData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
         notifyListeners();
         return;
       }
@@ -391,12 +382,10 @@ class AnalysisProvider with ChangeNotifier {
 
       // BƯỚC 5: HOÀN TẤT
       _state = AnalysisState.loaded;
-      print('[AnalysisProvider] fetchData END - focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     } catch (e) {
       _state = AnalysisState.error;
       _errorMessage = e.toString();
       _resetData();
-      print('[AnalysisProvider] fetchData ERROR - after _resetData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     } finally {
       notifyListeners();
     }
@@ -406,9 +395,7 @@ class AnalysisProvider with ChangeNotifier {
 
   /// Callback khi TransactionProvider có changes
   void _onTransactionsChanged() {
-    print('[AnalysisProvider] _onTransactionsChanged - Before fetchData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
     fetchData();
-    print('[AnalysisProvider] _onTransactionsChanged - After fetchData: focusedCategory=$_focusedCategory, focusedType=$_focusedType');
   }
 
   /// Lọc giao dịch theo khoảng thời gian đã chọn

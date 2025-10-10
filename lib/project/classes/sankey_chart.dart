@@ -74,7 +74,7 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   /// Lấy hoặc tạo GlobalKey cho income/expense category
   GlobalKey _getKey(String category, String type) {
     final map = type == 'Income' ? _incomeKeys : _expenseKeys;
-    return map.putIfAbsent(category, () => GlobalKey());
+    return map.putIfAbsent(category, GlobalKey.new);
   }
 
   /// Handle category tap với double-tap detection
@@ -83,31 +83,22 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
     final key = '$type:$category';
     final lastTap = _lastTapTimes[key];
     
-    print('[SankeyChart] Tap on $category ($type)');
-    
     if (lastTap != null && now.difference(lastTap) <= _doubleTapMaxDelay) {
       // Double-tap detected - navigate to Calendar with filter
-      print('[SankeyChart] Double-tap detected - navigating to Calendar');
       _navigateToCalendarWithFilter(category, type);
       _lastTapTimes.remove(key); // Clear to prevent triple-tap
     } else {
       // Single tap - set focus for flow visualization
-      print('[SankeyChart] Single tap - setting focus');
       final provider = context.read<AnalysisProvider>();
-      print('[SankeyChart] Provider instance: ${provider.hashCode}');
-      print('[SankeyChart] Before setFocus - focused: ${provider.focusedCategory} (${provider.focusedType})');
       
       if (provider.focusedCategory == category && provider.focusedType == type) {
         // Already focused, clear focus
-        print('[SankeyChart] Clearing focus (was already focused)');
         provider.setFocus(null, null);
       } else {
         // Set new focus
-        print('[SankeyChart] Setting focus to $category ($type)');
         provider.setFocus(category, type);
       }
       
-      print('[SankeyChart] After setFocus - focused: ${provider.focusedCategory} (${provider.focusedType})');
       _lastTapTimes[key] = now;
       
       // Call original callback if provided
@@ -205,7 +196,6 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
               );
             }
           } catch (e) {
-            debugPrint("Could not calculate position for ${entry.key}: $e");
           }
         }
       }
@@ -226,7 +216,6 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AnalysisProvider>();
-    print('[SankeyChart] Build with provider instance: ${provider.hashCode}');
     
     final hasIncome = provider.incomeSummaries.isNotEmpty;
     final hasExpense = provider.expenseSummaries.isNotEmpty;
@@ -392,9 +381,7 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
           maxAmount: maxAmount, // Pass pre-calculated maxAmount
           focusedCategory: provider.focusedCategory, // Pass focus info
           focusedType: provider.focusedType, // Pass focus type
-          onCategoryTap: (category) {
-            provider.setFocusedCategory(category);
-          },
+          onCategoryTap: provider.setFocusedCategory,
         ),
         // Hiển thị loading overlay nếu chưa có positions
         child: _itemPositions.isEmpty 
@@ -490,24 +477,16 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
     String categoryType, // <-- THÊM THAM SỐ NÀY
   ) {
     // Use passed provider instance - guaranteed to be the same instance used in build
-    print('[SankeyChart] _buildCategoryItem provider instance: ${provider.hashCode}');
     final percentage = totalAmount > 0 ? (summary.totalAmount / totalAmount) : 0.0;
 
     // SỬA LẠI LOGIC XÁC ĐỊNH TYPE - DÙNG THAM SỐ TRUYỀN VÀO
     final isBalanceItem = summary.category == 'Balance'; // Kiểm tra với key chuẩn
     final String type = isBalanceItem ? '' : categoryType;
     
-    // Debug: check categoryType parameter
-    print('[SankeyChart] CategoryType parameter: $categoryType, Final type: $type');
-
     // Kiểm tra focus mode - highlight cả categories có flow liên quan
     final isFocused = provider.focusedCategory == summary.category && 
                      provider.focusedType == type;
     final hasAnyFocus = provider.focusedCategory != null;
-    
-    print('[SankeyChart] Category: ${summary.category}, Type: $type');
-    print('[SankeyChart] Provider focused: ${provider.focusedCategory} (${provider.focusedType})');
-    print('[SankeyChart] isFocused: $isFocused, hasAnyFocus: $hasAnyFocus');
     
     // Kiểm tra xem category này có liên quan đến focused category không
     bool isRelated = false;
@@ -517,14 +496,12 @@ class _SankeyChartAnalysisState extends State<SankeyChartAnalysis> {
         if ((flow.fromCategory == provider.focusedCategory && flow.toCategory == summary.category) ||
             (flow.toCategory == provider.focusedCategory && flow.fromCategory == summary.category)) {
           isRelated = true;
-          print('[SankeyChart] Found related flow: ${flow.fromCategory} -> ${flow.toCategory}');
           break;
         }
       }
     }
     
     final shouldDim = hasAnyFocus && !isFocused && !isRelated;
-    print('[SankeyChart] isRelated: $isRelated, shouldDim: $shouldDim');
 
     // Lấy GlobalKey cho category để track position
     GlobalKey? categoryKey;

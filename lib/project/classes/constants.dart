@@ -125,7 +125,6 @@ Widget? connectionUI(AsyncSnapshot<List<InputModel>> snapshot) {
     );
   }
   if (snapshot.hasError) {
-    print('${snapshot.error}');
     return Center(
       child: CircularProgressIndicator(),
     );

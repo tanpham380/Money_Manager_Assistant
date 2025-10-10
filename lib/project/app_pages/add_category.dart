@@ -71,11 +71,8 @@ class _AddCategoryState extends State<AddCategory> {
   // REFACTORED: Toàn bộ logic lưu được đưa vào đây
   void _saveCategory(BuildContext providerContext) {
     _unFocusNode(context);
-    print("--- Bắt đầu _saveCategory ---"); // <--- THÊM DÒNG NÀY
 
     if (!_formKey.currentState!.validate()) {
-          print("--- Validation thất bại, dừng lại ---"); // <--- THÊM DÒNG NÀY
-
       AlertService.show(
         context,
         type: NotificationType.error,
@@ -116,7 +113,6 @@ class _AddCategoryState extends State<AddCategory> {
       Navigator.pop(context, true);
 
     } catch (e) {
-      print('Error saving category: $e');
       AlertService.show(
         context,
         type: NotificationType.error,

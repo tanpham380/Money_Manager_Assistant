@@ -44,7 +44,6 @@ class DropDownBox extends StatelessWidget {
                     sharedPrefs.selectedDate = value.toString();
                   } catch (e) {
                     // Fallback: nếu không tìm thấy AnalysisProvider
-                    print('AnalysisProvider not found in context: $e');
                   }
                 } else {
                   // Cho màn hình Report, vẫn dùng provider cũ
@@ -52,7 +51,6 @@ class DropDownBox extends StatelessWidget {
                     context.read<ChangeSelectedDate>().changeSelectedReportDate(
                         newSelectedDate: value.toString());
                   } catch (e) {
-                    print('ChangeSelectedDate not found in context: $e');
                   }
                 }
               },

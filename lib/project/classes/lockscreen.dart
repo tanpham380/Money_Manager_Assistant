@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // *** THÊM IMPORT NÀY ***
 import 'package:flutter_app_lock/flutter_app_lock.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 import 'package:local_auth/local_auth.dart';
@@ -29,27 +28,22 @@ class MainLockScreen extends StatelessWidget {
       return;
     }
 
-    try {
-      final didAuthenticate = await localAuth.authenticate(
-        localizedReason: getTranslated(
-              context,
-              'Scan your fingerprint to authenticate',
-            ) ??
-            'Please authenticate to continue',
-        options: const AuthenticationOptions(
-          stickyAuth: true, // Rất quan trọng, giữ xác thực khi app bị che khuất
-          // Bỏ 'biometricOnly: true' để cho phép dùng cả PIN/Mẫu hình của thiết bị
-          // nếu vân tay thất bại nhiều lần. Đây là trải nghiệm người dùng tốt hơn.
-        ),
-      );
+    final didAuthenticate = await localAuth.authenticate(
+      localizedReason: getTranslated(
+            context,
+            'Scan your fingerprint to authenticate',
+          ) ??
+          'Please authenticate to continue',
+      options: const AuthenticationOptions(
+        stickyAuth: true, // Rất quan trọng, giữ xác thực khi app bị che khuất
+        // Bỏ 'biometricOnly: true' để cho phép dùng cả PIN/Mẫu hình của thiết bị
+        // nếu vân tay thất bại nhiều lần. Đây là trải nghiệm người dùng tốt hơn.
+      ),
+    );
 
-      // Kiểm tra widget còn tồn tại không trước khi gọi didUnlock
-      if (didAuthenticate && context.mounted) {
-        AppLock.of(context)!.didUnlock();
-      }
-    } on PlatformException catch (e) {
-      // Xử lý lỗi, ví dụ: người dùng hủy bỏ
-      print("Lỗi xác thực: $e");
+    // Kiểm tra widget còn tồn tại không trước khi gọi didUnlock
+    if (didAuthenticate && context.mounted) {
+      AppLock.of(context)!.didUnlock();
     }
   }
 

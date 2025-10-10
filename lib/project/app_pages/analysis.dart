@@ -36,16 +36,13 @@ class _AnalysisState extends State<Analysis> with AutomaticKeepAliveClientMixin 
     return ChangeNotifierProxyProvider<TransactionProvider, AnalysisProvider>(
       create: (context) {
         final provider = AnalysisProvider(context.read<TransactionProvider>());
-        print('[Analysis] Created new AnalysisProvider instance: ${provider.hashCode}');
         return provider;
       },
       update: (context, transactionProvider, previous) {
         if (previous != null) {
-          print('[Analysis] Reusing existing AnalysisProvider instance: ${previous.hashCode}');
           return previous;
         } else {
           final provider = AnalysisProvider(transactionProvider);
-          print('[Analysis] Creating AnalysisProvider in update: ${provider.hashCode}');
           return provider;
         }
       },

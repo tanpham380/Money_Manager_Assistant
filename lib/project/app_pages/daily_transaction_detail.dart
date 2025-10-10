@@ -50,7 +50,6 @@ class DailyTransactionDetail extends StatelessWidget {
           );
         }
       } catch (e) {
-        print('Error deleting transaction: $e');
         if (context.mounted) {
           AlertService.show(
             context,
@@ -79,7 +78,6 @@ class DailyTransactionDetail extends StatelessWidget {
         );
       }
     } catch (e) {
-      print('Error duplicating transaction: $e');
       if (context.mounted) {
         AlertService.show(
           context,

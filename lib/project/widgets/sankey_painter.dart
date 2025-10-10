@@ -39,7 +39,6 @@ class SankeyPainter extends CustomPainter {
 
     // Check if we have focus mode active
     final hasFocus = focusedCategory != null;
-    print('[SankeyPainter] Focus mode: $hasFocus, focused: $focusedCategory ($focusedType)');
 
     // Sử dụng pre-calculated maxAmount hoặc tính mới nếu không có
     final calculatedMaxAmount = maxAmount ?? visibleFlows
@@ -77,8 +76,6 @@ class SankeyPainter extends CustomPainter {
     
     // Debug logging để kiểm tra positions
     if (flow.toCategory == 'Balance') {
-      print('[SankeyPainter] Flow to Balance: sourcePos=$sourcePos, targetKey=$targetKey, targetPos=$targetPos');
-      print('[SankeyPainter] Available keys: ${itemPositions.keys.toList()}');
     }
 
     // Check if this flow should be highlighted or dimmed
@@ -91,7 +88,6 @@ class SankeyPainter extends CustomPainter {
                      (flow.toCategory == focusedCategory && focusedType == 'Expense');
       shouldDim = !isHighlighted;
       
-      print('[SankeyPainter] Flow ${flow.fromCategory}->${flow.toCategory}: highlighted=$isHighlighted, shouldDim=$shouldDim');
     }
     
     final hasValidPositions = sourcePos != null && 
@@ -104,7 +100,6 @@ class SankeyPainter extends CustomPainter {
     
     if (!hasValidPositions) {
       if (flow.toCategory == 'Balance') {
-        print('[SankeyPainter] Invalid positions for Balance flow, using fallback');
       }
       _drawFlowFallback(canvas, size, flow, maxAmount, isHighlighted, shouldDim);
       return;

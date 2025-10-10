@@ -270,7 +270,6 @@ class SharedPrefs {
       }
     }
     if (_sharedPrefs!.containsKey('parent expense item names') == false) {
-      print('didnt save successfully');
     }
   }
 }

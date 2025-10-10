@@ -23,11 +23,9 @@ class DateMigration {
   /// Migrate all dates from user format (dd/MM/yyyy or MM/dd/yyyy) to ISO format (yyyy-MM-dd)
   static Future<void> migrateDates() async {
     if (await isMigrationComplete()) {
-      print('Date migration already complete, skipping...');
       return;
     }
 
-    print('Starting date format migration...');
 
     try {
       // Get current user's date format
@@ -47,7 +45,6 @@ class DateMigration {
         try {
           // Check if already in ISO format
           if (_isISOFormat(transaction.date!)) {
-            print('Date already in ISO format: ${transaction.date}');
             continue;
           }
 
@@ -63,19 +60,15 @@ class DateMigration {
 
           migrated++;
         } catch (e) {
-          print(
-              'Failed to migrate date for transaction ${transaction.id}: ${transaction.date} - Error: $e');
+
           failed++;
         }
       }
 
-      print(
-          'Date migration complete: $migrated migrated, $failed failed out of ${allTransactions.length} total');
 
       // Mark migration as complete
       await markMigrationComplete();
     } catch (e) {
-      print('Error during date migration: $e');
       rethrow;
     }
   }

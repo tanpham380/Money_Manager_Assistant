@@ -123,15 +123,25 @@ class _MyAppState extends State<MyApp> {
       double designWidth;
       // Logic xác định designWidth dựa trên kích thước thực tế
       if (isPortrait) {
-        if (size.width >= 428) designWidth = 428;       // iPhone Pro Max
-        else if (size.width >= 390) designWidth = 390;  // iPhone Pro
-        else if (size.width >= 375) designWidth = 375;  // iPhone SE
-        else designWidth = 360;                         // Android phổ biến
+        if (size.width >= 428) {
+          designWidth = 428;       // iPhone Pro Max
+        } else if (size.width >= 390) {
+          designWidth = 390;  // iPhone Pro
+        } else if (size.width >= 375) {
+          designWidth = 375;  // iPhone SE
+        } else {
+          designWidth = 360;                         // Android phổ biến
+        }
       } else { // Chế độ landscape
-        if (size.height >= 428) designWidth = 428;
-        else if (size.height >= 390) designWidth = 390;
-        else if (size.height >= 375) designWidth = 375;
-        else designWidth = 360;
+        if (size.height >= 428) {
+          designWidth = 428;
+        } else if (size.height >= 390) {
+          designWidth = 390;
+        } else if (size.height >= 375) {
+          designWidth = 375;
+        } else {
+          designWidth = 360;
+        }
       }
 
       // Khởi tạo lại ResponsiveScaler với giá trị chính xác

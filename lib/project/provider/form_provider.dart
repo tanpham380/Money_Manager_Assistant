@@ -176,7 +176,6 @@ class FormProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      print('Error saving input: $e');
       AlertService.show(
         context,
         type: NotificationType.error,
@@ -209,7 +208,6 @@ class FormProvider with ChangeNotifier {
           message: 'Transaction has been deleted',
         );
       } catch (e) {
-        print('Error deleting input: $e');
         AlertService.show(
           context,
           type: NotificationType.error,
