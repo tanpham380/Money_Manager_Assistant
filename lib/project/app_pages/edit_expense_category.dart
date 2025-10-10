@@ -30,7 +30,7 @@ class _EditExpenseCategoryState extends State<EditExpenseCategory> {
                       contextExEdit: contextEdit,
                       type: 'Expense',
                       appBarTitle:
-                          getTranslated(context, 'Add Expense Category')!,
+                          getTranslated(context, 'Add Expense Category') ?? 'Add Expense Category',
                       description: ''),
                 ),
                 body: ExpenseCategoryBody(

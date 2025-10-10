@@ -394,14 +394,12 @@ class AddEditInput extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 70.h),
                   child: inputModel != null
                       ? SaveAndDeleteButton(
-                          saveAndDeleteInput: true,
-                          formKey: formKey,
                           onSave: () =>
                               provider.saveInput(context, isNewInput: false),
                           onDelete: () => _showDeleteDialog(context, provider),
+                          isLoading: provider.isLoading, // Truyền trạng thái loading vào
                         )
                       : SaveButton(
-                          saveInput: true,
                           onSave: () =>
                               provider.saveInput(context, isNewInput: true),
                           isLoading: provider.isLoading,

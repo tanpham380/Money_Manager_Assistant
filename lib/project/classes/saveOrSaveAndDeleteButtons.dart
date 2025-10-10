@@ -12,15 +12,11 @@ import 'constants.dart';
 
 class SaveButton extends StatelessWidget {
   final VoidCallback? onSave;
-  final Function? saveCategoryFunc;
-  final bool saveInput;
   final bool isLoading; // Thêm loading state
 
   const SaveButton({
     Key? key,
     this.onSave,
-    this.saveCategoryFunc,
-    this.saveInput = false,
     this.isLoading = false, // Default false
   }) : super(key: key);
 
@@ -30,14 +26,7 @@ class SaveButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: isLoading
             ? null
-            : () {
-                // Disable khi loading
-                if (saveInput && onSave != null) {
-                  onSave!();
-                } else if (saveCategoryFunc != null) {
-                  saveCategoryFunc!();
-                }
-              },
+            : onSave,
         style: ElevatedButton.styleFrom(
           foregroundColor: white,
           backgroundColor: const Color.fromRGBO(236, 158, 66, 1),
@@ -74,27 +63,15 @@ class SaveButton extends StatelessWidget {
 }
 
 class SaveAndDeleteButton extends StatelessWidget {
-  final bool saveAndDeleteInput;
-  final Function? saveCategory;
   final VoidCallback? onSave;
   final VoidCallback? onDelete;
-  final String? parentExpenseItem, categoryName;
-  final BuildContext? contextEx, contextExEdit, contextIn, contextInEdit;
-  final GlobalKey<FormState>? formKey;
+  final bool isLoading; // Thêm trạng thái loading
 
   const SaveAndDeleteButton({
     Key? key,
-    required this.saveAndDeleteInput,
-    this.saveCategory,
-    this.onSave,
-    this.onDelete,
-    this.categoryName,
-    this.parentExpenseItem,
-    this.contextEx,
-    this.contextExEdit,
-    this.contextIn,
-    this.contextInEdit,
-    this.formKey,
+    required this.onSave,
+    required this.onDelete,
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
@@ -103,21 +80,7 @@ class SaveAndDeleteButton extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ElevatedButton.icon(
-            onPressed: () {
-              if (saveAndDeleteInput && onDelete != null) {
-                onDelete!();
-              } else {
-                deleteCategoryFunction(
-                  context: context,
-                  categoryName: categoryName!,
-                  parentExpenseItem: parentExpenseItem,
-                  contextEx: contextEx,
-                  contextExEdit: contextExEdit,
-                  contextIn: contextIn,
-                  contextInEdit: contextInEdit,
-                );
-              }
-            },
+            onPressed: onDelete,
             style: ElevatedButton.styleFrom(
                 foregroundColor: red,
                 backgroundColor: white,
@@ -140,12 +103,9 @@ class SaveAndDeleteButton extends StatelessWidget {
               getTranslated(context, 'Delete')!,
               style: TextStyle(fontSize: 25.sp),
             )),
-        // SaveButton sẽ nhận isLoading từ FormProvider nếu saveAndDeleteInput = true
         SaveButton(
-          saveInput: saveAndDeleteInput,
           onSave: onSave,
-          saveCategoryFunc: saveCategory,
-          isLoading: false, // Sẽ được update từ input.dart
+          isLoading: isLoading,
         ),
       ],
     );

@@ -95,7 +95,7 @@ class SharedPrefs {
       _sharedPrefs!.setInt('reminderMinute', value);
 
   List<String> get parentExpenseItemNames =>
-      _sharedPrefs!.getStringList('parent expense item names')!;
+      _sharedPrefs!.getStringList('parent expense item names') ?? [];
 
   // not yet use this set method
   set parentExpenseItemNames(List<String> parentExpenseItemNames) =>
@@ -125,7 +125,8 @@ class SharedPrefs {
   //jsonEncode turns a Map<String, dynamic> into a json string,
   //jsonDecode turns a json string into a Map<String, dynamic>
   List<CategoryItem> getItems(String parentItemName) {
-    List<String> itemsEncoded = _sharedPrefs!.getStringList(parentItemName)!;
+    List<String>? itemsEncoded = _sharedPrefs!.getStringList(parentItemName);
+    if (itemsEncoded == null) return [];
     List<CategoryItem> items = itemsEncoded
         .map((item) => CategoryItem.fromJson(jsonDecode(item)))
         .toList();

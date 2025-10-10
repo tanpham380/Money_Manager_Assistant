@@ -7,8 +7,6 @@ import '../classes/category_item.dart';
 import 'app_preferences_service.dart';
 import 'category_data_service.dart';
 
-/// Legacy SharedPrefs class for backward compatibility
-/// TODO: Gradually replace with direct service usage
 class SharedPrefs {
   final AppPreferencesService _appPrefs = AppPreferencesService();
   final CategoryDataService _categoryData = CategoryDataService();
