@@ -615,16 +615,16 @@ class CategoryCard extends StatelessWidget {
                     left: 20.w, right: 20.w, top: 20.h, bottom: 21.h),
                 child: Row(
                   children: [
-                    // Icon(
-                    //   iconData(categoryItem),
-                    //   size: 40.sp,
-                    //   color: isDefaultCategory
-                    //       ? Colors.grey
-                    //       : (provider.model.type == 'Income' ? green : red),
-                    // ),
+                    Icon(
+                      iconData(categoryItem),
+                      size: 40.sp,
+                      color: isDefaultCategory
+                          ? Colors.grey
+                          : (provider.model.type == 'Income' ? green : red),
+                    ),
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(left: 31.w),
+                        padding: EdgeInsets.only(left: 16.w),
                         child: Text(
                           getTranslated(context, categoryItem.text) ??
                               categoryItem.text,
